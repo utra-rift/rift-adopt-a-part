@@ -56,6 +56,7 @@ main { padding: 92px var(--gutter) 40px; }
 @media (min-width: 1280px) { .cell { width: 16.666%; } }
 .cell[data-in] { opacity: 1; }
 .hit { display: block; width: 100%; text-align: center; }
+@media (hover: hover) { .hit { cursor: default; } .cell[data-hot] .hit { cursor: pointer; } }
 .fig { position: relative; aspect-ratio: 1 / .86; }
 /* Every part lives in the same box; a cable that runs past it feathers out instead of
    shrinking the part to fit. */
@@ -78,7 +79,7 @@ main { padding: 92px var(--gutter) 40px; }
 @keyframes halo { 0%, 100% { scale: .9; opacity: .8; } 50% { scale: 1; opacity: 1; } }
 .cap { display: flex; justify-content: center; gap: 10px; padding: 0 0 34px; }
 .cap .price { color: var(--muted); transition: color .2s; }
-.cell:hover .cap .price, .cell[data-state] .cap .price { color: var(--ink); }
+.cell[data-hot] .cap .price, .cell[data-state] .cap .price { color: var(--ink); }
 .cell[data-state="crate"] .cap .code::before { content: "● "; font-size: 8px; vertical-align: 1px; }
 .cell[data-state="adopted"] .cap { color: #8f9aa8; }
 .cell[data-state="adopted"] .cap .price { color: #8f9aa8; }

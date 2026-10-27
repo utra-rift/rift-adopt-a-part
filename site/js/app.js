@@ -136,30 +136,88 @@ SECTIONS.forEach((sec, si) => {
         <div class="cap"><span class="code">${o.code}</span><span class="price">${adopted ? "Adopted" : money(priceOf(o))}</span></div>
       </button>`;
     ul.append(li);
-    const cell = { el: li, o, s: null };
+    const cell = { el: li, o, s: null, mask: null, hot: false, focused: false, on: false };
     cells.set(o.id, cell);
     const hit = li.querySelector(".hit");
-    hit.addEventListener("click", () => openView(o.id));
-    const focus = (on) => {
-      const s = cell.s; if (!s) return;
+    const update = () => {
+      const on = cell.hot || cell.focused, s = cell.s;
+      if (on === cell.on || !s) return;
+      cell.on = on;
       s.motionTarget = on && !reduced ? 1 : 0;
       if (on) revealOn(s); else { revealOff(s); s.azTarget = s.azBase; }
       kick(s);
     };
+    // A mouse click only counts on the part; a tap or a key press anywhere on the cell.
+    let via = "mouse";
+    hit.addEventListener("pointerdown", (e) => { via = e.pointerType; });
+    hit.addEventListener("click", (e) => { if (!canHover || !e.detail || via !== "mouse" || overPart(cell, e)) openView(o.id); });
     if (canHover) {
-      hit.addEventListener("pointerenter", () => focus(true));
-      hit.addEventListener("pointerleave", () => focus(false));
       hit.addEventListener("pointermove", (e) => {
-        if (!cell.s || reduced) return;
+        const hot = overPart(cell, e);
+        if (hot !== cell.hot) { cell.hot = hot; li.toggleAttribute("data-hot", hot); update(); }
+        if (!hot || !cell.s || reduced) return;
         const r = hit.getBoundingClientRect();
         cell.s.azTarget = cell.s.azBase + ((e.clientX - r.left) / r.width - 0.5) * 20;
         kick(cell.s);
       });
+      hit.addEventListener("pointerleave", () => { cell.hot = false; li.removeAttribute("data-hot"); update(); });
     }
-    hit.addEventListener("focus", () => focus(true));
-    hit.addEventListener("blur", () => focus(false));
+    hit.addEventListener("focus", () => { cell.focused = hit.matches(":focus-visible"); update(); });
+    hit.addEventListener("blur", () => { cell.focused = false; update(); });
   });
 });
+
+// ------------------------------------------------------------------ hover target
+// A cell answers the pointer near the part itself, not anywhere in its box. Its target is
+// the part's drawn silhouette at rest and at the full hover turn (so the part never turns
+// out from under the pointer), less whatever the box's edge fade hides, grown by NEAR to
+// start the hover and by FAR to end it. The caption counts too.
+const GRID = 4, NEAR = 12, FAR = 22; // CSS px
+
+function measureMask(cell) {
+  const s = cell.s, view = s.view, c = view.canvas;
+  const W = c.clientWidth, H = c.clientHeight;
+  if (!W || !H) { cell.mask = null; return; }
+  const cols = Math.ceil(W / GRID), rows = Math.ceil(H / GRID), bits = new Uint8Array(cols * rows);
+  const kx = W / c.width, ky = H / c.height, step = Math.max(1, Math.round(c.width / W));
+  const fade = (u, edge) => Math.min(1, u / edge, (1 - u) / edge); // the .float mask in site.css
+  const { spin, zoom } = view;
+  for (const [turn, grow] of [[0, 0], [HOVER_TURN, HOVER_GROW]]) {
+    view.spin = s.rest + turn; view.zoom = 1 + grow; view.paint();
+    const px = view.ctx.getImageData(0, 0, c.width, c.height).data;
+    for (let y = 0; y < c.height; y += step) {
+      const fy = fade((y + 0.5) / c.height, 0.14);
+      if (fy <= 0) continue;
+      for (let x = 0; x < c.width; x += step) {
+        if (px[(y * c.width + x) * 4 + 3] * fy * fade((x + 0.5) / c.width, 0.16) < 128) continue;
+        bits[Math.floor((y * ky) / GRID) * cols + Math.floor((x * kx) / GRID)] = 1;
+      }
+    }
+  }
+  view.spin = spin; view.zoom = zoom; view.paint();
+  cell.mask = { bits, cols, rows };
+}
+
+function overPart(cell, e) {
+  const reach = cell.hot ? FAR : NEAR;
+  const cap = cell.el.querySelector(".cap");
+  const a = cap.firstElementChild.getBoundingClientRect(), b = cap.lastElementChild.getBoundingClientRect();
+  if (e.clientX >= a.left - 6 && e.clientX <= b.right + 6 && e.clientY >= a.top - 6 && e.clientY <= a.bottom + 6) return true;
+  const m = cell.mask, r = cell.el.querySelector(".fig").getBoundingClientRect();
+  if (!m) return false;
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  const gx0 = Math.max(0, Math.floor((x - reach) / GRID)), gx1 = Math.min(m.cols - 1, Math.floor((x + reach) / GRID));
+  const gy0 = Math.max(0, Math.floor((y - reach) / GRID)), gy1 = Math.min(m.rows - 1, Math.floor((y + reach) / GRID));
+  for (let gy = gy0; gy <= gy1; gy++) {
+    const dy = Math.max(gy * GRID - y, 0, y - (gy + 1) * GRID);
+    for (let gx = gx0; gx <= gx1; gx++) {
+      if (!m.bits[gy * m.cols + gx]) continue;
+      const dx = Math.max(gx * GRID - x, 0, x - (gx + 1) * GRID);
+      if (dx * dx + dy * dy <= reach * reach) return true;
+    }
+  }
+  return false;
+}
 
 // The grid is the whole page, so every figure loads straight away and paints a still
 // frame before it animates (no frame loop needed to see it).
@@ -168,6 +226,7 @@ for (const cell of cells.values()) {
     cell.s = liveFigure(cell.el.querySelector("canvas"), fig, { visual: multi ? VISUAL_GROUP : VISUAL });
     cell.s.sync = true;
     placeHalo(cell);
+    measureMask(cell);
     cell.el.setAttribute("data-in", "");
     if (!reduced) cell.s.view.spin = -30;
     cell.s.view.paint();
@@ -441,7 +500,7 @@ let resizeTimer = 0;
 addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    for (const c of cells.values()) if (c.s) { c.s.view.resize(); placeHalo(c); c.s.view.paint(); }
+    for (const c of cells.values()) if (c.s) { c.s.view.resize(); placeHalo(c); measureMask(c); }
     if (big) { big.view.resize(); big.view.paint(); }
   }, 120);
 });
