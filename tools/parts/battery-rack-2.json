@@ -215,5 +215,101 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "RoboMaster Battery Rack 2, official STEP (robomaster.com). Mounted flat, battery side up. Faces that can't be seen from outside (the PCB and its parts under the foam, inserts, thread interiors) left out. XT60 lead re-routed from the CAD's straight run to drape onto the table and curl beside the rack; length kept."
+  "notes": "RoboMaster Battery Rack 2, official STEP (robomaster.com). Mounted flat, battery side up. Faces that can't be seen from outside (the PCB and its parts under the foam, inserts, thread interiors) left out. XT60 lead re-routed from the CAD's straight run to drape onto the table and curl beside the rack; length kept.",
+  "defaultMaterial": "rack-black",
+  "materials": [
+    {
+      "match": "RUBRING",
+      "mat": "rubber"
+    },
+    {
+      "match": "CON-M_HOUSING",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "CON-M_GPIN",
+      "mat": "gold"
+    },
+    {
+      "match": "YC_ST_LL",
+      "mat": "steel"
+    },
+    {
+      "match": "PC-[FB]-01|EVA-[FB]-01",
+      "mat": "matte-black"
+    },
+    {
+      "match": "NAUO1",
+      "mat": "xt60-yellow"
+    },
+    {
+      "match": "NAUO[23]",
+      "mat": "gold"
+    },
+    {
+      "match": "XT60H-_X2",
+      "mat": "xt60-sheath"
+    },
+    {
+      "match": "XT60-WIRE_3[^#]*#31$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "XT60-WIRE_3[^#]*#32$",
+      "mat": "silicone-red"
+    },
+    {
+      "match": "ASM0001",
+      "mat": "pcb-green"
+    },
+    {
+      "match": "QRCODE",
+      "mat": "qr-label"
+    },
+    {
+      "match": "LED_4|GH_3",
+      "mat": "white-plastic"
+    },
+    {
+      "match": "HOLE_PC",
+      "mat": "gold"
+    }
+  ],
+  "customMaterials": {
+    "rack-black": {
+      "color": "#2a2a2d",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "xt60-yellow": {
+      "color": "#f0b020",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "xt60-sheath": {
+      "color": "#333336",
+      "mr": [
+        0,
+        0.55
+      ]
+    },
+    "silicone-red": {
+      "color": "#dc1f3d",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "qr-label": {
+      "color": "#9a9a9a",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
 }

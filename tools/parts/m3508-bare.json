@@ -182,5 +182,20 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster M3508, from DJI's official M3508 P19 STEP with the P19 gearbox removed (DJI publishes no CAD for the bare motor). Leads re-routed from the CAD's straight run; length kept."
+  "notes": "DJI RoboMaster M3508, from DJI's official M3508 P19 STEP with the P19 gearbox removed (DJI publishes no CAD for the bare motor). Leads re-routed from the CAD's straight run; length kept.",
+  "defaultMaterial": "black-anodized",
+  "customMaterials": {
+    "yellow-plastic": { "color": "#d9a62e", "mr": [0, 0.5] },
+    "gh-ivory": { "color": "#ddd7c5", "mr": [0, 0.5] }
+  },
+  "materials": [
+    { "match": "#4$", "mat": "red-wire" },
+    { "match": "#5$", "mat": "yellow-wire" },
+    { "match": "#6$", "mat": "black-plastic" },
+    { "match": "#11$", "mat": "yellow-plastic" },
+    { "match": "#7$", "mat": "black-plastic" },
+    { "match": "5_ASM/[^#]*#(8|9|10|12|13|14|15|16|17|18|19|20|21|22|23)$", "mat": "brass" },
+    { "match": "#3$", "mat": "gh-ivory" },
+    { "match": "#(0|1|2|25)$", "mat": "black-plastic" }
+  ]
 }

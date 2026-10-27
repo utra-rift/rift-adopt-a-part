@@ -174,5 +174,83 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster M2006 P36, official STEP (robomaster.com). Leads re-routed from the CAD's straight run; length kept."
+  "notes": "DJI RoboMaster M2006 P36, official STEP (robomaster.com). Leads re-routed from the CAD's straight run; length kept.",
+  "defaultMaterial": "black-anodized",
+  "customMaterials": {
+    "bronze-band": {
+      "color": "#5c4239",
+      "mr": [
+        0.25,
+        0.45
+      ]
+    },
+    "lemon-wire": {
+      "color": "#dcc83e",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "amass-yellow": {
+      "color": "#dfa23c",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "#17$",
+      "box": [
+        -16.8,
+        12.1,
+        -47.5,
+        -10.5,
+        18.4,
+        -32.6
+      ],
+      "mat": "steel"
+    },
+    {
+      "match": "#(1|7)$",
+      "mat": "bronze-band"
+    },
+    {
+      "match": "#4$",
+      "mat": "steel"
+    },
+    {
+      "match": "#12$",
+      "mat": "red-wire"
+    },
+    {
+      "match": "#13$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#14$",
+      "mat": "lemon-wire"
+    },
+    {
+      "match": "#15$",
+      "mat": "white-plastic"
+    },
+    {
+      "match": "#16$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#33$",
+      "mat": "amass-yellow"
+    },
+    {
+      "match": "#34$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#(1[89]|2[0-9]|3[0-2])$",
+      "mat": "gold"
+    }
+  ]
 }

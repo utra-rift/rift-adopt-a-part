@@ -3,6 +3,19 @@
   "up": "z",
   "deflection": 0.0012,
   "angular": 0.26,
-  "view": { "azimuth": 45, "elevation": 30 },
-  "notes": "Carbon-fibre laminate sheet, common 400 × 300 × 3 mm stock size."
+  "view": {
+    "azimuth": 45,
+    "elevation": 30
+  },
+  "notes": "Carbon-fibre laminate sheet, common 400 \u00d7 300 \u00d7 3 mm stock size.",
+  "defaultMaterial": "carbon-fibre",
+  "customMaterials": {
+    "carbon-fibre": {
+      "color": "#1b1c1e",
+      "mr": [
+        0.05,
+        0.25
+      ]
+    }
+  }
 }

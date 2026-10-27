@@ -307,5 +307,75 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "RoboMaster 17 mm fluorescent projectile charger kit, official STEPs (robomaster.com): LED driver and two UV light panels laid out flat. The CAD truncates the leads (real: 160 mm and 300 mm); the stubs are re-routed to rest on the table, length kept."
+  "notes": "RoboMaster 17 mm fluorescent projectile charger kit, official STEPs (robomaster.com): LED driver and two UV light panels laid out flat. The CAD truncates the leads (real: 160 mm and 300 mm); the stubs are re-routed to rest on the table, length kept.",
+  "defaultMaterial": "black-plastic",
+  "materials": [
+    {
+      "match": "driver/2/",
+      "mat": "pcb-black"
+    },
+    {
+      "match": "driver/[01]/",
+      "mat": "white-plastic"
+    },
+    {
+      "match": "driver/[34]/",
+      "mat": "steel"
+    },
+    {
+      "match": "driver/[56]/",
+      "mat": "gold"
+    },
+    {
+      "match": "driver/7/",
+      "mat": "marking"
+    },
+    {
+      "match": "driver/16/",
+      "mat": "matte-black"
+    },
+    {
+      "match": "driver/(31|32|33)/",
+      "mat": "mlcc"
+    },
+    {
+      "match": "driver/lead/",
+      "mat": "xt30-yellow"
+    },
+    {
+      "match": "panel-./heatsink",
+      "mat": "silver-anodized"
+    },
+    {
+      "match": "panel-./board",
+      "mat": "white-plastic"
+    },
+    {
+      "match": "panel-./lead",
+      "mat": "white-plastic"
+    }
+  ],
+  "customMaterials": {
+    "xt30-yellow": {
+      "color": "#f0b020",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "mlcc": {
+      "color": "#9a8470",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "marking": {
+      "color": "#9a9a9a",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
 }

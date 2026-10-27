@@ -1,6 +1,11 @@
 {
   "src": "cad/raw/vt03/RoboMaster_VT03_transmitter_2025-12.stp",
   "up": "y",
+  "rotate": [
+    0,
+    90,
+    0
+  ],
   "deflection": 0.035,
   "angular": 0.5,
   "drop": "#(7|8|9|10|14|23|24|25|26|27|28)$",
@@ -420,8 +425,70 @@
     }
   ],
   "view": {
-    "azimuth": 315,
+    "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster VT03 video transmission module (transmitter), official STEP (Dec 2025). Cables re-routed from the CAD's straight runs to lie on the table; length kept."
+  "notes": "DJI RoboMaster VT03 video transmission module (transmitter), official STEP (Dec 2025). Cables re-routed from the CAD's straight runs to lie on the table; length kept.",
+  "defaultMaterial": "black-plastic",
+  "customMaterials": {
+    "vt-housing": {
+      "color": "#303137",
+      "mr": [
+        0,
+        0.62
+      ]
+    },
+    "lens-glass": {
+      "color": "#0d0e11",
+      "mr": [
+        0,
+        0.06
+      ]
+    },
+    "led-pipe": {
+      "color": "#2a2b31",
+      "mr": [
+        0,
+        0.25
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "/SOLID#(0|4)$",
+      "mat": "vt-housing"
+    },
+    {
+      "match": "SHELL_(SIDENET|TOPNET)[^#]*#(1|2|3)$",
+      "mat": "matte-black"
+    },
+    {
+      "match": "SHELL_LENS[^#]*#5$",
+      "mat": "lens-glass"
+    },
+    {
+      "match": "SHELL_LEDBOSS[^#]*#6$",
+      "mat": "led-pipe"
+    },
+    {
+      "match": "PCBA_LAYOUT_1010_7#12$",
+      "mat": "steel"
+    },
+    {
+      "match": "PCBA_LAYOUT_1010_[58]#(11|13)$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "PRT0004[^#]*#(17|21)$",
+      "mat": "steel"
+    },
+    {
+      "match": "(PRT0002|PRT0003)[^#]*#(15|16|19|20)$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "SRDINBAN[^#]*#(18|22)$",
+      "mat": "rubber"
+    }
+  ]
 }

@@ -359,5 +359,25 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster C620, official STEP (robomaster.com). Leads re-routed from the CAD's straight runs (power lead coiled beside the ESC); lengths kept."
+  "notes": "DJI RoboMaster C620, official STEP (robomaster.com). Leads re-routed from the CAD's straight runs (power lead coiled beside the ESC); lengths kept.",
+  "defaultMaterial": "c620-grey",
+  "customMaterials": {
+    "c620-grey": { "color": "#4f5054", "mr": [0, 0.55] },
+    "gh-ivory": { "color": "#ddd7c5", "mr": [0, 0.5] },
+    "lemon-wire": { "color": "#dcc83e", "mr": [0, 0.5] },
+    "amass-yellow": { "color": "#dfa23c", "mr": [0, 0.5] }
+  },
+  "materials": [
+    { "match": "#0$", "mat": "black-plastic" },
+    { "match": "#(3|4|5)$", "mat": "gh-ivory" },
+    { "match": "#([6-9]|1[01])$", "mat": "steel" },
+    { "match": "#(1[4-7])$", "mat": "steel" },
+    { "match": "#18$", "mat": "red-wire" },
+    { "match": "#19$", "mat": "lemon-wire" },
+    { "match": "#20$", "mat": "black-plastic" },
+    { "match": "#21$", "mat": "amass-yellow" },
+    { "match": "#22$", "mat": "grey-plastic" },
+    { "match": "#(24|25|26)$", "mat": "gold" },
+    { "match": "#(23|27)$", "mat": "black-plastic" }
+  ]
 }

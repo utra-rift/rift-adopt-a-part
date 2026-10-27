@@ -5,6 +5,104 @@
   "angular": 0.35,
   "drop": "#108$",
   "lit": "#113$",
-  "view": { "azimuth": 45, "elevation": 30 },
-  "notes": "DJI RoboMaster CM01 supercapacitor management module, official STEP (PCBA). Bare board as modelled; the clear protective sleeve on shipped units is not in the CAD."
+  "view": {
+    "azimuth": 45,
+    "elevation": 30
+  },
+  "notes": "DJI RoboMaster CM01 supercapacitor management module, official STEP (PCBA). Bare board as modelled; the clear protective sleeve on shipped units is not in the CAD.",
+  "defaultMaterial": "black-plastic",
+  "customMaterials": {
+    "amass-yellow": {
+      "color": "#f2b640",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "gh-ivory": {
+      "color": "#e6dccb",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "tin": {
+      "color": "#c2c0ba",
+      "mr": [
+        0.7,
+        0.45
+      ]
+    },
+    "mlcc-tan": {
+      "color": "#8c7f6a",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "qr-mark": {
+      "color": "#3a3b3e",
+      "mr": [
+        0,
+        0.6
+      ]
+    },
+    "led-white": {
+      "color": "#e4e4e2",
+      "mr": [
+        0,
+        0.3
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "/DRB_1_1/DRB_1_1#0$",
+      "mat": "pcb-black"
+    },
+    {
+      "match": "XT30PW-F_SJ[^#]*#(1|6)$",
+      "mat": "amass-yellow"
+    },
+    {
+      "match": "MR30PW-F20[^#]*#(2|5|7|10)$",
+      "mat": "gold"
+    },
+    {
+      "match": "XT30__-_3[^#]*#(3|4|8|9)$",
+      "mat": "gold"
+    },
+    {
+      "match": "USER_LIBRARY-XT30PW-M#11$",
+      "mat": "amass-yellow"
+    },
+    {
+      "match": "SM04B-GHS-TB#12$",
+      "mat": "gh-ivory"
+    },
+    {
+      "match": "/(HOLE_PC4P2DC2P2|TP_C1)#\\d+$",
+      "mat": "gold"
+    },
+    {
+      "match": "/QRCODE_3P5X3P5#27$",
+      "mat": "qr-mark"
+    },
+    {
+      "match": "/R2512_S#41$",
+      "mat": "tin"
+    },
+    {
+      "match": "/X3225#106$",
+      "mat": "tin"
+    },
+    {
+      "match": "/C0[0-9]{3}(_[A-D])?#\\d+$",
+      "mat": "mlcc-tan"
+    },
+    {
+      "match": "/LED_4-1P6X0P8-0P7#105$",
+      "mat": "led-white"
+    }
+  ]
 }

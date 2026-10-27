@@ -1,25 +1,45 @@
-import { BUNDLES, TIERS, BUDGET, TRAVEL, tierFor, priceOf, totalOf, money } from "./catalog.js";
-import { loadPart, Figure, View } from "./stage.js";
+import { LINES, OFFERS, SECTIONS, TIERS, BUDGET, ADOPTED_TOTAL, tierFor, priceOf, isAdopted, adopterOf, money } from "./catalog.js";
+import { loadPart, Figure, Group, View } from "./stage.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canHover = matchMedia("(hover: hover)").matches;
 const partUrl = (id) => `parts/${id}.bin`;
-const robot = BUNDLES.filter((b) => b.section === "robot");
-const byId = new Map(BUNDLES.map((b) => [b.id, b]));
-const isAdopted = (b) => !!b.adopted;
+const byId = new Map(OFFERS.map((o) => [o.id, o]));
 
 // Every part is drawn at the same optical size: its visual mass (area-weighted spread,
 // as the camera sees it) takes this fraction of the cell width, like a row of products
-// photographed to read the same size.
-const VISUAL = 0.165;
+// photographed to read the same size. Bundles get a little more room.
+const VISUAL = 0.165, VISUAL_GROUP = 0.2;
 
 // ------------------------------------------------------------------ crate state
-const STORE = "rift-crate-v2";
-const crate = new Set(read().filter((k) => byId.has(k) && !isAdopted(byId.get(k))));
+// The crate holds offer ids, plus "seat:N" for single seats. What it costs is the sum of
+// the distinct budget lines those cover, so overlapping offers never double up.
+const STORE = "rift-crate-v3";
+const crate = new Set(read().filter((k) => (k.startsWith("seat:") ? LINES[`seat${k.slice(5)}`] : byId.has(k) && !isAdopted(byId.get(k)))));
 function read() { try { return JSON.parse(localStorage.getItem(STORE) ?? "[]"); } catch { return []; } }
 function save() { try { localStorage.setItem(STORE, JSON.stringify([...crate])); } catch {} }
-const crateTotal = () => [...crate].reduce((s, k) => s + priceOf(byId.get(k)), 0);
+const linesOf = (key) => (key.startsWith("seat:") ? [`seat${key.slice(5)}`] : byId.get(key).lines);
+const covered = () => new Set([...crate].flatMap(linesOf));
+const crateTotal = () => [...covered()].reduce((s, k) => s + LINES[k].price, 0);
+const seatsIn = (set = covered()) => [...set].filter((k) => k.startsWith("seat")).length;
+const nameOf = (key) => (key.startsWith("seat:") ? "A seat on the plane" : byId.get(key).name);
+
+function add(o) {
+  const have = covered();
+  if (o.seat) {
+    const free = Array.from({ length: 8 }, (_, i) => i + 1).find((i) => !have.has(`seat${i}`));
+    if (!free) { toast("All eight seats are in your crate"); return false; }
+    crate.add(`seat:${free}`);
+    return true;
+  }
+  if (o.lines.every((k) => have.has(k))) { toast(`${o.name} is already covered by your crate`); return false; }
+  const swallowed = [...crate].filter((k) => linesOf(k).every((l) => o.lines.includes(l)));
+  for (const k of swallowed) crate.delete(k);
+  crate.add(o.id);
+  if (swallowed.length) toast(`${o.name} includes ${[...new Set(swallowed.map(nameOf))].join(" and ")}`);
+  return true;
+}
 
 // ------------------------------------------------------------------ motion
 // Each live figure eases toward its targets; the loop sleeps when nothing moves.
@@ -36,75 +56,123 @@ const follow = (x, target, rate, dt) => target + (x - target) * Math.exp(-rate *
 function step(s, dt) {
   const { view, figure } = s;
   if (s.drift) s.spinTarget += s.drift * dt;
-  const w = 4.6; // critically damped spring toward spinTarget
+  const w = 7.5; // critically damped spring toward spinTarget
   s.spinVel += (-w * w * (view.spin - s.spinTarget) - 2 * w * s.spinVel) * dt;
   view.spin += s.spinVel * dt;
-  view.azimuth = follow(view.azimuth, s.azTarget, 6, dt);
+  view.azimuth = follow(view.azimuth, s.azTarget, 10, dt);
   s.motion = follow(s.motion, s.motionTarget, 3, dt);
+  // Grid cells: colour and size ride the hover turn itself, so all three start and land
+  // together. The part view fades its colour on its own.
+  if (s.sync) syncToTurn(s);
+  else {
+    s.color = follow(s.color, s.colorTarget, s.colorTarget ? 7 : 2.2, dt);
+    if (Math.abs(s.color - s.colorTarget) < 0.004) s.color = s.colorTarget;
+  }
+  figure.color = s.color;
   const turning = figure.tick(dt, s.motion);
   view.paint();
   const still = !s.drift && Math.abs(view.spin - s.spinTarget) < 0.05 && Math.abs(s.spinVel) < 0.05 &&
-    Math.abs(view.azimuth - s.azTarget) < 0.02 && Math.abs(s.motion - s.motionTarget) < 0.002;
+    Math.abs(view.azimuth - s.azTarget) < 0.02 && Math.abs(s.motion - s.motionTarget) < 0.002 && (s.sync || s.color === s.colorTarget);
+  if (still) { view.spin = s.spinTarget; if (s.sync) { syncToTurn(s); figure.color = s.color; view.paint(); } }
   return !still || (turning && s.motion > 0.002);
 }
 
-function liveFigure(canvas, data, opts) {
-  const figure = new Figure(data);
+function liveFigure(canvas, figure, opts) {
   const view = new View(canvas, figure, opts);
-  return { view, figure, azBase: view.azimuth, spinTarget: view.spin, spinVel: 0, azTarget: view.azimuth, motion: 0, motionTarget: 0, drift: 0 };
+  return { view, figure, azBase: view.azimuth, spinTarget: view.spin, spinVel: 0, azTarget: view.azimuth,
+    motion: 0, motionTarget: 0, drift: 0, color: 0, colorTarget: 0, rest: view.spin };
+}
+
+// Hover turns the part a little toward you; its real colour and a slight lift in size come
+// in with the turn and go out with it.
+const HOVER_TURN = 35, HOVER_GROW = 0.06;
+function syncToTurn(s) {
+  const p = reduced ? s.colorTarget : Math.min(1, Math.max(0, (s.view.spin - s.rest) / HOVER_TURN));
+  s.color = p;
+  s.view.zoom = 1 + HOVER_GROW * p;
+}
+function revealOn(s) {
+  s.colorTarget = 1;
+  if (reduced) s.color = 1; else s.spinTarget = s.rest + HOVER_TURN;
+  kick(s);
+}
+function revealOff(s) {
+  s.colorTarget = 0; s.spinTarget = s.rest;
+  if (reduced) s.color = 0;
+  kick(s);
+}
+
+// Load the parts an offer shows; one part is a Figure, several stand together as a Group.
+async function figureFor(o) {
+  const datas = (await Promise.all(o.show.map((id) => loadPart(partUrl(id)).catch(() => null)))).filter(Boolean);
+  if (!datas.length) throw new Error(`no figures for ${o.id}`);
+  const fig = datas.length > 1 ? new Group(datas) : new Figure(datas[0]);
+  fig.holo = isAdopted(o) ? 1 : 0;
+  return { fig, multi: datas.length > 1 };
 }
 
 // ------------------------------------------------------------------ grid
-const grid = $("#grid");
+const shelves = $("#shelves");
 const cells = new Map();
 
-robot.forEach((b, i) => {
-  const li = document.createElement("li");
-  li.className = "cell";
-  li.style.setProperty("--d", `${(i % 5) * 70}ms`);
-  li.style.setProperty("--bob", `${6.4 + ((i * 37) % 17) / 10}s`);
-  li.style.setProperty("--bob-at", `${-((i * 53) % 29) / 10}s`);
-  li.innerHTML = `
-    <button class="hit" type="button" aria-label="${b.name}, ${isAdopted(b) ? "adopted" : money(priceOf(b))}">
-      <div class="fig"><div class="halo"></div><div class="float"><canvas aria-hidden="true"></canvas></div></div>
-      <div class="cap"><span class="code">${b.code}</span><span class="price">${isAdopted(b) ? "Adopted" : money(priceOf(b))}</span></div>
-    </button>`;
-  grid.append(li);
-  const cell = { el: li, b, s: null };
-  cells.set(b.id, cell);
-  const hit = li.querySelector(".hit");
-  hit.addEventListener("click", () => openView(b.id));
-  const focus = (on) => {
-    const s = cell.s; if (!s || reduced) return;
-    if (on) s.spinTarget = Math.round(s.view.spin / 360) * 360 + 360; else s.azTarget = s.azBase;
-    s.motionTarget = on ? 1 : 0;
-    kick(s);
-  };
-  if (canHover) {
-    hit.addEventListener("pointerenter", () => focus(true));
-    hit.addEventListener("pointerleave", () => focus(false));
-    hit.addEventListener("pointermove", (e) => {
-      if (!cell.s || reduced) return;
-      const r = hit.getBoundingClientRect();
-      cell.s.azTarget = cell.s.azBase + ((e.clientX - r.left) / r.width - 0.5) * 20;
-      kick(cell.s);
-    });
-  }
-  hit.addEventListener("focus", () => focus(true));
-  hit.addEventListener("blur", () => focus(false));
+SECTIONS.forEach((sec, si) => {
+  const el = document.createElement("section");
+  el.className = "tier";
+  el.setAttribute("aria-label", `${sec.tier.name}, ${money(sec.tier.min, false)} and up`);
+  el.innerHTML = `<p class="tier-label">${sec.tier.name} <span>${money(sec.tier.min, false)}+</span></p><ul class="grid" role="list"></ul>`;
+  shelves.append(el);
+  const ul = el.querySelector("ul");
+  sec.items.forEach((o, i) => {
+    const adopted = isAdopted(o);
+    const li = document.createElement("li");
+    li.className = "cell";
+    if (adopted) li.dataset.state = "adopted";
+    li.style.setProperty("--d", `${(i % 5) * 70}ms`);
+    li.style.setProperty("--bob", `${6.4 + (((si * 5 + i) * 37) % 17) / 10}s`);
+    li.style.setProperty("--bob-at", `${-(((si * 5 + i) * 53) % 29) / 10}s`);
+    li.innerHTML = `
+      <button class="hit" type="button" aria-label="${o.name}, ${adopted ? `adopted by ${adopterOf(o)}` : money(priceOf(o))}">
+        <div class="fig"><div class="halo"></div><div class="float"><canvas aria-hidden="true"></canvas></div></div>
+        <div class="cap"><span class="code">${o.code}</span><span class="price">${adopted ? "Adopted" : money(priceOf(o))}</span></div>
+      </button>`;
+    ul.append(li);
+    const cell = { el: li, o, s: null };
+    cells.set(o.id, cell);
+    const hit = li.querySelector(".hit");
+    hit.addEventListener("click", () => openView(o.id));
+    const focus = (on) => {
+      const s = cell.s; if (!s) return;
+      s.motionTarget = on && !reduced ? 1 : 0;
+      if (on) revealOn(s); else { revealOff(s); s.azTarget = s.azBase; }
+      kick(s);
+    };
+    if (canHover) {
+      hit.addEventListener("pointerenter", () => focus(true));
+      hit.addEventListener("pointerleave", () => focus(false));
+      hit.addEventListener("pointermove", (e) => {
+        if (!cell.s || reduced) return;
+        const r = hit.getBoundingClientRect();
+        cell.s.azTarget = cell.s.azBase + ((e.clientX - r.left) / r.width - 0.5) * 20;
+        kick(cell.s);
+      });
+    }
+    hit.addEventListener("focus", () => focus(true));
+    hit.addEventListener("blur", () => focus(false));
+  });
 });
 
 // The grid is the whole page, so every figure loads straight away and paints a still
 // frame before it animates (no frame loop needed to see it).
 for (const cell of cells.values()) {
-  loadPart(partUrl(cell.b.hero)).then((data) => {
-    cell.s = liveFigure(cell.el.querySelector("canvas"), data, { visual: VISUAL });
+  figureFor(cell.o).then(({ fig, multi }) => {
+    cell.s = liveFigure(cell.el.querySelector("canvas"), fig, { visual: multi ? VISUAL_GROUP : VISUAL });
+    cell.s.sync = true;
     placeHalo(cell);
     cell.el.setAttribute("data-in", "");
-    if (!reduced) cell.s.view.spin = -110;
+    if (!reduced) cell.s.view.spin = -30;
     cell.s.view.paint();
     if (!reduced) kick(cell.s);
-  }).catch((err) => console.warn(cell.b.hero, err.message));
+  }).catch((err) => { console.warn(err.message); cell.el.setAttribute("data-in", ""); cell.el.dataset.empty = ""; });
 }
 
 function placeHalo(cell) {
@@ -114,9 +182,13 @@ function placeHalo(cell) {
 }
 
 function paintCells() {
+  const have = covered(), seats = seatsIn(have);
   for (const c of cells.values()) {
-    const st = isAdopted(c.b) ? "adopted" : crate.has(c.b.id) ? "crate" : "";
-    if (st) c.el.dataset.state = st; else delete c.el.dataset.state;
+    if (isAdopted(c.o)) continue;
+    const inCrate = c.o.seat ? seats > 0 : c.o.lines.every((k) => have.has(k));
+    if (inCrate) c.el.dataset.state = "crate"; else delete c.el.dataset.state;
+    const price = c.el.querySelector(".price");
+    price.textContent = c.o.seat && seats ? `${money(priceOf(c.o))} ×${seats}` : money(priceOf(c.o));
   }
 }
 
@@ -127,19 +199,13 @@ function scrimOn(on) {
   else { scrim.removeAttribute("data-open"); setTimeout(() => { if (!scrim.hasAttribute("data-open")) scrim.hidden = true; }, 400); }
 }
 scrim.addEventListener("click", () => { closeInfo(); closeCrate(); });
-const adoptedTotal = BUNDLES.filter(isAdopted).reduce((s, b) => s + totalOf(b), 0);
-$("#progress-text").textContent = `${money(adoptedTotal)} of ${money(BUDGET)} adopted`;
+$("#progress-text").textContent = `${money(ADOPTED_TOTAL)} of ${money(BUDGET)} adopted`;
 $("#tiers").innerHTML = TIERS.map((t, i) => `<dt>${t.name}<span>${money(t.min, false)}+</span></dt><dd>${i ? "Everything above, plus " + t.perks.join(", ").toLowerCase() : t.perks.join(", ")}</dd>`).join("");
-const seats = TRAVEL.find((t) => t.id === "seats"), road = TRAVEL.find((t) => t.id === "road");
-$("#travel").innerHTML = [
-  [`${seats.count} return flights to the competition`, `${money(seats.each)} each`],
-  ...road.items.map((it) => [it.unit === "km" ? `The drive there and back, ${it.qty.toLocaleString("en-CA")} km` : it.name, money(it.price)]),
-].map(([a, b]) => `<li><span>${a}</span><span>${b}</span></li>`).join("");
 
 function openInfo() {
   closeCrate();
   info.hidden = false; plus.setAttribute("aria-expanded", "true"); scrimOn(true);
-  requestAnimationFrame(() => { info.setAttribute("data-open", ""); $("#progress-fill").style.width = `${Math.max(0.8, (adoptedTotal / BUDGET) * 100)}%`; });
+  requestAnimationFrame(() => { info.setAttribute("data-open", ""); $("#progress-fill").style.width = `${(ADOPTED_TOTAL / BUDGET) * 100}%`; });
 }
 function closeInfo() {
   if (!info.hasAttribute("data-open")) return;
@@ -149,14 +215,8 @@ function closeInfo() {
 }
 plus.addEventListener("click", () => (info.hasAttribute("data-open") ? closeInfo() : openInfo()));
 
-// ------------------------------------------------------------------ crate
+// ------------------------------------------------------------------ crate drawer
 const crateEl = $("#crate"), crateBtn = $("#crate-btn");
-function toggle(id) {
-  const adding = !crate.has(id);
-  if (adding) crate.add(id); else crate.delete(id);
-  save(); render(adding);
-  return adding;
-}
 
 function render(bump = false) {
   paintCells();
@@ -164,10 +224,14 @@ function render(bump = false) {
   count.textContent = crate.size;
   if (bump) { count.classList.remove("bump"); void count.offsetWidth; count.classList.add("bump"); }
   const total = crateTotal();
-  $("#crate-list").innerHTML = crate.size ? [...crate].map((k) => {
-    const b = byId.get(k);
-    return `<li><span class="n">${b.name}<small>${b.code}</small></span><span class="p">${money(priceOf(b))}</span><button class="x" type="button" data-remove="${k}" aria-label="Remove ${b.name}">×</button></li>`;
-  }).join("") : `<li class="crate-empty">Nothing here yet.</li>`;
+  const offers = [...crate].filter((k) => !k.startsWith("seat:"));
+  const seatKeys = [...crate].filter((k) => k.startsWith("seat:"));
+  const rows = offers.map((k) => {
+    const o = byId.get(k);
+    return `<li><span class="n">${o.name}<small>${o.code}</small></span><span class="p">${money(priceOf(o))}</span><button class="x" type="button" data-remove="${k}" aria-label="Remove ${o.name}">×</button></li>`;
+  });
+  if (seatKeys.length) rows.push(`<li><span class="n">A seat on the plane${seatKeys.length > 1 ? ` ×${seatKeys.length}` : ""}<small>SEAT</small></span><span class="p">${money(seatKeys.length * LINES.seat1.price)}</span><button class="x" type="button" data-remove="${seatKeys.at(-1)}" aria-label="Remove a seat">×</button></li>`);
+  $("#crate-list").innerHTML = rows.length ? rows.join("") : `<li class="crate-empty">Nothing here yet.</li>`;
   $("#crate-total").textContent = money(total);
   const tier = tierFor(total), i = tier ? TIERS.indexOf(tier) : -1, next = TIERS[i + 1];
   const lo = tier?.min ?? 0;
@@ -179,14 +243,16 @@ function render(bump = false) {
 }
 
 function summary(total, tier) {
-  const lines = [...crate].map((k) => { const b = byId.get(k); return `• ${b.name} (${b.code}): ${money(priceOf(b))}`; });
-  return [`We'd like to adopt these RIFT parts:`, "", ...lines, "", `Total: ${money(total)} CAD${tier ? ` (${tier.name} tier)` : ""}`, "", "Name / company:", "Logo and contact for recognition:"].join("\n");
+  const seats = [...crate].filter((k) => k.startsWith("seat:")).length;
+  const lines = [...crate].filter((k) => !k.startsWith("seat:")).map((k) => { const o = byId.get(k); return `• ${o.name} (${o.code}): ${money(priceOf(o))}`; });
+  if (seats) lines.push(`• ${seats} seat${seats > 1 ? "s" : ""} on the plane: ${money(seats * LINES.seat1.price)}`);
+  return [`We'd like to adopt these for RIFT:`, "", ...lines, "", `Total: ${money(total)} CAD${tier ? ` (${tier.name} tier)` : ""}`, "", "Name / company:", "Logo and contact for recognition:"].join("\n");
 }
 function mailto(total, tier) {
-  const subject = `Adopt a Part: ${[...crate].map((k) => byId.get(k).code).join(", ")} (${money(total)})`;
-  return `mailto:arcrobotics@utra.ca?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summary(total, tier))}`;
+  const codes = [...new Set([...crate].map((k) => (k.startsWith("seat:") ? "SEAT" : byId.get(k).code)))];
+  return `mailto:arcrobotics@utra.ca?subject=${encodeURIComponent(`Adopt a Part: ${codes.join(", ")} (${money(total)})`)}&body=${encodeURIComponent(summary(total, tier))}`;
 }
-$("#crate-list").addEventListener("click", (e) => { const k = e.target.closest("[data-remove]")?.dataset.remove; if (k) { toggle(k); paintAdopt(); } });
+$("#crate-list").addEventListener("click", (e) => { const k = e.target.closest("[data-remove]")?.dataset.remove; if (k) { crate.delete(k); save(); render(); paintAdopt(); } });
 $("#crate-copy").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(summary(crateTotal(), tierFor(crateTotal()))); toast("Copied"); } catch { toast("Couldn't copy"); }
 });
@@ -207,74 +273,109 @@ $("#crate-close").addEventListener("click", closeCrate);
 let toastTimer = 0;
 function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.setAttribute("data-show", "");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.removeAttribute("data-show"), 1800);
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.removeAttribute("data-show"), 2200);
 }
 
 // ------------------------------------------------------------------ part view
 const viewEl = $("#view"), viewCanvas = $("#view-canvas");
-let big = null, current = null, shown = null, returnFocus = null;
+let big = null, current = null, returnFocus = null, showing = null;
+
+function insideOf(o) {
+  // What's in the offer, one entry per distinct thing (seats collapse to one).
+  const seen = new Map();
+  for (const k of o.lines) {
+    const l = LINES[k];
+    for (const p of l.parts ?? [l]) {
+      const key = p.cad ?? p.name;
+      const prev = seen.get(key);
+      if (prev && k.startsWith("seat")) { prev.qty += 1; continue; }
+      if (!prev) seen.set(key, { name: p.name, qty: p.qty, unit: p.unit, cad: p.cad, adopted: !!l.adopted });
+    }
+  }
+  return [...seen.values()];
+}
 
 function openView(id) {
-  const b = byId.get(id); if (!b) return;
-  current = b; returnFocus = document.activeElement;
-  $("#view-code").textContent = b.code;
-  $("#view-name").textContent = b.name;
-  $("#view-price").textContent = isAdopted(b) ? "Adopted" : `${money(priceOf(b))} · ${tierFor(priceOf(b)).name}`;
-  $("#view-line").textContent = b.line;
-  const drawn = b.items.filter((it) => it.cad), plain = b.items.filter((it) => !it.cad);
+  const o = byId.get(id); if (!o) return;
+  current = o; returnFocus = document.activeElement;
+  const adopted = isAdopted(o);
+  $("#view-code").textContent = o.code;
+  $("#view-name").textContent = o.name;
+  $("#view-price").textContent = adopted ? `${money(priceOf(o))} · Adopted by ${adopterOf(o)}` : `${money(priceOf(o))} · ${tierFor(priceOf(o)).name}`;
+  $("#view-line").textContent = o.line;
+  const things = insideOf(o), drawn = things.filter((t) => t.cad), plain = things.filter((t) => !t.cad);
   const inside = $("#view-inside");
-  inside.innerHTML = drawn.map((it, k) => `<li><button type="button" data-k="${k}" aria-label="${it.name}"><canvas aria-hidden="true"></canvas><span>×${it.qty}${it.unit ? ` ${it.unit}` : ""}</span></button></li>`).join("") +
-    `<li style="grid-column:1/-1" class="inside-name" id="inside-name"></li>`;
+  inside.innerHTML = drawn.length > 1 || o.show.length > 1 ? drawn.map((t, k) => `<li><button type="button" data-k="${k}" aria-label="${t.name}"><canvas aria-hidden="true"></canvas><span>×${t.qty}${t.unit ? ` ${t.unit}` : ""}</span></button></li>`).join("") +
+    `<li style="grid-column:1/-1" class="inside-name" id="inside-name"></li>` : `<li style="grid-column:1/-1" class="inside-name" id="inside-name">${drawn[0] ? `${drawn[0].qty > 1 ? `${drawn[0].qty} × ` : ""}${drawn[0].name}` : ""}</li>`;
   inside.querySelectorAll("button[data-k]").forEach((btn) => {
-    const it = drawn[+btn.dataset.k];
-    btn.addEventListener("click", () => show(it));
-    btn.addEventListener("pointerenter", () => { $("#inside-name").textContent = it.name; });
-    btn.addEventListener("pointerleave", () => { $("#inside-name").textContent = shown?.name ?? ""; });
-    loadPart(partUrl(it.cad)).then((data) => { new View(btn.querySelector("canvas"), new Figure(data), { fill: 0.84, dpr: 2 }).paint(); })
-      .catch(() => btn.querySelector("canvas").replaceWith(Object.assign(document.createElement("span"), { className: "ph", textContent: "·" })));
+    const t = drawn[+btn.dataset.k];
+    btn.addEventListener("click", () => showPart(t));
+    btn.addEventListener("pointerenter", () => { $("#inside-name").textContent = t.name; });
+    btn.addEventListener("pointerleave", () => { $("#inside-name").textContent = showing?.name ?? ""; });
+    loadPart(partUrl(t.cad)).then((data) => {
+      const f = new Figure(data); f.holo = t.adopted ? 1 : 0;
+      new View(btn.querySelector("canvas"), f, { fill: 0.84, dpr: 2 }).paint();
+    }).catch(() => btn.querySelector("canvas").replaceWith(Object.assign(document.createElement("span"), { className: "ph", textContent: "·" })));
   });
-  $("#view-note").textContent = plain.length ? `Also inside: ${plain.map((p) => p.name.toLowerCase()).join(", ")}.` : "";
+  $("#view-note").textContent = plain.length ? `Also inside: ${plain.map((p) => p.name.charAt(0).toLowerCase() + p.name.slice(1)).join(", ")}.` : "";
   paintAdopt();
   viewEl.hidden = false;
   document.documentElement.style.overflow = "hidden";
   requestAnimationFrame(() => viewEl.setAttribute("data-open", ""));
-  big = null;
-  show(drawn.find((x) => x.cad === b.hero) ?? drawn[0]);
+  showOffer(o);
   $(".close").focus({ preventScroll: true });
-  history.replaceState(null, "", `#part-${b.id}`);
+  history.replaceState(null, "", `#part-${o.id}`);
 }
 
-function show(it) {
-  if (!it) return;
-  shown = it;
-  $("#inside-name").textContent = it.name;
-  document.querySelectorAll("#view-inside button[data-k]").forEach((btn) => btn.setAttribute("aria-current", btn.getAttribute("aria-label") === it.name));
-  loadPart(partUrl(it.cad)).then((data) => {
-    if (shown !== it) return;
-    const keep = big ? big.view.spin : 0;
-    if (big) live.delete(big);
-    big = liveFigure(viewCanvas, data, { fill: 0.6 });
-    big.view.spin = keep - (reduced ? 0 : 50); big.spinTarget = keep;
-    big.drift = reduced ? 0 : 9;
-    big.motionTarget = reduced ? 0 : 1;
-    big.view.paint();
-    kick(big);
+function mount(fig, multi) {
+  if (big) live.delete(big);
+  big = liveFigure(viewCanvas, fig, { fill: multi ? 0.72 : 0.6 });
+  big.motionTarget = reduced ? 0 : 1;
+  big.view.paint();
+  // Arrive as a drawing, then fade the colour in and keep it.
+  if (!reduced) setTimeout(() => { if (big?.figure === fig) { revealOn(big); big.drift = 0; } }, 250);
+  else revealOn(big);
+  const settle = () => { if (big?.figure === fig && !reduced) { big.drift = 7; kick(big); } };
+  setTimeout(settle, 1800);
+}
+
+function showOffer(o) {
+  showing = null;
+  document.querySelectorAll("#view-inside button[data-k]").forEach((b) => b.removeAttribute("aria-current"));
+  figureFor(o).then(({ fig, multi }) => { if (current === o && !showing) mount(fig, multi); }).catch(() => {});
+}
+
+function showPart(t) {
+  showing = t;
+  $("#inside-name").textContent = t.name;
+  document.querySelectorAll("#view-inside button[data-k]").forEach((btn) => btn.setAttribute("aria-current", btn.getAttribute("aria-label") === t.name));
+  loadPart(partUrl(t.cad)).then((data) => {
+    if (showing !== t) return;
+    const f = new Figure(data); f.holo = t.adopted ? 1 : 0;
+    mount(f, false);
   }).catch(() => {});
 }
 
 function paintAdopt() {
-  const btn = $("#view-adopt"), b = current; if (!b) return;
-  if (isAdopted(b)) { btn.disabled = true; btn.textContent = `Adopted · ${b.adopted.by}`; delete btn.dataset.state; return; }
+  const btn = $("#view-adopt"), o = current; if (!o) return;
+  if (isAdopted(o)) { btn.disabled = true; btn.textContent = `Adopted by ${adopterOf(o)}`; delete btn.dataset.state; return; }
   btn.disabled = false;
-  const on = crate.has(b.id);
+  const have = covered();
+  const seats = seatsIn(have);
+  if (o.seat) {
+    if (seats) btn.dataset.state = "crate"; else delete btn.dataset.state;
+    btn.textContent = seats >= 8 ? "All eight seats are in your crate" : seats ? `Add another seat · ${seats} in your crate` : `Adopt · ${money(priceOf(o))}`;
+    return;
+  }
+  const on = o.lines.every((k) => have.has(k));
   if (on) btn.dataset.state = "crate"; else delete btn.dataset.state;
-  btn.textContent = on ? "In your crate · Remove" : `Adopt · ${money(priceOf(b))}`;
+  btn.textContent = on ? (crate.has(o.id) ? "In your crate · Remove" : "Covered by your crate") : `Adopt · ${money(priceOf(o))}`;
 }
 $("#view-adopt").addEventListener("click", () => {
-  const b = current; if (!b || isAdopted(b)) return;
-  const adding = toggle(b.id);
-  paintAdopt();
-  if (adding) flyToCrate(viewCanvas); else toast("Removed");
+  const o = current; if (!o || isAdopted(o)) return;
+  if (!o.seat && crate.has(o.id)) { crate.delete(o.id); save(); render(); paintAdopt(); toast("Removed"); return; }
+  if (!o.seat && o.lines.every((k) => covered().has(k))) { openCrate(); return; }
+  if (add(o)) { save(); render(true); paintAdopt(); flyToCrate(viewCanvas); }
 });
 
 // A snapshot of the figure arcs up and drops into the crate.
@@ -330,7 +431,7 @@ addEventListener("keydown", (e) => {
     if (!drag || !big) return;
     big.spinTarget = big.view.spin + drag.v * 240;
     drag = null;
-    setTimeout(() => { if (big && !drag && !reduced) { big.drift = 9; kick(big); } }, 1600);
+    setTimeout(() => { if (big && !drag && !reduced) { big.drift = 7; kick(big); } }, 1600);
     kick(big);
   };
   pad.addEventListener("pointerup", end); pad.addEventListener("pointercancel", end);
@@ -350,4 +451,4 @@ const deep = location.hash.match(/^#part-([\w-]+)/);
 if (deep && byId.has(deep[1])) openView(deep[1]);
 
 // Inspection hook for automated checks.
-window.__rift = { cells, crate, big: () => big };
+window.__rift = { cells, crate, big: () => big, add: (id) => { add(byId.get(id)); save(); render(true); } };

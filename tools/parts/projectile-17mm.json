@@ -3,6 +3,20 @@
   "up": "z",
   "deflection": 0.0012,
   "angular": 0.26,
-  "view": { "azimuth": 45, "elevation": 30 },
-  "notes": "RoboMaster 17 mm projectile: sphere Ø16.8 mm (official)."
+  "view": {
+    "azimuth": 45,
+    "elevation": 30
+  },
+  "notes": "RoboMaster 17 mm projectile: sphere \u00d816.8 mm (official).",
+  "defaultMaterial": "glow-tpu",
+  "customMaterials": {
+    "glow-tpu": {
+      "color": "#cbd09a",
+      "mr": [
+        0,
+        0.6
+      ],
+      "glow": 0.35
+    }
+  }
 }

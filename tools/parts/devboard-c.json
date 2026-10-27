@@ -14,5 +14,33 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster Development Board Type C, official STEP (robomaster.com). Case, board and the bottom plate's four metal eyelets as shipped; a hidden 10 x 10 mm pad under the case left out."
+  "notes": "DJI RoboMaster Development Board Type C, official STEP (robomaster.com). Case, board and the bottom plate's four metal eyelets as shipped; a hidden 10 x 10 mm pad under the case left out.",
+  "defaultMaterial": "black-plastic",
+  "customMaterials": {
+    "case-charcoal": {
+      "color": "#34343a",
+      "mr": [
+        0,
+        0.78
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "/2_0/2_0#2$",
+      "mat": "case-charcoal"
+    },
+    {
+      "match": "/3_0/3_0#3$",
+      "mat": "black-anodized"
+    },
+    {
+      "match": "/4_0/4_0#[4-7]$",
+      "mat": "brass"
+    },
+    {
+      "match": "/1_0/#0$",
+      "mat": "black-plastic"
+    }
+  ]
 }

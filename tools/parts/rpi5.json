@@ -1,6 +1,167 @@
 {
   "src": "cad/soup/rpi5.soup",
   "up": "z",
+  "rotate": [
+    0,
+    0,
+    -90
+  ],
   "minFeature": 1.6,
-  "notes": "Raspberry Pi 5, official STEP (pip.raspberrypi.com, MIT). Surface-mount parts under 1.6 mm left out."
+  "notes": "Raspberry Pi 5, official STEP (pip.raspberrypi.com, MIT). Surface-mount parts under 1.6 mm left out.",
+  "customMaterials": {
+    "rpi-green": {
+      "color": "#33a07b",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "ic-black": {
+      "color": "#262829",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "fpc-cream": {
+      "color": "#ddd0b4",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "fpc-latch": {
+      "color": "#9c7656",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "jst-cream": {
+      "color": "#ece4d0",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "inductor-grey": {
+      "color": "#a8a8a8",
+      "mr": [
+        0,
+        0.6
+      ]
+    },
+    "nickel": {
+      "color": "#d2d3d2",
+      "mr": [
+        0.9,
+        0.45
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "#1340$",
+      "mat": "nickel"
+    },
+    {
+      "rgb": [
+        0,
+        67,
+        17
+      ],
+      "tol": 2,
+      "mat": "rpi-green"
+    },
+    {
+      "rgb": [
+        154,
+        154,
+        154
+      ],
+      "tol": 2,
+      "mat": "nickel"
+    },
+    {
+      "rgb": [
+        127,
+        127,
+        127
+      ],
+      "tol": 2,
+      "mat": "nickel"
+    },
+    {
+      "rgb": [
+        218,
+        218,
+        218
+      ],
+      "tol": 2,
+      "mat": "nickel"
+    },
+    {
+      "rgb": [
+        255,
+        212,
+        62
+      ],
+      "tol": 2,
+      "mat": "gold"
+    },
+    {
+      "rgb": [
+        8,
+        8,
+        8
+      ],
+      "tol": 2,
+      "mat": "ic-black"
+    },
+    {
+      "rgb": [
+        4,
+        4,
+        4
+      ],
+      "tol": 2,
+      "mat": "black-plastic"
+    },
+    {
+      "rgb": [
+        233,
+        233,
+        186
+      ],
+      "tol": 2,
+      "mat": "fpc-cream"
+    },
+    {
+      "rgb": [
+        36,
+        23,
+        16
+      ],
+      "tol": 2,
+      "mat": "fpc-latch"
+    },
+    {
+      "rgb": [
+        222,
+        184,
+        122
+      ],
+      "tol": 2,
+      "mat": "jst-cream"
+    },
+    {
+      "rgb": [
+        134,
+        134,
+        134
+      ],
+      "tol": 2,
+      "mat": "inductor-grey"
+    }
+  ]
 }

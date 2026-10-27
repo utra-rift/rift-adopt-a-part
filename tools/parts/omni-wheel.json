@@ -2,5 +2,15 @@
   "src": "cad/models/omni-wheel.soup",
   "up": "z",
   "view": { "azimuth": 45, "elevation": 30 },
-  "notes": "goBILDA 3624-0014-0096 96 mm omni wheel, official STEP (gobilda.com). Standing on its rollers, axle horizontal. B-rep faces that can't be seen from outside (screw threads, roller bores, most of the roller pins, contact faces) left out."
+  "notes": "goBILDA 3624-0014-0096 96 mm omni wheel, official STEP (gobilda.com). Standing on its rollers, axle horizontal. B-rep faces that can't be seen from outside (screw threads, roller bores, most of the roller pins, contact faces) left out.",
+  "defaultMaterial": "gobilda-black",
+  "customMaterials": {
+    "gobilda-black": { "color": "#302f2c", "mr": [0, 0.65] },
+    "roller-rubber": { "color": "#292826", "mr": [0, 0.6] }
+  },
+  "materials": [
+    { "match": "/RollerTire#", "mat": "roller-rubber" },
+    { "match": "/Pin#", "mat": "steel" },
+    { "match": "/HARDWARE/", "mat": "black-anodized" }
+  ]
 }

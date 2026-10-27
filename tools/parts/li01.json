@@ -122,5 +122,41 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster LI01 light indicator module, official STEP. Aviation-connector lead re-routed from the CAD's straight run to rest on the table; length kept."
+  "notes": "DJI RoboMaster LI01 light indicator module, official STEP. Aviation-connector lead re-routed from the CAD's straight run to rest on the table; length kept.",
+  "defaultMaterial": "black-anodized",
+  "customMaterials": {
+    "milky-diffuser": {
+      "color": "#dfe2ee",
+      "mr": [
+        0,
+        0.35
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "#(3|5|8)$",
+      "mat": "milky-diffuser"
+    },
+    {
+      "match": "#(1|4)$",
+      "mat": "black-anodized"
+    },
+    {
+      "match": "#(0|2)$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#(6|7)$",
+      "mat": "black-anodized"
+    },
+    {
+      "match": "#13$",
+      "mat": "steel"
+    },
+    {
+      "match": "#(9|10|11|12)$",
+      "mat": "black-plastic"
+    }
+  ]
 }

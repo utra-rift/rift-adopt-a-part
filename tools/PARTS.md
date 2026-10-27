@@ -48,8 +48,8 @@ See the header of `tools/convert.mjs` for every key. The ones that matter:
   Get `from`/`to` from `axis.mjs` (`from` just outside the strain relief, `to` where the connector starts).
   Very long leads (C620's ~300 mm) loop or coil loosely beside the part instead of running off-frame.
   Several bundles can each have their own bend.
-- `view`: `{ "azimuth": 45, "elevation": 30 }` by default (the anatomy camera). Change the azimuth
-  only to show the part's best side.
+- `view`: ignored by the site, which uses one camera (azimuth 45, elevation 30) for every part.
+  Pose each part with `rotate` so its front faces the camera's left, like every other part.
 - `notes`: one line for the site: source and anything changed (e.g. "Leads re-routed; length kept.").
 
 ## Done means

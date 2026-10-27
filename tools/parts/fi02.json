@@ -1,14 +1,48 @@
 {
   "src": "cad/raw/fi02/RoboMaster_FI02_2019.STEP",
   "up": "y",
-  "rotate": [180, 0, 0],
+  "rotate": [
+    180,
+    0,
+    0
+  ],
   "deflection": 0.0012,
   "angular": 0.26,
   "defaultMaterial": "black-plastic",
   "materials": [
-    { "match": "#[2-5]$", "mat": "white-plastic" }
+    {
+      "match": "#0$",
+      "mat": "textured-black"
+    },
+    {
+      "match": "#1$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#[2-5]$",
+      "mat": "milky-diffuser"
+    }
   ],
   "lit": "#[2-5]$",
-  "view": { "azimuth": 45, "elevation": 30 },
-  "notes": "DJI RoboMaster Referee System RFID Interaction Module FI02, official STEP (RoboMaster wiki). Shown logo face up; geometry unchanged."
+  "view": {
+    "azimuth": 45,
+    "elevation": 30
+  },
+  "notes": "DJI RoboMaster Referee System RFID Interaction Module FI02, official STEP (RoboMaster wiki). Shown logo face up; geometry unchanged.",
+  "customMaterials": {
+    "textured-black": {
+      "color": "#323236",
+      "mr": [
+        0,
+        0.82
+      ]
+    },
+    "milky-diffuser": {
+      "color": "#eeeeee",
+      "mr": [
+        0,
+        0.4
+      ]
+    }
+  }
 }

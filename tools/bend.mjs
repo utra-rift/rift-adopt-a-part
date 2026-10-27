@@ -27,7 +27,7 @@ function bendOne(raw, b, log) {
   const step = b.maxEdge ?? 2;
   let sel = raw.tris.map((_, i) => re.test(raw.names[i]));
   if (!sel.some(Boolean)) throw new Error(`bend: nothing matches ${b.match}`);
-  const out = { tris: [], faces: [], colors: [], names: [], sel: [] };
+  const out = { tris: [], faces: [], colors: [], names: [], sel: [], src: [] };
   raw.tris.forEach((t, i) => {
     if (!sel[i]) { push(out, raw, i, t, false); return; }
     let poly = [0, 1, 2].map((k) => ({ p: t.slice(k * 3, k * 3 + 3), n: t.slice(9 + k * 3, 12 + k * 3) }));
@@ -48,6 +48,7 @@ function bendOne(raw, b, log) {
     }
   });
   raw.tris = out.tris; raw.faces = out.faces; raw.colors = out.colors; raw.names = out.names; sel = out.sel;
+  if (raw.src) raw.src = out.src;
 
   // 2. The new route, sampled densely with rotation-minimizing frames.
   const pts = [F, ...b.path];
@@ -122,7 +123,10 @@ function clip(poly, cut) {
   return [below, above];
 }
 
-function push(out, raw, i, t, s) { out.tris.push(t); out.faces.push(raw.faces[i]); out.colors.push(raw.colors[i]); out.names.push(raw.names[i]); out.sel.push(s); }
+function push(out, raw, i, t, s) {
+  out.tris.push(t); out.faces.push(raw.faces[i]); out.colors.push(raw.colors[i]); out.names.push(raw.names[i]); out.sel.push(s);
+  if (raw.src) out.src.push(raw.src[i]);
+}
 
 // Centripetal Catmull-Rom through the points, resampled with arc length and tangents.
 function sample(pts, n) {

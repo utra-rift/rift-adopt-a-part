@@ -128,5 +128,48 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster Referee System Speed Monitor Module SM01 (17 mm), official STEP (RoboMaster wiki). Hidden nuts left out; the two pigtails re-routed from the CAD's straight run to droop to the table, length kept."
+  "notes": "DJI RoboMaster Referee System Speed Monitor Module SM01 (17 mm), official STEP (RoboMaster wiki). Hidden nuts left out; the two pigtails re-routed from the CAD's straight run to droop to the table, length kept.",
+  "defaultMaterial": "black-anodized",
+  "customMaterials": {
+    "matte-black-alu": {
+      "color": "#2a2a2e",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "led-diffuser": {
+      "color": "#dad7d8",
+      "mr": [
+        0,
+        0.35
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "#(0|1)$",
+      "mat": "matte-black-alu"
+    },
+    {
+      "match": "#2$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#(3|4)$",
+      "mat": "led-diffuser"
+    },
+    {
+      "match": "#(5|6|7|9|11|12|1[6-9]|2[0-5])$",
+      "mat": "black-anodized"
+    },
+    {
+      "match": "#(28|31)$",
+      "mat": "steel"
+    },
+    {
+      "match": "#(26|27|29|30)$",
+      "mat": "black-plastic"
+    }
+  ]
 }

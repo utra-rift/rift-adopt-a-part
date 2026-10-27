@@ -232,5 +232,17 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster M3508 Accessories Kit terminal board with its XT60 lead, official STEP (robomaster.com). Lead re-routed from the CAD's straight run; length kept."
+  "notes": "DJI RoboMaster M3508 Accessories Kit terminal board with its XT60 lead, official STEP (robomaster.com). Lead re-routed from the CAD's straight run; length kept.",
+  "defaultMaterial": "kit-grey",
+  "customMaterials": {
+    "kit-grey": { "color": "#5c5d60", "mr": [0, 0.5] },
+    "amass-yellow": { "color": "#dfa23c", "mr": [0, 0.5] }
+  },
+  "materials": [
+    { "match": "#5$", "mat": "red-wire" },
+    { "match": "#6$", "mat": "black-plastic" },
+    { "match": "#7$", "mat": "amass-yellow" },
+    { "match": "#8$", "mat": "grey-plastic" },
+    { "match": "#(9|10)$", "mat": "gold" }
+  ]
 }

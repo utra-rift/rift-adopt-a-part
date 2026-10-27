@@ -16,7 +16,8 @@
 //   foldLines      keep precomputed silhouette edges (off: the site draws silhouettes from smooth normals)
 //   minFeature     leave out meshes whose largest side is under this many mm (tiny SMD parts)
 //   drop           regex on mesh path ("<path>/<name>#<mesh index>", as inspect.mjs lists): meshes left out
-//   defaultMaterial, materials [{ match, rgb?, tol?, mat }]   real-look materials by mesh path / CAD colour
+//   defaultMaterial, materials [{ match, rgb?, tol?, box?, mat }]   real-look materials by mesh path / CAD colour;
+//                  box [x0, y0, z0, x1, y1, z1] (source mm, before bends) picks out a region of a mesh
 //   customMaterials { name: { color, mr: [metal, rough], glow } }
 //   bends          [{ match, from, to, path, maxEdge }]   straight CAD wire leads re-routed naturally (see bend.mjs)
 //   lit            regex on mesh path: the one lit accent
@@ -47,6 +48,8 @@ fs.mkdirSync(OUT, { recursive: true });
 for (const part of todo) {
   const t0 = Date.now();
   const raw = load(part);
+  // Each triangle's centre in the CAD's own frame, before any bend, for `box` material rules.
+  raw.src = raw.tris.map((t) => [(t[0] + t[3] + t[6]) / 3, (t[1] + t[4] + t[7]) / 3, (t[2] + t[5] + t[8]) / 3]);
   if (part.bends) applyBends(raw, part.bends);
   const model = build(raw, part);
   const bytes = pack(model, part);
@@ -193,7 +196,8 @@ function build(raw, part) {
   const palette = [], palMat = [], palIndex = new Map();
   const colorIdx = colors.map((c, ti) => {
     const rgb = c.map((v) => Math.round(v * 255));
-    const rule = rules.find((r) => (r.re ? r.re.test(names[ti]) : true) && (!r.rgb || r.rgb.every((v, a) => Math.abs(v - rgb[a]) <= (r.tol ?? 6))));
+    const inBox = (b) => { const c = raw.src[ti]; return c[0] >= b[0] && c[1] >= b[1] && c[2] >= b[2] && c[0] <= b[3] && c[1] <= b[4] && c[2] <= b[5]; };
+    const rule = rules.find((r) => (r.re ? r.re.test(names[ti]) : true) && (!r.rgb || r.rgb.every((v, a) => Math.abs(v - rgb[a]) <= (r.tol ?? 6))) && (!r.box || inBox(r.box)));
     const mat = rule?.mat ?? part.defaultMaterial ?? null;
     const key = `${rgb.join(",")}|${mat}`;
     if (!palIndex.has(key)) { palIndex.set(key, palette.length); palette.push(rgb); palMat.push(mat); }

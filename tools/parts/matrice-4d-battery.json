@@ -1,7 +1,101 @@
 {
   "src": "cad/models/matrice-4d-battery.soup",
   "up": "z",
-  "rotate": [180, 0, -90],
-  "view": { "azimuth": 45, "elevation": 30 },
-  "notes": "DJI Matrice 4D Series battery (BPX230-6768-22.14), official STEP published by RoboMaster/DJI. Standing on its base, cap up. Faces that can't be seen from outside left out (the CAD has no cells; the inside is treated as filled)."
+  "rotate": [
+    180,
+    0,
+    -90
+  ],
+  "view": {
+    "azimuth": 45,
+    "elevation": 30
+  },
+  "notes": "DJI Matrice 4D Series battery (BPX230-6768-22.14), official STEP published by RoboMaster/DJI. Standing on its base, cap up. Faces that can't be seen from outside left out (the CAD has no cells; the inside is treated as filled).",
+  "defaultMaterial": "dji-grey",
+  "customMaterials": {
+    "dji-grey": {
+      "color": "#c4c4c6",
+      "mr": [
+        0,
+        0.6
+      ]
+    },
+    "dji-grey-film": {
+      "color": "#c4c4c6",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "latch-grey": {
+      "color": "#8b8b8d",
+      "mr": [
+        0,
+        0.6
+      ]
+    },
+    "keypad-grey": {
+      "color": "#a9a9ab",
+      "mr": [
+        0,
+        0.35
+      ]
+    },
+    "label-grey": {
+      "color": "#626264",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "insert-nickel": {
+      "color": "#b3b1aa",
+      "mr": [
+        0.9,
+        0.35
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "PC_BOT#28$",
+      "mat": "label-grey"
+    },
+    {
+      "match": "PC_TOP#27$|PC_BACK#31$|WINDOWFILM#32$",
+      "mat": "dji-grey-film"
+    },
+    {
+      "match": "BATT_SR-[LR]#",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "LOCK_BUTTON_[AB]#|LOCK_PIN_[AB]#",
+      "mat": "latch-grey"
+    },
+    {
+      "match": "KEYPAD#",
+      "mat": "keypad-grey"
+    },
+    {
+      "match": "PSDK_NUT#",
+      "mat": "insert-nickel"
+    },
+    {
+      "match": "LOCK_SHAFT|LOCK_SPRING|T16-TC",
+      "mat": "steel"
+    },
+    {
+      "match": "CON-F_HOUSING#",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "CON-F_CONTACT",
+      "mat": "gold"
+    },
+    {
+      "match": "CONFOAM#|YC_WJ_LL000059",
+      "mat": "matte-black"
+    }
+  ]
 }

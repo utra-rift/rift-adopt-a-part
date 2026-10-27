@@ -101,5 +101,63 @@
     "azimuth": 45,
     "elevation": 30
   },
-  "notes": "DJI RoboMaster Referee System Main Control Module MC02, official STEP (RoboMaster wiki). Cable re-routed from the CAD's straight run to lie on the table; length kept."
+  "notes": "DJI RoboMaster Referee System Main Control Module MC02, official STEP (RoboMaster wiki). Cable re-routed from the CAD's straight run to lie on the table; length kept.",
+  "defaultMaterial": "black-plastic",
+  "customMaterials": {
+    "charcoal-plastic": {
+      "color": "#46464c",
+      "mr": [
+        0,
+        0.62
+      ]
+    },
+    "charcoal-metal": {
+      "color": "#46464c",
+      "mr": [
+        0.2,
+        0.5
+      ]
+    },
+    "oled-window": {
+      "color": "#d2d1e2",
+      "mr": [
+        0,
+        0.12
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "#2$",
+      "mat": "charcoal-plastic"
+    },
+    {
+      "match": "#0$",
+      "mat": "charcoal-metal"
+    },
+    {
+      "match": "#7$",
+      "mat": "oled-window"
+    },
+    {
+      "match": "#8$",
+      "mat": "matte-black"
+    },
+    {
+      "match": "#1$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#(4|6)$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#(3|5)$",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "#(9|10|11|12)$",
+      "mat": "black-anodized"
+    }
+  ]
 }

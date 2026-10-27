@@ -1,0 +1,110 @@
+{
+  "src": "cad/models/cargo-van.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    -90
+  ],
+  "deflection": 0.0012,
+  "angular": 0.26,
+  "lit": "/lampclear/",
+  "notes": "Generic long-wheelbase high-roof panel van, modelled (no manufacturer CAD) to the class's common proportions: 5,980 mm long over bumpers, 2,020 mm wide (2,580 mm over mirrors), 2,600 mm tall, 3,750 mm wheelbase, 1,720 mm track, 235/65 R16 tyres on 6-stud steel wheels. Twin sliding doors, twin rear doors; no badges.",
+  "defaultMaterial": "white-paint",
+  "customMaterials": {
+    "white-paint": {
+      "color": "#f1f1ee",
+      "mr": [
+        0,
+        0.28
+      ]
+    },
+    "dark-glass": {
+      "color": "#1c2228",
+      "mr": [
+        0.1,
+        0.06
+      ]
+    },
+    "trim-black": {
+      "color": "#1d1e20",
+      "mr": [
+        0,
+        0.78
+      ]
+    },
+    "wheel-silver": {
+      "color": "#a7abb1",
+      "mr": [
+        0.55,
+        0.42
+      ]
+    },
+    "chrome": {
+      "color": "#d4d7dc",
+      "mr": [
+        1.0,
+        0.12
+      ]
+    },
+    "lamp-clear": {
+      "color": "#e9eef2",
+      "mr": [
+        0.2,
+        0.1
+      ]
+    },
+    "lamp-red": {
+      "color": "#b0141b",
+      "mr": [
+        0,
+        0.22
+      ]
+    },
+    "lamp-amber": {
+      "color": "#e3861c",
+      "mr": [
+        0,
+        0.25
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "/body/",
+      "mat": "white-paint"
+    },
+    {
+      "match": "/glass/",
+      "mat": "dark-glass"
+    },
+    {
+      "match": "/trim/",
+      "mat": "trim-black"
+    },
+    {
+      "match": "/tyres/",
+      "mat": "rubber"
+    },
+    {
+      "match": "/wheels/",
+      "mat": "wheel-silver"
+    },
+    {
+      "match": "/(lampchrome|mirrorglass)/",
+      "mat": "chrome"
+    },
+    {
+      "match": "/lampclear/",
+      "mat": "lamp-clear"
+    },
+    {
+      "match": "/lampred/",
+      "mat": "lamp-red"
+    },
+    {
+      "match": "/lampamber/",
+      "mat": "lamp-amber"
+    }
+  ]
+}

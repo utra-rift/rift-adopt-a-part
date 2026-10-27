@@ -1,0 +1,103 @@
+{
+  "src": "cad/models/airline-seat.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0012,
+  "angular": 0.26,
+  "lit": "/buckle/",
+  "notes": "Generic economy seat, modelled (no manufacturer CAD) to typical published figures: 445 mm (17.5 in) between armrests, cushion 418 mm deep and 462 mm high at the front edge, backrest 725 mm from its pivot at 16\u00b0 (top 1,107 mm above the floor), armrests 650 mm (cushion + 190 mm). Stowed 416 \u00d7 270 mm tray with turn-button latch, literature pocket, lap belt, headrest cover; truss legs on Douglas-type seat tracks 400 mm apart.",
+  "defaultMaterial": "silver-anodized",
+  "customMaterials": {
+    "seat-fabric": {
+      "color": "#3d4553",
+      "mr": [
+        0,
+        0.88
+      ]
+    },
+    "arm-pad": {
+      "color": "#2d3036",
+      "mr": [
+        0,
+        0.62
+      ]
+    },
+    "shell-plastic": {
+      "color": "#c9cbcd",
+      "mr": [
+        0,
+        0.48
+      ]
+    },
+    "tray-plastic": {
+      "color": "#b7babd",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "belt-webbing": {
+      "color": "#565d68",
+      "mr": [
+        0,
+        0.72
+      ]
+    },
+    "head-cover": {
+      "color": "#ecebe6",
+      "mr": [
+        0,
+        0.9
+      ]
+    },
+    "aluminium": {
+      "color": "#b9bdc2",
+      "mr": [
+        0.8,
+        0.38
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "/(cushion|backcushion|headrest|pocket|lifevest)/",
+      "mat": "seat-fabric"
+    },
+    {
+      "match": "/headcover/",
+      "mat": "head-cover"
+    },
+    {
+      "match": "/armpads/",
+      "mat": "arm-pad"
+    },
+    {
+      "match": "/(shell|armrests)/",
+      "mat": "shell-plastic"
+    },
+    {
+      "match": "/(tray|trayarms)/",
+      "mat": "tray-plastic"
+    },
+    {
+      "match": "/latch/",
+      "mat": "grey-plastic"
+    },
+    {
+      "match": "/belt/",
+      "mat": "belt-webbing"
+    },
+    {
+      "match": "/(buckle|button|bolts|fittings)/",
+      "mat": "steel"
+    },
+    {
+      "match": "/(frame|pan|track)/",
+      "mat": "aluminium"
+    }
+  ]
+}

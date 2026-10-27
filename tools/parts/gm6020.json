@@ -7,13 +7,14 @@
   "drop": "#12$",
   "defaultMaterial": "black-anodized",
   "customMaterials": {
-    "xt30-amber": { "color": "#d4973a", "mr": [0, 0.45] }
+    "amass-yellow": { "color": "#dfa23c", "mr": [0, 0.5] },
+    "gh-ivory": { "color": "#ddd7c5", "mr": [0, 0.5] }
   },
   "materials": [
     { "match": "#1$", "mat": "steel" },
-    { "match": "#6$", "mat": "xt30-amber" },
+    { "match": "#6$", "mat": "amass-yellow" },
     { "match": "#(4|5|7|8|9)$", "mat": "gold" },
-    { "match": "#(10|11)$", "mat": "white-plastic" },
+    { "match": "#(10|11)$", "mat": "gh-ivory" },
     { "match": "#3$", "mat": "black-plastic" }
   ],
   "lit": "#1$",
