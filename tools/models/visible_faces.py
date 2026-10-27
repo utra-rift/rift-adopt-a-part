@@ -4,26 +4,28 @@ Manufacturer CAD carries a lot of surface nobody can see: the inside of a closed
 screw threads inside their holes, the bore of a roller tyre around its core. Dropping whole meshes
 can't remove those (the screw head and the battery's outside are the same mesh as the hidden part),
 so this works per B-rep face. A face is kept if any point on it can see out to infinity along any
-of `--dirs` directions spread over the sphere (orthographic, like the site's camera at any
-azimuth and elevation). Faces left out are never visible; faces kept are the CAD's own, unchanged.
+of: rings around the face's own normal, the 26 axis/diagonal directions, and `--dirs` spread over
+the sphere (orthographic, like the site's camera at any azimuth and elevation). Hidden faces that meet a visible face tangentially are
+kept too. Faces left out are never visible; faces kept are the CAD's own, unchanged.
 Leaves whose faces are all kept stay solids; the others become open shells of their visible faces.
 Names are kept, so `drop`, `bends` and `materials` regexes still match.
 
 `--occluder` adds a box that blocks sight but is never drawn, for contents the CAD leaves out
 (a battery shell modelled without its cells would otherwise show its inner walls through the vents).
 An output ending in `.soup` writes the visible faces as a converter soup instead of a STEP, meshed
-with OpenCascade's minimum element size (`--min-size`), which occt-import-js can't set: on parts
-with thousands of tiny fillets that is what brings the count within budget.
+with OpenCascade's minimum element size (`--min-size`), which occt-import-js can't set, and with
+tangent-continuous faces sharing one face id (`--no-merge` keeps chosen leaves' faces apart): on
+parts with thousands of tiny fillets that is what brings the count within budget.
 
-    .venv/bin/python -I visible_faces.py <in.step> <out.step|out.soup> [--dirs 2000] [--drop REGEX]
-        [--occluder x0,y0,z0,x1,y1,z1] [--mesh-deflection 0.002 --mesh-angular 0.4 --min-size 0.3]
+    .venv/bin/python -I visible_faces.py <in.step> <out.step|out.soup> [--dirs 8000] [--drop REGEX]
+        [--occluder x0,y0,z0,x1,y1,z1] [--mesh-deflection 0.002 --mesh-angular 0.4 --min-size 0.3 --no-merge REGEX]
     --keep-all skips the visibility test (to mesh an already culled STEP into a soup).
 """
-import json
-import struct
 import argparse
+import json
 import math
 import re
+import struct
 import time
 
 import numpy as np
@@ -219,6 +221,30 @@ def occluded(o, d, skip, V0, E1, E2, order, bmin, bmax, left, start, count, stac
     return False
 
 
+@njit(cache=True)
+def normal_cone(n, out):
+    """Directions along the surface normal and in rings around it (both sides): a recess, a pin end
+    or a hole bottom is visible only near its own normal, which a fixed set of directions can miss."""
+    l = math.sqrt(n[0] * n[0] + n[1] * n[1] + n[2] * n[2])
+    if l == 0.0:
+        return 0
+    n = n / l
+    a = np.array([1.0, 0.0, 0.0]) if abs(n[0]) < 0.9 else np.array([0.0, 1.0, 0.0])
+    u = np.cross(n, a)
+    u /= math.sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2])
+    v = np.cross(n, u)
+    k = 0
+    for sgn in (1.0, -1.0):
+        out[k] = sgn * n
+        k += 1
+        for tilt in (0.08, 0.2, 0.4):
+            for i in range(6):
+                ph = i * math.pi / 3 + tilt * 7
+                out[k] = sgn * (math.cos(tilt) * n + math.sin(tilt) * (math.cos(ph) * u + math.sin(ph) * v))
+                k += 1
+    return k
+
+
 @njit(parallel=True, cache=True)
 def find_visible(so, stri, sface, V0, E1, E2, order, bmin, bmax, left, start, count, dirs, tmin, vis):
     for j in prange(len(sface)):
@@ -226,10 +252,14 @@ def find_visible(so, stri, sface, V0, E1, E2, order, bmin, bmax, left, start, co
         if vis[f]:
             continue
         stack = np.empty(256, np.int64)
-        for di in range(len(dirs)):
+        local = np.empty((38, 3))
+        t = stri[j]
+        nl = normal_cone(np.cross(E1[t], E2[t]), local)
+        for di in range(nl + len(dirs)):
             if di % 64 == 63 and vis[f]:
                 break
-            if not occluded(so[j], dirs[di], stri[j], V0, E1, E2, order, bmin, bmax, left, start, count, stack, tmin):
+            d = local[di] if di < nl else dirs[di - nl]
+            if not occluded(so[j], d, t, V0, E1, E2, order, bmin, bmax, left, start, count, stack, tmin):
                 vis[f] = True
                 break
 
@@ -413,7 +443,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("src")
     ap.add_argument("out")
-    ap.add_argument("--dirs", type=int, default=2000, help="view directions for faces not seen in the first pass")
+    ap.add_argument("--dirs", type=int, default=8000, help="view directions for the last pass, on faces not seen before")
     ap.add_argument("--deflection", type=float, default=0.001, help="ray-test tessellation, ratio of the bbox diagonal")
     ap.add_argument("--angular", type=float, default=0.3)
     ap.add_argument("--drop", default=None, help="regex on leaf path: leaves left out entirely")

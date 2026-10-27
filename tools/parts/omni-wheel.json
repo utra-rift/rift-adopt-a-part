@@ -1,8 +1,6 @@
 {
-  "src": "cad/models/omni-wheel-visible.step",
+  "src": "cad/models/omni-wheel.soup",
   "up": "z",
-  "deflection": 0.0045,
-  "angular": 0.6,
   "view": { "azimuth": 45, "elevation": 30 },
-  "notes": "goBILDA 3624-0014-0096 96 mm omni wheel, official STEP (gobilda.com). Standing on its rollers, axle horizontal. B-rep faces that can't be seen from outside (screw threads, roller bores, roller pins, contact faces) left out."
+  "notes": "goBILDA 3624-0014-0096 96 mm omni wheel, official STEP (gobilda.com). Standing on its rollers, axle horizontal. B-rep faces that can't be seen from outside (screw threads, roller bores, most of the roller pins, contact faces) left out."
 }
