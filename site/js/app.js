@@ -9,8 +9,9 @@ const byId = new Map(OFFERS.map((o) => [o.id, o]));
 
 // Every part is drawn at the same optical size: its visual mass (area-weighted spread,
 // as the camera sees it) takes this fraction of the cell width, like a row of products
-// photographed to read the same size. Bundles get a little more room.
-const VISUAL = 0.165, VISUAL_GROUP = 0.2;
+// photographed to read the same size. A bundle's parts are evened out among themselves
+// (see Group in stage.js), and together they fill this much of the box.
+const VISUAL = 0.165, GROUP_FRAME = 0.66;
 
 // ------------------------------------------------------------------ crate state
 // The crate holds offer ids, plus "seat:N" for single seats. What it costs is the sum of
@@ -223,7 +224,7 @@ function overPart(cell, e) {
 // frame before it animates (no frame loop needed to see it).
 for (const cell of cells.values()) {
   figureFor(cell.o).then(({ fig, multi }) => {
-    cell.s = liveFigure(cell.el.querySelector("canvas"), fig, { visual: multi ? VISUAL_GROUP : VISUAL });
+    cell.s = liveFigure(cell.el.querySelector("canvas"), fig, multi ? { frame: GROUP_FRAME } : { visual: VISUAL });
     cell.s.sync = true;
     placeHalo(cell);
     measureMask(cell);

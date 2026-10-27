@@ -296,60 +296,121 @@ export class Figure {
   }
 }
 
-// A bundle: several parts standing side by side on one floor across the camera's view,
-// the largest in the middle and set slightly back. Sizes are pulled toward each other
-// (square-root compression of how big each looks to the camera), so a 17 mm ball doesn't
-// vanish next to a van but still reads smaller than it. It turns as one, like a still
-// life on a turntable.
+// A bundle: several parts standing together on one floor, like a still life on a
+// turntable. Each covers the same area of the screen whatever its real size, so a 17 mm
+// ball reads as clearly as a van. They stand in one row, or in two staggered rows (the
+// tallest at the back) when one row would leave the box half empty. Parts are spaced by
+// their footprints on the floor, so nothing passes through anything, cables included.
+// `frame` is the screen box the bodies fill, centred on the origin, for the View to fit.
+// Parts are rescaled so each covers UNIT² of screen (model units), well inside the camera's depth range.
+const UNIT = 100, GAP = 0.1, OVERLAP = 0.1, FRAME_ASPECT = 0.86;
 export class Group {
-  constructor(datas, { azimuth = 45 } = {}) {
+  constructor(datas, { azimuth = 45, elevation = 30 } = {}) {
     this.figures = datas.map((d) => new Figure(d));
     this.root = new THREE.Group();
-    const az = THREE.MathUtils.degToRad(azimuth);
-    const R = new THREE.Vector3(Math.cos(az), 0, -Math.sin(az)), D = new THREE.Vector3(Math.sin(az), 0, Math.cos(az));
-    const el = THREE.MathUtils.degToRad(30);
+    const az = THREE.MathUtils.degToRad(azimuth), el = THREE.MathUtils.degToRad(elevation);
+    const R = [Math.cos(az), 0, -Math.sin(az)], D = [Math.sin(az), 0, Math.cos(az)];
     const U = [-Math.sin(az) * Math.sin(el), Math.cos(el), -Math.cos(az) * Math.sin(el)];
-    const radius = (f) => projectedRadius(f.data.cov, [R.x, R.y, R.z], U);
-    const target = Math.max(...this.figures.map(radius));
-    const sized = this.figures.map((f) => {
-      const k = Math.sqrt(target / radius(f));
-      return { f, k, r: Math.sqrt(f.data.cov[0] + f.data.cov[5]) * k };
-    }).sort((a, b) => radius(b.f) - radius(a.f));
-    const order = [];
-    sized.forEach((s, i) => (i % 2 ? order.push(s) : order.unshift(s)));
-    let x = 0;
-    const place = [];
-    order.forEach((s, i) => {
-      const half = 1.55 * s.r;
-      if (i) x += half;
-      place.push({ ...s, x, back: s === sized[0] && order.length > 1 ? 0.35 * s.r : 0 });
-      x += half + 0.18 * s.r;
+    const parts = this.figures.map((f) => {
+      const cell = projectedRadius(f.data.cov, R, U) / 24;
+      const sil = coverage(f.data, R, U, 1, cell);
+      return { f, sil, cell, size: Math.sqrt(sil.count) * cell };
     });
-    const mid = (place[0].x + place.at(-1).x) / 2;
-    // Floor: every part's lowest point on y = 0.
-    let area = 0; const C = new THREE.Vector3(); const pts = [];
-    for (const p of place) {
-      const pos = R.clone().multiplyScalar(p.x - mid).addScaledVector(D, -p.back);
-      pos.y = -p.f.data.yRange[0] * p.k;
-      p.f.root.position.copy(pos);
-      p.f.root.scale.setScalar(p.k);
-      this.root.add(p.f.root);
-      const a = p.f.data.area * p.k * p.k;
-      area += a; C.addScaledVector(pos, a);
-      pts.push({ ...p, a });
+    const unit = UNIT, cell = unit / 28, gap = GAP * unit, g = Math.ceil(gap / cell);
+    for (const p of parts) {
+      p.k = unit / p.size;
+      p.box = bodyOf(p.sil).map((v) => v * p.cell * p.k); // [left, right, bottom, top] on screen
+      p.lift = -p.f.data.yRange[0] * p.k * Math.cos(el); // centre above its floor, on screen
+      p.top = p.lift + p.box[3];
+      p.foot = footprint(coverage(p.f.data, R, D, p.k, cell)); // per floor row (along D): extent along R, in cells
+      p.screen = coverage(p.f.data, R, U, p.k, cell);
     }
-    C.divideScalar(area || 1);
-    for (const p of pts) p.f.root.position.sub(C);
-    // Combined statistics (parallel-axis) for sizing and the shadow.
+    // One row, left to right: each part as close as its footprint and its body allow.
+    const row = (list) => {
+      const sky = new Map(); // floor row -> rightmost occupied cell
+      let right = -Infinity;
+      const out = list.map((p) => {
+        let t = right === -Infinity ? 0 : (right + gap - p.box[0]) / cell;
+        for (const [d, [lo]] of p.foot) for (let e = -g; e <= g; e++) if (sky.has(d + e)) t = Math.max(t, sky.get(d + e) - lo + 1 + g);
+        t = Math.ceil(t);
+        for (const [d, [, hi]] of p.foot) sky.set(d, Math.max(sky.get(d) ?? -Infinity, hi + t));
+        right = t * cell + p.box[1];
+        return { p, x: t * cell };
+      });
+      const mid = (out[0].x + out[0].p.box[0] + right) / 2;
+      for (const q of out) q.x -= mid;
+      return out;
+    };
+    // Two rows, front first. The back row steps back until its footprints clear the front
+    // row's, then on until no two parts overlap on screen by more than OVERLAP of either.
+    const lay = (rows) => {
+      const placed = [], seen = new Map();
+      let ahead = null;
+      rows.forEach((list, r) => {
+        const out = row(list);
+        if (rows.length > 1 && rows[0].length === list.length) for (const q of out) q.x += (r ? 0.25 : -0.25) * (out.at(-1).x - out[0].x + unit) / list.length;
+        let s = 0;
+        if (ahead) {
+          for (const [c, [, hi]] of columns(out, cell)) for (let e = -g; e <= g; e++) if (ahead.has(c + e)) s = Math.max(s, hi - ahead.get(c + e)[0] + 1 + g);
+          let rise = Math.ceil(s * Math.sin(el));
+          while (rise < 200 && out.some((q) => overlap(q.p.screen, Math.round(q.x / cell), rise + Math.round(q.p.lift / cell), seen, placed) > OVERLAP)) rise++;
+          s = (rise * cell) / Math.sin(el);
+        }
+        for (const q of out) {
+          placed.push({ ...q, row: r, depth: -s, y: s * Math.sin(el) + q.p.lift });
+          mark(q.p.screen, Math.round(q.x / cell), Math.round((s * Math.sin(el) + q.p.lift) / cell), seen, placed.length - 1);
+        }
+        ahead = columns(out, cell, ahead);
+      });
+      const b = [Infinity, -Infinity, Infinity, -Infinity];
+      for (const q of placed) {
+        b[0] = Math.min(b[0], q.x + q.p.box[0]); b[1] = Math.max(b[1], q.x + q.p.box[1]);
+        b[2] = Math.min(b[2], q.y + q.p.box[2]); b[3] = Math.max(b[3], q.y + q.p.box[3]);
+      }
+      return { placed, b, fit: Math.min(1 / (b[1] - b[0]), FRAME_ASPECT / (b[3] - b[2])) };
+    };
+    let best = lay([parts]);
+    if (parts.length > 2) {
+      const tall = [...parts].sort((a, b) => b.top - a.top);
+      for (const back of new Set([Math.floor(parts.length / 2), Math.ceil(parts.length / 2)])) {
+        const inBack = new Set(tall.slice(0, back));
+        const two = lay([parts.filter((p) => !inBack.has(p)), parts.filter((p) => inBack.has(p))]);
+        if (two.fit > best.fit * 1.25) best = two;
+      }
+    }
+    const { placed, b } = best, cx = (b[0] + b[1]) / 2, cy = (b[2] + b[3]) / 2;
+    // The turntable's axis stands midway between the rows, so a turn swings the rows past
+    // each other instead of sliding the whole bundle sideways. Same picture at rest.
+    const mid = placed.reduce((sum, q) => sum + q.depth, 0) / placed.length;
+    let area = 0;
+    const pts = [];
+    for (const q of placed) {
+      const { f, k } = q.p, d = q.depth - mid;
+      const pos = new THREE.Vector3((q.x - cx) * R[0] + d * D[0], (q.p.lift - cy - mid * Math.sin(el)) / Math.cos(el), (q.x - cx) * R[2] + d * D[2]);
+      f.root.position.copy(pos);
+      f.root.scale.setScalar(k);
+      this.root.add(f.root);
+      const a = f.data.area * k * k;
+      area += a;
+      pts.push({ ...q.p, a, o: pos });
+    }
+    this.frame = { w: b[1] - b[0], h: b[3] - b[2] };
+    // The shadow sits under the front row.
+    const front = placed.filter((q) => !q.row);
+    this.ground = {
+      below: cy - Math.min(...front.map((q) => q.y + q.p.box[2])),
+      width: Math.max(...front.map((q) => q.x + q.p.box[1])) - Math.min(...front.map((q) => q.x + q.p.box[0])),
+    };
+    // Combined statistics (parallel-axis) about the origin, for the extent and the shadow.
     const cov = [0, 0, 0, 0, 0, 0];
     let ylo = Infinity, yhi = -Infinity;
     const pos = [];
     for (const p of pts) {
-      const o = p.f.root.position, w = p.a / (area || 1), k2 = p.k * p.k, c = p.f.data.cov;
+      const o = p.o, w = p.a / (area || 1), k2 = p.k * p.k, c = p.f.data.cov;
       cov[0] += w * (k2 * c[0] + o.x * o.x); cov[1] += w * (k2 * c[1] + o.x * o.y); cov[2] += w * (k2 * c[2] + o.x * o.z);
       cov[3] += w * (k2 * c[3] + o.y * o.y); cov[4] += w * (k2 * c[4] + o.y * o.z); cov[5] += w * (k2 * c[5] + o.z * o.z);
-      const P = p.f.data.position, [cx, cy, cz] = p.f.data.centre, n = P.length / 3, stride = Math.max(1, Math.floor(n / 1500));
-      for (let i = 0; i < n; i += stride) pos.push((P[i * 3] - cx) * p.k + o.x, (P[i * 3 + 1] - cy) * p.k + o.y, (P[i * 3 + 2] - cz) * p.k + o.z);
+      const P = p.f.data.position, [cx0, cy0, cz0] = p.f.data.centre, n = P.length / 3, stride = Math.max(1, Math.floor(n / 1500));
+      for (let i = 0; i < n; i += stride) pos.push((P[i * 3] - cx0) * p.k + o.x, (P[i * 3 + 1] - cy0) * p.k + o.y, (P[i * 3 + 2] - cz0) * p.k + o.z);
       ylo = Math.min(ylo, p.f.data.yRange[0] * p.k + o.y); yhi = Math.max(yhi, p.f.data.yRange[1] * p.k + o.y);
     }
     this.data = { position: new Float32Array(pos), centre: [0, 0, 0], cov, area, yRange: [ylo, yhi],
@@ -359,6 +420,95 @@ export class Group {
   set holo(v) { for (const f of this.figures) f.holo = v; }
   set color(v) { for (const f of this.figures) f.color = v; }
   tick(dt, speed) { let any = false; for (const f of this.figures) any = f.tick(dt, speed) || any; return any; }
+}
+
+// Grid cells (of size `cell`) that a part covers when projected on axes A and B, scaled
+// by k about its optical centre. Cell (i, j) spans [x0 + i, x0 + i + 1) along A.
+function coverage({ position: P, index: I, centre: [cx, cy, cz] }, A, B, k, cell) {
+  const n = P.length / 3, pa = new Float32Array(n), pb = new Float32Array(n);
+  let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const x = P[i * 3] - cx, y = P[i * 3 + 1] - cy, z = P[i * 3 + 2] - cz;
+    const a = pa[i] = ((x * A[0] + y * A[1] + z * A[2]) * k) / cell, b = pb[i] = ((x * B[0] + y * B[1] + z * B[2]) * k) / cell;
+    a0 = Math.min(a0, a); a1 = Math.max(a1, a); b0 = Math.min(b0, b); b1 = Math.max(b1, b);
+  }
+  const x0 = Math.floor(a0), y0 = Math.floor(b0), nx = Math.floor(a1) - x0 + 1, ny = Math.floor(b1) - y0 + 1;
+  const bits = new Uint8Array(nx * ny);
+  for (let t = 0; t < I.length; t += 3) {
+    const ax = pa[I[t]] - x0, ay = pb[I[t]] - y0, bx = pa[I[t + 1]] - x0, by = pb[I[t + 1]] - y0, qx = pa[I[t + 2]] - x0, qy = pb[I[t + 2]] - y0;
+    const det = (bx - ax) * (qy - ay) - (by - ay) * (qx - ax);
+    let hit = false;
+    if (det) {
+      const i0 = Math.max(0, Math.ceil(Math.min(ax, bx, qx) - 0.5)), i1 = Math.min(nx - 1, Math.floor(Math.max(ax, bx, qx) - 0.5));
+      const j0 = Math.max(0, Math.ceil(Math.min(ay, by, qy) - 0.5)), j1 = Math.min(ny - 1, Math.floor(Math.max(ay, by, qy) - 0.5));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+        const px = i + 0.5, py = j + 0.5;
+        const w0 = ((qx - bx) * (py - by) - (qy - by) * (px - bx)) * det, w1 = ((ax - qx) * (py - qy) - (ay - qy) * (px - qx)) * det;
+        const w2 = ((bx - ax) * (py - ay) - (by - ay) * (px - ax)) * det;
+        if (w0 >= 0 && w1 >= 0 && w2 >= 0) { bits[j * nx + i] = 1; hit = true; }
+      }
+    }
+    if (!hit) bits[Math.min(ny - 1, Math.floor((ay + by + qy) / 3)) * nx + Math.min(nx - 1, Math.floor((ax + bx + qx) / 3))] = 1;
+  }
+  let count = 0;
+  for (const v of bits) count += v;
+  return { x0, y0, nx, ny, bits, count };
+}
+
+// The box that holds most of a silhouette: the 3rd to 97th percentile of its cells along
+// each axis, so a thin lead running off to one side doesn't count. In cells.
+function bodyOf({ x0, y0, nx, ny, bits, count }) {
+  const across = new Float64Array(nx), up = new Float64Array(ny);
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) if (bits[j * nx + i]) { across[i]++; up[j]++; }
+  const span = (h, o) => {
+    let acc = 0, lo = 0, hi = h.length;
+    for (let i = 0; i < h.length; i++) { if (acc < 0.03 * count && acc + h[i] >= 0.03 * count) lo = i; if (acc < 0.97 * count && acc + h[i] >= 0.97 * count) hi = i + 1; acc += h[i]; }
+    return [o + lo, o + hi];
+  };
+  return [...span(across, x0), ...span(up, y0)];
+}
+
+// Screen cells of a silhouette placed at cell offset (dx, dy): mark them as part `who`'s,
+// or measure the largest share of it, or of any marked part, the two have in common.
+const key = (i, j) => (i + 4096) * 8192 + (j + 4096);
+function mark({ x0, y0, nx, ny, bits }, dx, dy, into, who) {
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) if (bits[j * nx + i]) into.set(key(x0 + i + dx, y0 + j + dy), who);
+}
+function overlap({ x0, y0, nx, ny, bits, count }, dx, dy, seen, placed) {
+  const shared = new Map();
+  let n = 0;
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+    const who = bits[j * nx + i] ? seen.get(key(x0 + i + dx, y0 + j + dy)) : undefined;
+    if (who !== undefined) { n++; shared.set(who, (shared.get(who) ?? 0) + 1); }
+  }
+  let most = n / count;
+  for (const [who, m] of shared) most = Math.max(most, m / placed[who].p.screen.count);
+  return most;
+}
+
+// For each floor row (along D) the first and last occupied cell along R.
+function footprint({ x0, y0, nx, ny, bits }) {
+  const rows = new Map();
+  for (let j = 0; j < ny; j++) {
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i < nx; i++) if (bits[j * nx + i]) { lo = Math.min(lo, i); hi = Math.max(hi, i); }
+    if (hi >= lo) rows.set(y0 + j, [x0 + lo, x0 + hi]);
+  }
+  return rows;
+}
+
+// For each column along R (cells) the nearest and farthest occupied floor row of a laid
+// out row of parts, merged into `into`.
+function columns(out, cell, into = null) {
+  const cols = new Map(into ?? []);
+  for (const q of out) {
+    const t = Math.round(q.x / cell);
+    for (const [d, [lo, hi]] of q.p.foot) for (let c = lo + t; c <= hi + t; c++) {
+      const was = cols.get(c);
+      cols.set(c, was ? [Math.min(was[0], d), Math.max(was[1], d)] : [d, d]);
+    }
+  }
+  return cols;
 }
 
 // RMS radius of a surface (area-weighted covariance) as seen along screen axes R and U.
@@ -411,10 +561,10 @@ export class View {
   constructor(canvas, figure, opts = {}) {
     // Every figure uses the same camera, so every part faces the same way; parts are posed
     // in their configs, never by moving the camera.
-    const o = { azimuth: 45, elevation: 30, fill: 0.7, span: null, visual: null, dpr: Math.min(2, devicePixelRatio || 1), ...opts };
+    const o = { azimuth: 45, elevation: 30, fill: 0.7, frame: null, span: null, visual: null, dpr: Math.min(2, devicePixelRatio || 1), ...opts };
     this.canvas = canvas; this.ctx = canvas.getContext("2d");
     this.figure = figure; this.azimuth = o.azimuth; this.elevation = o.elevation;
-    this.fill = o.fill; this.span = o.span; this.visual = o.visual; this.dpr = o.dpr;
+    this.fill = o.fill; this.frame = o.frame; this.span = o.span; this.visual = o.visual; this.dpr = o.dpr;
     this.spin = 0; this.zoom = 1;
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -5000, 5000);
     this.extent = this.measure();
@@ -443,7 +593,11 @@ export class View {
     if (this.canvas.width !== w || this.canvas.height !== h) { this.canvas.width = w; this.canvas.height = h; }
     const aspect = w / h;
     const fit = Math.max(this.extent.hw, this.extent.hh * aspect) / 0.94;
-    const halfW = this.visual ? this.radius() / (2 * this.visual)
+    // A bundle at rest fills `frame` of the box with its bodies; anything that keeps
+    // turning fits its extent over a whole turn instead.
+    const f = this.frame && this.figure.frame;
+    const halfW = f ? Math.max(f.w / 2, (f.h / 2) * aspect) / this.frame
+      : this.visual ? this.radius() / (2 * this.visual)
       : this.span ? Math.max(this.span / 2, fit)
       : Math.max(this.extent.hw, this.extent.hh * aspect) / this.fill;
     this.camera.left = -halfW; this.camera.right = halfW;
@@ -460,9 +614,10 @@ export class View {
   // wide its footprint reads (fraction of canvas width).
   get floor() {
     const [rh, ry] = this.figure.data.spread, el = THREE.MathUtils.degToRad(this.elevation);
-    return 0.5 + (1.6 * ry * Math.cos(el) + 1.2 * rh * Math.sin(el)) / (this.camera.top - this.camera.bottom);
+    const below = this.figure.ground?.below ?? 1.6 * ry * Math.cos(el) + 1.2 * rh * Math.sin(el);
+    return 0.5 + below / (this.camera.top - this.camera.bottom);
   }
-  get width() { return (2.6 * this.figure.data.spread[0]) / (this.camera.right - this.camera.left); }
+  get width() { return (this.figure.ground?.width ?? 2.6 * this.figure.data.spread[0]) / (this.camera.right - this.camera.left); }
   pose() {
     const az = THREE.MathUtils.degToRad(this.azimuth), el = THREE.MathUtils.degToRad(this.elevation);
     this.camera.position.set(Math.sin(az) * Math.cos(el) * 1000, Math.sin(el) * 1000, Math.cos(az) * Math.cos(el) * 1000);

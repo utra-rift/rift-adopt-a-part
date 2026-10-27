@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Sheet</title>
+<style>
+  html, body { margin: 0; background: #fff; font: 11px/1.4 ui-monospace, monospace; color: #555; }
+  main { display: grid; grid-template-columns: repeat(var(--cols, 4), 300px); gap: 0; padding: 12px; }
+  .c { position: relative; width: 300px; }
+  .fig { position: relative; aspect-ratio: 1 / .86; outline: 1px solid #f1d4d4; outline-offset: -1px; }
+  .fig canvas { position: absolute; inset: 0; width: 100%; height: 100%;
+    mask-image: linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent 100%), linear-gradient(to bottom, transparent 0, #000 14%, #000 86%, transparent 100%);
+    mask-composite: intersect; }
+  p { margin: 4px 0 14px; text-align: center; }
+</style></head>
+<body><main id="m"></main>
+<script type="module">
+// Contact sheet: grid cells rendered the way the site draws them, for checking sizing and
+// composition.  ?ids=finish,match (default: every bundle)  &all=1  &real=1  &spin=35  &cols=4
+import { OFFERS, isAdopted } from "./js/catalog.js";
+import { loadPart, Figure, Group, View } from "./js/stage.js";
+const VISUAL = 0.165, GROUP_FRAME = 0.66; // as in js/app.js
+const Q = new URLSearchParams(location.search);
+document.body.style.setProperty("--cols", Q.get("cols") ?? 4);
+const offers = Q.has("ids") ? Q.get("ids").split(",").map((id) => OFFERS.find((o) => o.id === id))
+  : OFFERS.filter((o) => Q.has("all") || o.show.length > 1);
+for (const o of offers) {
+  const el = document.createElement("div"); el.className = "c";
+  el.innerHTML = `<div class="fig"><canvas></canvas></div><p>${o.code} · ${o.show.join(", ")}</p>`;
+  document.getElementById("m").append(el);
+  const datas = await Promise.all(o.show.map((id) => loadPart(`parts/${id}.bin`)));
+  const fig = datas.length > 1 ? new Group(datas) : new Figure(datas[0]);
+  fig.holo = isAdopted(o) ? 1 : 0;
+  fig.color = +(Q.get("real") ?? 0);
+  const v = new View(el.querySelector("canvas"), fig, datas.length > 1 ? { frame: GROUP_FRAME } : { visual: VISUAL });
+  v.spin = +(Q.get("spin") ?? 0);
+  v.paint();
+}
+window.__ready = true;
+</script></body></html>
