@@ -1,0 +1,105 @@
+{
+  "src": "cad/raw/mc02/RoboMaster_MC02_2019.STEP",
+  "up": "y",
+  "deflection": 0.002,
+  "angular": 0.4,
+  "lit": "#7$",
+  "bends": [
+    {
+      "match": "#(3|4|5)$",
+      "from": [
+        0,
+        4.7,
+        30
+      ],
+      "to": [
+        0,
+        4.7,
+        147
+      ],
+      "path": [
+        [
+          0,
+          4.59,
+          32.5
+        ],
+        [
+          0,
+          3.62,
+          38.92
+        ],
+        [
+          0,
+          2.01,
+          47.77
+        ],
+        [
+          -0.71,
+          1.75,
+          56.71
+        ],
+        [
+          -3.66,
+          1.75,
+          65.19
+        ],
+        [
+          -8.7,
+          1.75,
+          72.61
+        ],
+        [
+          -15.49,
+          1.75,
+          78.48
+        ],
+        [
+          -23.56,
+          1.75,
+          82.39
+        ],
+        [
+          -32.35,
+          1.75,
+          84.29
+        ],
+        [
+          -41.33,
+          1.75,
+          84.54
+        ],
+        [
+          -50.21,
+          1.75,
+          83.15
+        ],
+        [
+          -58.75,
+          1.75,
+          80.31
+        ],
+        [
+          -66.93,
+          3.72,
+          77.33
+        ],
+        [
+          -72.88,
+          5,
+          75.17
+        ],
+        [
+          -75.23,
+          5,
+          74.31
+        ]
+      ],
+      "maxEdge": 3
+    }
+  ],
+  "view": {
+    "azimuth": 45,
+    "elevation": 30
+  },
+  "notes": "DJI RoboMaster Referee System Main Control Module MC02, official STEP (RoboMaster wiki). Cable re-routed from the CAD's straight run to lie on the table; length kept."
+}

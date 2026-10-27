@@ -1,0 +1,14 @@
+{
+  "src": "cad/raw/fi02/RoboMaster_FI02_2019.STEP",
+  "up": "y",
+  "rotate": [180, 0, 0],
+  "deflection": 0.0012,
+  "angular": 0.26,
+  "defaultMaterial": "black-plastic",
+  "materials": [
+    { "match": "#[2-5]$", "mat": "white-plastic" }
+  ],
+  "lit": "#[2-5]$",
+  "view": { "azimuth": 45, "elevation": 30 },
+  "notes": "DJI RoboMaster Referee System RFID Interaction Module FI02, official STEP (RoboMaster wiki). Shown logo face up; geometry unchanged."
+}

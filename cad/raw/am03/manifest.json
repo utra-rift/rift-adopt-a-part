@@ -1,0 +1,52 @@
+{
+  "id": "am03",
+  "name": "RoboMaster Referee System Small Armor Module AM03 (CAD is the AM02 small armor)",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/am03/RoboMaster_AM02_2019_small_armor.STEP",
+      "format": "STEP AP214 (AUTOMOTIVE_DESIGN)",
+      "bytes": 5476473,
+      "units": "mm",
+      "products": [
+        "小装甲 (Small Armor)"
+      ],
+      "bodies": 16,
+      "advanced_faces": 1245,
+      "colours": true,
+      "origin": "SolidWorks 2016, 2018-11-20, FILE_NAME '小装甲.STEP'",
+      "sha256": "dcc2141c6a2928493f9f95ba00eb103ccd15354433f81b03dbba9f58e92e7e49",
+      "vertex_bbox_mm": [
+        141.0,
+        129.97,
+        19.0
+      ],
+      "note": "Single multi-body part, 16 bodies ('001'..'016'); has per-face colours (light blue-grey 0.79/0.82/0.93 and 0.90/0.92/0.93 - SolidWorks defaults, not real colours)."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/811816",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/2615",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/be2a04862db54079b0bdfa100f5a963d1761019143407/RoboMaster 装甲模块 AM02 2019.STEP",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/17348/RoboMaster Referee System Armor Modules AM02.STEP (same byte size, 5476473)",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "outline": [
+      140,
+      125
+    ],
+    "thickness": "not stated officially (CAD ~19)",
+    "source": "AM02 spec (wiki 811816 / AM02&AM12 user guide)"
+  },
+  "mass_g": 359,
+  "mass_note": "359 g is the AM02 figure; no separate AM03 spec published.",
+  "colors": "Matte black impact panel inside a black frame with 4 corner screws; two translucent white light strips on the left/right edges that glow solid red or blue (team colour), flash on hits.",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/206818a32eb891592473233822538556.jpg",
+    "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/21aadd0cbedc4bfeba9208424832140d1758940459795/image.png"
+  ],
+  "ref_photo": "cad/raw/am03/ref.jpg (AM02 product photo)",
+  "docs": [
+    "cad/raw/am03/docs/AM02_AM12_user_guide.pdf"
+  ],
+  "notes": "DOUBT: DJI has not published an AM03-specific CAD, spec or photo. AM03 is real: the Referee System User Manual V1.4 (2025) and V1.5 (2026) list 'Small Armor Module (AM02/AM03)' and 'Large Armor Module (AM12/AM13)' under one shared illustration, i.e. a revision with the same outline. The official small-armor page (wiki 811816) still offers only the AM02 STEP. The RMU 2027 spec manual (2026-10-15) says the 2027-season armor impact surface becomes a dot-matrix screen - a different future module, not modelled by this file. Third-party mirror checked: github.com/jiushipanta/armor_module (MIT) has only AM02/AM12 STEP."
+}

@@ -1,0 +1,8 @@
+{
+  "src": "cad/models/cf-sheet.step",
+  "up": "z",
+  "deflection": 0.0012,
+  "angular": 0.26,
+  "view": { "azimuth": 45, "elevation": 30 },
+  "notes": "Carbon-fibre laminate sheet, common 400 × 300 × 3 mm stock size."
+}

@@ -1,0 +1,43 @@
+{
+  "id": "projectile-17mm",
+  "name": "RoboMaster 17mm Fluorescent Projectile (17mm荧光弹丸)",
+  "status": "no-cad",
+  "files": [
+    {
+      "path": "cad/raw/projectile-17mm/ref.jpg",
+      "format": "jpg",
+      "role": "photo",
+      "bytes": 5330449,
+      "md5": "175b15f025bf566c3a45f7431601d4ff",
+      "units": null,
+      "products": [],
+      "url": "https://rm-static.djicdn.com/tem/17348/19c03202dcf3f1590677317492844591.jpg",
+      "what": "official product photo: bag of 500 (8688x5792)"
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/detail/2572",
+  "source_urls_more": [
+    "https://www.robomaster.com/zh-CN/products/components/detail/2571",
+    "https://bbs.robomaster.com/wiki/20204847/811052"
+  ],
+  "download_url": null,
+  "license": "n/a (no CAD needed: geometry is a plain sphere).",
+  "model_exactly_as": "smooth solid sphere, diameter 16.8 mm (radius 8.4 mm); official tolerance +/-0.2 mm. No dimples, seams or holes are described for this projectile.",
+  "dims_mm": {
+    "diameter": 16.8,
+    "diameter_tolerance": 0.2
+  },
+  "mass_g": 3.2,
+  "mass_tolerance_g": 0.1,
+  "material": "TPU plastic, hardness 90 Shore A (spec: 90 HA)",
+  "colors": {
+    "unlit": "pale yellow-green (glow-in-the-dark pigment), matte; median of the official photo (through the bag, on white) is about #CED09D",
+    "glowing": "emits yellow-green light after being charged with 390-410 nm UV (that is what projectile-charger does)"
+  },
+  "pack": "500 pcs per bag; USD 155 / RMB 799 per bag",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/19c03202dcf3f1590677317492844591.jpg",
+    "https://rm-static.djicdn.com/tem/17348/96e4c4bec14081590677962416160066.jpg"
+  ],
+  "notes": "Status no-cad only because no file is needed: the official spec fully defines the shape (sphere). It replaced the plain 17 mm projectile in 2019/2020 and is still the competition 17 mm ammo in the 2026 season (RMUC 2026 projectile-control notice 1917)."
+}

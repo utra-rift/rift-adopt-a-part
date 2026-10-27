@@ -1,0 +1,95 @@
+{
+  "id": "vt03",
+  "name": "RoboMaster Referee System Video Transmission Module (Transmitter) VT03",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/vt03/RoboMaster_VT03_transmitter_2025-12.stp",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 20205112,
+      "units": "mm",
+      "products": [
+        "ROBOMASTERVT030001_ASM",
+        "00_RS0105_ZONGZHUANG_ASM",
+        "01_RS0105_SHELL_ASM",
+        "02_RS0105_SHELL_TOP_ASM",
+        "RS0105_SHELL_TOP",
+        "RS0105_SHELL_TOPNET",
+        "RS0105_SHELL_SIDENET_L",
+        "02_RS0105_SHELL_BOT_ASM",
+        "RS0105_SHELL_BOT",
+        "RS0105_SHELL_LENS",
+        "RS0105_SHELL_LEDBOSS",
+        "YC_WJ_LL000420_03",
+        "01_RS0105_PCBA_ASM",
+        "02_RS0105_RMPCB_PCBA_UNIT_ASM",
+        "RS0105_RMPCB_PCBA_LAYOUT_1010 (x4)",
+        "01_RS0105_CAM_ASM",
+        "ZA530_FOV146_16_9 (camera lens)",
+        "PRT0002",
+        "PRT0003",
+        "PRT0004",
+        "SRDINBAN",
+        "YC_XC_XX000493_01 (cable assemblies x3)",
+        "003_ASM",
+        "0031_ASM"
+      ],
+      "bodies": "14 MANIFOLD_SOLID_BREP + 1 BREP_WITH_VOIDS + 2 SHELL_BASED_SURFACE_MODEL, 29 products, 33 NAUO",
+      "advanced_faces": 6827,
+      "colours": false,
+      "origin": "Creo Parametric 2019, 2025-12-16 (alexander.guo)",
+      "sha256": "b6dde4cc966265db47bd4ce8f5c21bdabe981a98b03c10d714760e3d098de443",
+      "vertex_bbox_mm": [
+        227.35,
+        232.54,
+        60.42
+      ],
+      "note": "Primary: current wiki file (uploaded 2025-12-16), real assembly with named shell/lens/PCBA/camera/cable parts, no colours. bbox ignores assembly transforms; 60.42 and 37.55 match the drawing."
+    },
+    {
+      "path": "cad/raw/vt03/RoboMaster_VT03_transmitter_2025-04_alt.stp",
+      "format": "STEP AP203e2 (CONFIG_CONTROL_DESIGN + SHAPE_APPEARANCE_LAYERS_GROUPS)",
+      "bytes": 19515873,
+      "units": "mm",
+      "products": [
+        "1111"
+      ],
+      "bodies": "1 SHELL_BASED_SURFACE_MODEL",
+      "advanced_faces": 2583,
+      "colours": true,
+      "origin": "Creo Parametric 2019, 2025-04-17",
+      "sha256": "dc087565a9e42d87622d55c9fa738b3e6c869cf71d3b11fc3c9b47d16be2af22",
+      "vertex_bbox_mm": [
+        240.47,
+        37.55,
+        60.42
+      ],
+      "note": "Alternate: earlier revision served by robomaster.com pages 6137/6138; single merged surface body with per-face colours (11206 STYLED_ITEMs)."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/817329",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/6138",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/b952bc4d707b45c0a31144b8305e6cb11765867777534/RoboMaster裁判系统相机图传模块（发送端）VT03.stp",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/17348/RoboMaster裁判系统相机图传模块（发送端）VT03 STEP.stp",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "overall": [
+      60.42,
+      78.5,
+      37.55
+    ],
+    "mounting": "4x d3.20 through holes 54.5 x 50; 4x M3 depth 4 threaded holes 32 x 35",
+    "source": "VT03&VT13 user guide 'Installation' drawing (docs/VT03_VT13_user_guide_CN_EN.pdf, EN p4)"
+  },
+  "mass_g": 121,
+  "colors": "Black housing with RoboMaster 'R' logo, finned/slotted air inlet and outlets (internal fan), camera lens on the front; two black cables ending in aviation connectors (silver rings).",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/c18636bc427cc1744899407593970144.jpg",
+    "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/dd9e19372743422d9af7da1ce165d48c1762410038787/image.png"
+  ],
+  "ref_photo": "cad/raw/vt03/ref.jpg",
+  "docs": [
+    "cad/raw/vt03/docs/VT03_VT13_user_guide_CN_EN.pdf"
+  ],
+  "notes": "Transmitter (robot side) of the VT03/VT13 pair; VT13 receiver is not part of this item and DJI publishes no VT13 STEP. 12 V, 665 mA, 5.1/5.8 GHz, up to 1920x1080 (wiki) / 1920x1200 (EN product page) @60 Hz."
+}

@@ -1,0 +1,115 @@
+{
+  "id": "devboard-c",
+  "name": "DJI RoboMaster Development Board Type C",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/devboard-c/DevBoardC_asm.stp",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 10843660,
+      "sha256": "237365773a6114ee14a64a92992df8e462d2b4e9e20b708dd40054d7efd74bae",
+      "units": "mm",
+      "units_evidence": "(LENGTH_UNIT()NAMED_UNIT(*)SI_UNIT(.MILLI.,.METRE.))",
+      "header_file_name": "'MOUNTING_THE_BOARD_TYPE_C_ASM','2020-01-07T',('camaro.ren'),(''), 'CREO PARAMETRIC BY PTC INC, 2015200','CREO PARAMETRIC BY PTC INC, 2015200',''",
+      "geometry": {
+        "ADVANCED_FACE": 6228,
+        "MANIFOLD_SOLID_BREP": 4,
+        "BREP_WITH_VOIDS": 1,
+        "SHELL_BASED_SURFACE_MODEL": 0,
+        "PRODUCT": 5,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 7
+      },
+      "embedded_colours": "none (no STYLED_ITEM entities; any COLOUR_RGB entries are an unlinked palette)",
+      "tessellated_bbox_mm": {
+        "size": [
+          41.01,
+          60.32,
+          16.3
+        ],
+        "min": [
+          -45.11,
+          -8.42,
+          -20.6
+        ],
+        "max": [
+          -4.1,
+          51.9,
+          -4.3
+        ],
+        "note": "world-space bbox of occt-import-js tessellation, includes cables/connectors"
+      },
+      "mesh_count_occt_import_js": 8,
+      "products": [
+        {
+          "name": "MOUNTING_THE_BOARD_TYPE_C_ASM",
+          "role": "root assembly"
+        },
+        {
+          "name": "1_0",
+          "role": "PCB assembly with components, 41 x 60.3 x 14.3 (2 solids; second is a 10 x 10 x 0.6 part)",
+          "occt_mesh": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "2_0",
+          "role": "top case/shell, 41 x 60 x 9",
+          "occt_mesh": [
+            2
+          ]
+        },
+        {
+          "name": "3_0",
+          "role": "bottom plate/case, 41 x 60 x 4",
+          "occt_mesh": [
+            3
+          ]
+        },
+        {
+          "name": "4_0 (x4)",
+          "role": "3.85 mm x 4 mm corner parts on a 36 x 36 grid (mounting bosses/standoffs)",
+          "occt_mesh": [
+            4,
+            5,
+            6,
+            7
+          ]
+        }
+      ]
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/general/development-board-type-c/info",
+  "download_url": "https://rm-static.djicdn.com/tem/35228/mounting_the_board_type_c_asm%28202001072134%29.stp",
+  "download_index": "https://rm-static.djicdn.com/live_json/simple_cms.json",
+  "license": "No explicit license on the CAD. Published by DJI (SZ DJI Technology Co., Ltd.) as a free public download on the official RoboMaster site for customers integrating the product. DJI user guides state the product and documents are copyrighted by DJI, all rights reserved, no reproduction without written consent. Treat as proprietary: OK for internal reference/rendering, ask DJI before redistributing the raw STEP.",
+  "dims_mm": {
+    "length": 60,
+    "width": 41,
+    "height": 16.3,
+    "height_note": "User Manual says 60x41x16.3; the short User Guide says 60x41x16",
+    "mounting": "4 holes, inner dia 2.5, outer dia 5; drawing values 60.00, 36.00, 14.50, 5.60, 16.30",
+    "cad_check": "CAD 41.0 x 60.3 x 16.3; corner parts centred on a 36 x 36 mm grid"
+  },
+  "mass_g": 38,
+  "colors": {
+    "case": "matte black top case with white silkscreen port labels (SWD, BOOT, USB, 5V, DBUS, RST, PWM, CAN1, CAN2, UART1, UART2, KEY) and white 'R ROBOMASTER' logo",
+    "ports": "white JST-GH style sockets (CAN/UART), black pin headers with gold pins (PWM, SWD), gold/orange round power sockets",
+    "pcb_edge": "dark green/black PCB edge visible between case halves; brass mounting holes"
+  },
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/%E5%8F%B3%E4%BE%A7%E8%A7%86%E5%9B%BE0113.png"
+  ],
+  "ref_photo": "cad/raw/devboard-c/ref.png",
+  "docs": [
+    {
+      "path": "cad/raw/devboard-c/docs/DevBoardC_UserManual_en.pdf",
+      "url": "https://rm-static.djicdn.com/tem/35228/RoboMaster%20Development%20Board%20Type%20C%20User%20Manual.pdf"
+    },
+    {
+      "path": "cad/raw/devboard-c/docs/DevBoardC_UserGuide_en.pdf",
+      "url": "https://rm-static.djicdn.com/tem/35228/RoboMaster%20Development%20Board%20Type%20C%20User%20Guide.pdf"
+    }
+  ],
+  "notes": "Official Creo export by camaro.ren 2020-01-07 ('mounting the board type C' assembly). Product names are generic ('1_0'..'4_0'); roles inferred from geometry. ref.png is the 4429 x 4429 official render (6.6 MB). The 4_0 corner parts may be mounting hardware rather than part of the board itself; the manual says screws and copper pillars are not included."
+}

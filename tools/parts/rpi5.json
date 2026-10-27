@@ -1,0 +1,6 @@
+{
+  "src": "cad/soup/rpi5.soup",
+  "up": "z",
+  "minFeature": 1.6,
+  "notes": "Raspberry Pi 5, official STEP (pip.raspberrypi.com, MIT). Surface-mount parts under 1.6 mm left out."
+}

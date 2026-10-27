@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Adopt a Part · RIFT</title>
+  <meta name="description" content="RIFT is a new University of Toronto robotics team. We haven't built our robot yet, but we know every part it needs. Adopt one.">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <link rel="modulepreload" href="vendor/three.module.min.js">
+</head>
+<body>
+  <header class="top">
+    <button class="plus" id="plus" type="button" aria-controls="info" aria-expanded="false" aria-label="About RIFT">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5v13M1.5 8h13"/></svg>
+    </button>
+    <a class="brand" href="./" aria-label="RIFT"><img src="assets/wordmark.png" alt="RIFT" width="54" height="36"></a>
+    <button class="crate-btn" id="crate-btn" type="button" aria-controls="crate" aria-expanded="false">
+      Crate <span id="crate-count">0</span>
+    </button>
+  </header>
+
+  <main>
+    <p class="gist">We haven’t built the robot yet. Adopt a part.</p>
+    <ul class="grid" id="grid" role="list"></ul>
+  </main>
+
+  <footer class="foot">
+    <a href="mailto:arcrobotics@utra.ca">arcrobotics@utra.ca</a>
+    <a href="https://www.instagram.com/utra_rift/" rel="noopener">Instagram</a>
+    <a href="https://rift.utra.ca" rel="noopener">rift.utra.ca</a>
+  </footer>
+
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- About, tiers, travel, contact: everything that isn't a part. -->
+  <aside class="info" id="info" aria-label="About RIFT" hidden>
+    <div class="info-inner">
+      <p class="info-lead">RIFT is a new robotics team at the University of Toronto, building a combat robot for ARC: two machines, 17&nbsp;mm projectiles, two minutes.</p>
+      <p>We haven’t built it yet, but we know every part it needs. Each part is a full sponsorship. Adopt one.</p>
+      <div class="progress"><i id="progress-fill"></i></div>
+      <p class="mono muted" id="progress-text"></p>
+
+      <h2 class="mono">Tiers</h2>
+      <dl class="tiers" id="tiers"></dl>
+
+      <h2 class="mono">Also on the list</h2>
+      <ul class="travel" id="travel" role="list"></ul>
+      <p class="muted small">Email us to cover a seat or the road trip. Parts, materials or machine time work too.</p>
+
+      <h2 class="mono">Contact</h2>
+      <p><a href="mailto:arcrobotics@utra.ca">arcrobotics@utra.ca</a><br><a href="https://www.instagram.com/utra_rift/" rel="noopener">@utra_rift</a></p>
+    </div>
+  </aside>
+
+  <!-- A part, up close. -->
+  <div class="view" id="view" role="dialog" aria-modal="true" aria-labelledby="view-name" hidden>
+    <button class="close" type="button" data-close aria-label="Close">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+    </button>
+    <div class="view-fig" id="view-fig">
+      <canvas id="view-canvas"></canvas>
+    </div>
+    <div class="view-info">
+      <p class="mono muted" id="view-code"></p>
+      <h1 id="view-name"></h1>
+      <p class="mono" id="view-price"></p>
+      <p class="view-line" id="view-line"></p>
+      <ul class="inside" id="view-inside" role="list"></ul>
+      <button class="adopt mono" id="view-adopt" type="button"></button>
+      <p class="mono muted tiny" id="view-note"></p>
+    </div>
+  </div>
+
+  <!-- The crate. -->
+  <aside class="crate" id="crate" aria-label="Your crate" hidden>
+    <div class="crate-head mono"><span>Crate</span><button type="button" id="crate-close">Close</button></div>
+    <ul class="crate-list" id="crate-list" role="list"></ul>
+    <div class="crate-foot">
+      <div class="row mono"><span>Total</span><span id="crate-total">$0.00</span></div>
+      <div class="tierbar"><i id="tierbar-fill"></i></div>
+      <p class="mono muted" id="crate-tier"></p>
+      <a class="adopt mono" id="crate-send" href="mailto:arcrobotics@utra.ca">Send adoption papers</a>
+      <button class="mono muted crate-copy" id="crate-copy" type="button">Copy summary</button>
+    </div>
+  </aside>
+
+  <div class="toast mono" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

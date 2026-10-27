@@ -1,0 +1,52 @@
+{
+  "id": "pm02",
+  "name": "RoboMaster Referee System Power Management Module PM02",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/pm02/RoboMaster_PM02_2020.STEP",
+      "format": "STEP AP214 (AUTOMOTIVE_DESIGN)",
+      "bytes": 50543005,
+      "units": "mm",
+      "products": [
+        "power-management-module-2019"
+      ],
+      "bodies": "1 SHELL_BASED_SURFACE_MODEL (surface model, not solid)",
+      "advanced_faces": 10833,
+      "colours": true,
+      "origin": "SolidWorks 2016, 2018-11-20, FILE_NAME 'power-management-module-2019.STEP'",
+      "sha256": "9e31e0f54b9e9e318880386ada6111c13c96a2985d990f803c5946516934d793",
+      "vertex_bbox_mm": [
+        70.0,
+        22.51,
+        375.59
+      ],
+      "note": "Includes cables/aviation connectors (hence 375 mm length). Has real-ish colours: dark grey 0.196, black 0.078, light grey 0.753, yellow (1,0.78,0)/(1,0.80,0) for XT30/XT60, white."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/809902",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/2608",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/9ce73a9e5c3c4bcb815cc9ad6f6855f31761018980633/RoboMaster 电源模块 PM02 2020 STEP.STEP",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/17348/RoboMaster Referee System Power Management Module PM02.STEP (same byte size, 50543005)",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "body": [
+      70,
+      48,
+      22.5
+    ],
+    "mounting_holes": "4x d2.70 (d4.50 counterbore), M2.5 screws, 63 x 42",
+    "source": "PM02 spec (wiki 809902); manual drawing shows 70 x 48 with 20.50 side dimension"
+  },
+  "mass_g": 120,
+  "colors": "Black anodised finned aluminium housing with white 'ROBOMASTER / POWER MANAGEMENT MODULE' print and port labels; yellow XT30 outputs (Chassis, Gimbal, Ammo-Booster, Mini PC); red/black XT60 input leads; white GH ports (Armor x2, RFID, CAN); black cables to aviation connectors.",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/5a0305fa041ad1592469731622716447.jpg",
+    "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/cd999f52cf5a4608be8c60263dfad7571758468875898/image.png"
+  ],
+  "ref_photo": "cad/raw/pm02/ref.jpg",
+  "docs": [
+    "cad/raw/pm02/docs/PM02_user_guide.pdf"
+  ],
+  "notes": "DJI labelling is inconsistent: robomaster.com page 2608 is titled 'PM01' but serves 'PM02.STEP'; the wiki's archived 'PM01 2019.STEP' is byte-identical in size and header to this file; the bundled manual's cover says 'PM01 v1.0 2018.11'. The model matches the PM02 spec (70 x 48 footprint, ports for Mini PC/Armor/RFID/CAN as in the current wiki photo). It is a surface model, so it may need sewing if a solid is required."
+}

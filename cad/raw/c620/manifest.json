@@ -1,0 +1,110 @@
+{
+  "id": "c620",
+  "name": "DJI RoboMaster C620 Brushless DC Motor Speed Controller",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/c620/C620.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 6946526,
+      "sha256": "85f82c36fdf055fefba64880e804be95ca216b63339a31e9a3c6fde715773a4c",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT ( ) NAMED_UNIT ( * ) SI_UNIT ( .MILLI., .METRE. ) )",
+      "header_file_name": "'WS2017 C620电调总装.STEP', '2017-08-11T02:35:58', ( 'hh' ), ( 'Microsoft' ), 'SwSTEP 2.0', 'SolidWorks 2016', ''",
+      "geometry": {
+        "ADVANCED_FACE": 1859,
+        "MANIFOLD_SOLID_BREP": 15,
+        "BREP_WITH_VOIDS": 1,
+        "SHELL_BASED_SURFACE_MODEL": 2,
+        "PRODUCT": 10,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 14
+      },
+      "embedded_colours": "none (no STYLED_ITEM entities; any COLOUR_RGB entries are an unlinked palette)",
+      "tessellated_bbox_mm": {
+        "size": [
+          345.35,
+          14.7,
+          26.13
+        ],
+        "min": [
+          -273,
+          -6.1,
+          -12.9
+        ],
+        "max": [
+          72.35,
+          8.6,
+          13.23
+        ],
+        "note": "world-space bbox of occt-import-js tessellation, includes cables/connectors"
+      },
+      "mesh_count_occt_import_js": 28,
+      "products": [
+        {
+          "name": "WS2017 C620电调总装",
+          "role": "root assembly (C620 ESC final assembly)"
+        },
+        {
+          "name": "7",
+          "role": "housing half, 49.4 x 6 x 25.8"
+        },
+        {
+          "name": "8",
+          "role": "housing half, 41 x 6.5 x 25.8"
+        },
+        {
+          "name": "2",
+          "role": "11 small solids: 3 port housings + switch/LED/button details"
+        },
+        {
+          "name": "5 (x4)",
+          "role": "3 x 9 x 3 mm corner parts at the mounting holes"
+        },
+        {
+          "name": "6",
+          "role": "10.5 x 8 x 8 cable gland where the power lead exits (-X)"
+        },
+        {
+          "name": "9",
+          "role": "3-phase leads (3x '14', 50 mm) + connector housings at +X"
+        },
+        {
+          "name": "10",
+          "role": "power lead: 170 mm 2-core cable + connector end (84.8 x 13.1 x 10.8 body) at -X"
+        }
+      ],
+      "same_bytes_also_served_at": "https://rm-static.djicdn.com/tem/17348/C620%E6%97%A0%E5%88%B7%E7%94%B5%E6%9C%BA%E8%B0%83%E9%80%9F%E5%99%A8.STEP (zh listing, identical sha256)"
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/general/M3508",
+  "download_url": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20C620%20Brushless%20DC%20Motor%20Speed%20Controller.STEP",
+  "download_index": "https://rm-static.djicdn.com/live_json/simple_cms.json",
+  "license": "No explicit license on the CAD. Published by DJI (SZ DJI Technology Co., Ltd.) as a free public download on the official RoboMaster site for customers integrating the product. DJI user guides state the product and documents are copyrighted by DJI, all rights reserved, no reproduction without written consent. Treat as proprietary: OK for internal reference/rendering, ask DJI before redistributing the raw STEP.",
+  "dims_mm": {
+    "length": 49.4,
+    "width": 25.8,
+    "height": 11.5,
+    "mounting_holes": "4x dia 2.0 (drawing also shows 18 and 2.00)",
+    "cad_check": "housing parts 7+8 span exactly 49.4 x 11.5 x 25.8"
+  },
+  "mass_g": 35,
+  "colors": {
+    "housing": "dark gunmetal grey / black matte plastic with faceted 'X' relief",
+    "branding": "white 'R ROBOMASTER' logo, 'C620', '20A' printed in white",
+    "mounting_tabs": "small silver metal inserts at the 4 corners",
+    "leads": "3-phase leads black / yellow / red into a yellow 3-pin connector",
+    "power": "black round lead ending in a black right-angle plug (photos; CAD models it as a 2-pin plug on a 170 mm lead); the user guide says the supply connects via XT30"
+  },
+  "photo_urls": [
+    "https://se-cdn.djiits.com/tpc/uploads/sku/cover/08aa5010-64ec-447d-a568-1d2eb597f345@ultra.png",
+    "https://rm-static.djicdn.com/tem/17348/d10268fac15631516863123417301533.png"
+  ],
+  "ref_photo": "cad/raw/c620/ref.png",
+  "docs": [
+    {
+      "path": "cad/raw/c620/docs/C620_UserGuide_V1.01.pdf",
+      "url": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20C620%20Brushless%20DC%20Motor%20Speed%20Controller%20V1.01.pdf"
+    }
+  ],
+  "notes": "Official SolidWorks 2016 export, 2017-08-11. Units mm. Housing matches the spec exactly; the bbox (345 mm) is dominated by the modelled cables. One BREP_WITH_VOIDS and two surface models present. Part names are numbers."
+}

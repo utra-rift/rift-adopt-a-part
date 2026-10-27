@@ -1,0 +1,109 @@
+{
+  "id": "arducam-b0385",
+  "name": "Arducam B0385: 1MP OV9782 global-shutter colour USB 2.0 UVC camera board with M12 low-distortion lens (board silkscreen 'Arducam UC-852 Rev.A')",
+  "status": "no-cad",
+  "files": [],
+  "related_cad_NOT_THIS_PART": [
+    {
+      "path": "cad/raw/arducam-b0385/related-NOT-b0385_B0332-UC-844RevB/B0332.STEP",
+      "why_not": "Official Arducam/UCTRONICS STEP for the sibling SKU B0332 (mono OV9281). Its root product is 'B0418' and its board is 'UC-844_Rev.B'. That board takes the sensor on a flex through an FH26-33S 33-pin FPC connector, and its 4-pin connector is a B4B-ZR (top entry). The B0385 is a different PCB (UC-852 Rev.A in the photos) with a side-entry S4B-ZR connector (datasheet) and no FPC connector. It shares the 38x38 outline and the M12 holder/lens envelope, but the components differ. Do not render it as the B0385.",
+      "format": "STEP AP214 (AUTOMOTIVE_DESIGN), SolidWorks 2021 export 2022-12-29, header FILE_NAME 'B0418.STEP'",
+      "bytes": 14305532,
+      "sha256": "abf50ce793346adc90fbe0613b2800e2f1c6b488c6013456e07af32e49fab1d2",
+      "units": "mm (SI_UNIT(.MILLI.,.METRE.))",
+      "geometry": {
+        "ADVANCED_FACE": 3782,
+        "MANIFOLD_SOLID_BREP": 37,
+        "PRODUCT": 103,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 149
+      },
+      "tessellated_bbox_mm": {
+        "size": [
+          38.0,
+          38.0,
+          23.74
+        ],
+        "min": [
+          -19.0,
+          -19.0,
+          -6.24
+        ],
+        "max": [
+          19.0,
+          19.0,
+          17.5
+        ]
+      },
+      "products": [
+        "B0418 (root)",
+        "UC-844_Rev.B.step (PCB 38x38x1.74 plus ~90 component products R*/C*/U*/L*, B4B-ZR, FH26-33S)",
+        "零件5 / 'part 5' (M12 holder 22x14x10 with ears, lens to Z=17.5, flex tail)"
+      ],
+      "download_url": "https://www.uctronics.com/download/Mechanical_Drawing/B0332.STEP"
+    }
+  ],
+  "source_url": "https://www.arducam.com/100fps-global-shutter-color-usb-camera-board-1mp-ov9782-uvc-webcam-module-with-low-distortion-m12-lens-without-microphones-for-computer-laptop-android-device-and-raspberry-pi-arducam.html",
+  "download_url": null,
+  "drawing_url": "https://www.welectron.com/mediafiles/productimg/arducam/Amazon/B0385_OV9782_Global_Shutter_UVC_Camera_Datasheet.pdf",
+  "drawing_files": [
+    {
+      "path": "cad/raw/arducam-b0385/B0385_OV9782_Global_Shutter_UVC_Camera_Datasheet.pdf",
+      "url": "https://core-electronics.com.au/attachments/localcontent/B0385_OV9782_Global_Shutter_UVC_Camera_Datasheet_19190316e78.pdf",
+      "what": "Arducam datasheet V1.0 (2021-12-16): sec.4 Overall Dimension Diagram, sec.5 Lens Diagram"
+    },
+    {
+      "path": "cad/raw/arducam-b0385/datasheet_dimension_diagram.jpg",
+      "what": "image extracted from datasheet p.4 (board outline, holes, connector)"
+    },
+    {
+      "path": "cad/raw/arducam-b0385/datasheet_lens_M27280M07S.jpg",
+      "what": "image extracted from datasheet p.4 (lens M27280M07S drawing + specs)"
+    },
+    {
+      "path": "cad/raw/arducam-b0385/B0385_Manual.pdf",
+      "url": "https://www.uctronics.com/download/Amazon/B0385_Manual.pdf",
+      "what": "quick start guide (specs)"
+    }
+  ],
+  "license": "n/a (no CAD for this SKU). Datasheet is 'Proprietary to Arducam'.",
+  "dims_mm": {
+    "board": "38.00 x 38.00 square",
+    "mounting_holes_outer": "4x on 34.00 x 34.00 pitch, labelled 'R=4* 1.30mm' (read as radius 1.30, i.e. Ø2.6)",
+    "mounting_holes_inner": "4x on 28.00 x 28.00 pitch, labelled 'R=4* 1.40mm' (read as radius 1.40, i.e. Ø2.8)",
+    "edge_slots": "rounded routed slots run along all four edges between the holes (drawn, not dimensioned); in photos the slot edges are plated/gold",
+    "lens_centre": "board centre (19.00 from the right edge and 19.00 from the top edge)",
+    "sensor_holder_footprint": "square drawn around the lens centre, not dimensioned. The photos show a black M12 holder with two screw ears on the vertical axis",
+    "usb_connector": "4-pin JST ZR 1.5 mm pitch, S4B-ZR(LF)(SN) side-entry, on the back. Footprint box 7.56 wide x 3.81 deep, 8.24 from the left edge, 3.47 from the bottom edge. Pin order VCC, DM, DP, GND",
+    "lens": "M27280M07S: M12 x P0.5 mount, EFL 2.8, F2.8, Ø14±0.05 head, total length 15.86 (head 4.3 + thread 8.9 = 13.2, the remaining ~2.7 is the rear IR-filter seat, Ø9 filter), Ø12 thread, IR-cut 650 filter, 4 g; lens spec table lists 'Lens Holder Height 7mm'",
+    "pcb_thickness": "not stated",
+    "photo_dimension_note": "the retailer/Arducam photo labels '32.00mm' under the board; the datasheet only gives 38/34/28 pitches. Trust the datasheet"
+  },
+  "mass_g": null,
+  "colors": {
+    "pcb": "matte black solder mask, white silkscreen ('Arducam', 'UC-852', 'Rev.A' on the back; G S F pads and L/R footprints on the front)",
+    "plating": "gold (ENIG) annular rings on all 8 mounting holes and along the edge slot outlines; matches the gold rings in the team render",
+    "lens_holder": "black plastic M12 holder with two ear tabs",
+    "lens": "black anodised/plastic barrel with knurled ring; glass with a purple/green AR-coating sheen",
+    "connector": "white JST ZR 4-pin (back side)",
+    "components": "back: black QFP USB-bridge IC (Sonix; USB VID:PID 0c45:6366 per Arducam forum), small black ICs, tan/brown MLCCs, and two silver screw heads that fix the lens holder from behind"
+  },
+  "photo_urls": [
+    "https://www.welectron.com/media/image/product/23129/lg/arducam-b0385-120fps-global-shutter-color-usb-camera-board.jpg",
+    "https://www.welectron.com/media/image/product/23129/lg/arducam-b0385-120fps-global-shutter-color-usb-camera-board~3.jpg",
+    "https://www.welectron.com/media/image/product/23129/lg/arducam-b0385-120fps-global-shutter-color-usb-camera-board~4.jpg"
+  ],
+  "ref_photo": "cad/raw/arducam-b0385/ref.jpg",
+  "other_refs": [
+    "cad/raw/arducam-b0385/ref_front.jpg",
+    "cad/raw/arducam-b0385/ref_front_back_dims.jpg (front and back, shows 'UC-852 Rev.A' silkscreen)"
+  ],
+  "search_log": [
+    "arducam.com product pages sit behind a Cloudflare challenge (403); not bypassed. A Wayback snapshot (2025-04-17) of the B0385 page has no STEP link; the Documentation tab loads dynamically",
+    "Search results say the B0385 page lists only Manual.pdf, while the B0332 page lists a '3D drawing.STEP'",
+    "uctronics.com/download/Mechanical_Drawing/<SKU>.STEP pattern (found in an Arducam forum reply): B0385.STEP and variants return 404; B0332.STEP is 200 (kept as related, see above)",
+    "download.arducam.com/doc/UC-852*.STEP variants: 404",
+    "Arducam forum (Discourse JSON search: B0385, OV9782 step, UC-852, STEP model, stp file, CAD model): no B0385/UC-852 CAD posted",
+    "GitHub repos, Printables, AndyMark (only OV9281 mount STEPs), welectron/Core Electronics (datasheet and manual only): no B0385 CAD"
+  ],
+  "notes": "The team render matches the B0385: black 38x38 board, gold rings, black M12 holder and lens. No public CAD exists for the B0385 / UC-852 board, so model it by hand from the datasheet drawing plus the front/back photos. The B0332 STEP can give general proportions for the M12 holder and lens envelope but is a different PCB. Some listings (welectron title) say 120 fps; Arducam's manual says MJPG 100 fps at 1280x800."
+}

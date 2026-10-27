@@ -1,0 +1,52 @@
+{
+  "id": "mc02",
+  "name": "RoboMaster Referee System Main Control Module MC02",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/mc02/RoboMaster_MC02_2019.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 11201813,
+      "units": "mm",
+      "products": [
+        "000"
+      ],
+      "bodies": 12,
+      "advanced_faces": 2887,
+      "colours": false,
+      "origin": "SolidWorks 2016, 2018-11-20, FILE_NAME '000.STEP'",
+      "sha256": "b19a95a8fec07ccaca94f4cb579bd8274ab11ba113b71cedb865e0c795f970e6",
+      "vertex_bbox_mm": [
+        76.0,
+        15.65,
+        219.46
+      ],
+      "note": "Single multi-body part (12 solid bodies named '1'..'13'). bbox includes the attached aviation-connector cable; body is 76 x 63 x 14."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/804782",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/2607",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/f4d29b85bd44461eafb3b45c983a5e491761018770093/RoboMaster 主控模块 MC02 2019.STEP",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/17348/RoboMaster Referee System Main Control Module MC02.STEP (same byte size, 11201813)",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "body": [
+      76,
+      63,
+      14
+    ],
+    "mounting_holes": "4x d2.5: top pair 67.5 apart, bottom tab pair 44 apart, rows 56 apart",
+    "source": "MC02 user guide 'Installation Dimensions' drawing (docs/MC02_user_guide_CHS_EN.pdf p4)"
+  },
+  "mass_g": 80,
+  "colors": "Matte dark charcoal/black housing (plastic top cover, metal bottom cover), small monochrome OLED screen near the top, four dark push-buttons + round IR receiver, micro-USB port on the side, light-grey embossed RoboMaster 'R' logo; black cable to an aviation connector with black metal ring.",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/3a80ec66bfc3b1592468604162211279.jpg",
+    "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/2b0ac6d1f7014b0482723f2dbb1cbbe71758467143547/image.png"
+  ],
+  "ref_photo": "cad/raw/mc02/ref.jpg",
+  "docs": [
+    "cad/raw/mc02/docs/MC02_user_guide_CHS_EN.pdf"
+  ],
+  "notes": "Official STEP from the current RoboMaster wiki (file labelled 'MC02 2019'; MC02 is still the current main controller per the 2026 Referee System User Manual V1.5). Specs: 12 V, ISM 2.4 GHz."
+}

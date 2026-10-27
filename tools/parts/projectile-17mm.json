@@ -1,0 +1,8 @@
+{
+  "src": "cad/models/projectile-17mm.step",
+  "up": "z",
+  "deflection": 0.0012,
+  "angular": 0.26,
+  "view": { "azimuth": 45, "elevation": 30 },
+  "notes": "RoboMaster 17 mm projectile: sphere Ø16.8 mm (official)."
+}

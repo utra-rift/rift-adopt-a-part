@@ -1,0 +1,64 @@
+{
+  "id": "m3508-bare",
+  "name": "DJI M3508 brushless motor without P19 gearbox (launcher flywheel motor)",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/m3508-p19/M3508_P19.stp",
+      "format": "STEP AP203 (shared with m3508-p19)",
+      "bytes": 4595780,
+      "sha256": "12e62a62c12495210feb74f1272f4d71cffed070fd91a601d646b6c2a6d57087",
+      "units": "mm",
+      "derive": {
+        "method": "load the P19 STEP and drop product subassembly '2_ASM' (all of it). Keep '1_1', '3', '4_ASM', '5_ASM'.",
+        "occt_import_js": "drop node '2_ASM' = meshes 26..40; keep meshes 0..25",
+        "remove_products": [
+          "2_ASM",
+          "23",
+          "16",
+          "17",
+          "18 (x4)",
+          "26_ASM (x2) -> 27, 28 (x2)",
+          "25",
+          "24"
+        ],
+        "keep_products": [
+          "1_1",
+          "3",
+          "4_ASM (__-__20, __-__10_1_, __-__10_2_, __-__10_3_)",
+          "5_ASM (15 x3, 20, unnamed terminals)"
+        ],
+        "resulting_motor_extent": "Z 15.34 to 58.74 = 43.4 mm incl. rear stub and front shaft stub; housing OD 42; front: 26.8 mm boss (z50.4-52) and ~5 mm shaft stub to z58.74"
+      },
+      "products": [
+        "1_1",
+        "3",
+        "4_ASM",
+        "5_ASM"
+      ]
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/general/M3508",
+  "download_url": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20M3508%20P19%20Brushless%20DC%20Gear%20Motor%20.stp",
+  "download_index": "https://rm-static.djicdn.com/live_json/simple_cms.json",
+  "license": "No explicit license on the CAD. Published by DJI (SZ DJI Technology Co., Ltd.) as a free public download on the official RoboMaster site for customers integrating the product. DJI user guides state the product and documents are copyrighted by DJI, all rights reserved, no reproduction without written consent. Treat as proprietary: OK for internal reference/rendering, ask DJI before redistributing the raw STEP.",
+  "dims_mm": {
+    "outer_diameter": 42,
+    "official_bare_motor_dims": null,
+    "cad_derived_length_without_gearbox": 43.4,
+    "note": "DJI publishes no spec for the motor alone; the CAD-derived length is the 1_1 body's Z extent, not an official figure"
+  },
+  "mass_g": null,
+  "colors": {
+    "housing": "matte black anodized aluminium (same as the motor section of the P19)",
+    "rear": "black vented end cap, steel rear shaft stub",
+    "front_after_gearbox_removal": "not shown in any official photo",
+    "leads": "3-phase leads black / yellow / red with yellow 3-pin connector; black 7-pin cable"
+  },
+  "photo_urls": [
+    "https://se-cdn.djiits.com/tpc/uploads/sku/cover/f67908bb-15c5-464f-8bd4-2a425b44c113@ultra.png"
+  ],
+  "ref_photo": "cad/raw/m3508-bare/ref.png",
+  "ref_photo_note": "official photo is of the full P19 with gearbox; the lower black section is the motor",
+  "notes": "No separate official CAD for the bare M3508 exists: DJI's download index (simple_cms.json) lists only the P19 STEP, and web/GitHub/GrabCAD searches found none. DJI does not sell the motor without the gearbox, so there is no official spec, mass or photo for it. In the CAD the front of '1_1' beyond the boss is a plain ~5 mm shaft stub; the real motor carries the gearbox's sun pinion there, so the CAD front is simplified. The 4 '18' screws enter the motor housing (start at z46.64); after removing them the CAD has no screw heads at the joint."
+}

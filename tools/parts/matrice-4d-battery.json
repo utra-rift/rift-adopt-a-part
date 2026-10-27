@@ -1,0 +1,7 @@
+{
+  "src": "cad/models/matrice-4d-battery.soup",
+  "up": "z",
+  "rotate": [180, 0, -90],
+  "view": { "azimuth": 45, "elevation": 30 },
+  "notes": "DJI Matrice 4D Series battery (BPX230-6768-22.14), official STEP published by RoboMaster/DJI. Standing on its base, cap up. Faces that can't be seen from outside left out (the CAD has no cells; the inside is treated as filled)."
+}

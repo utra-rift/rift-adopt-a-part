@@ -1,0 +1,136 @@
+{
+  "id": "projectile-charger",
+  "name": "RoboMaster 17mm Fluorescent Projectile Charger (17mm荧光弹丸充能装置): LED driver board plus two 390-410 nm UV LED panels with heat sinks",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/projectile-charger/UV_Light_Panel.STEP",
+      "format": "step",
+      "role": "main",
+      "bytes": 561232,
+      "md5": "be96e060e8fa0d76bdadf8b91f0f6967",
+      "units": "mm",
+      "products": [
+        "1",
+        "2",
+        "3",
+        "UV_Light_Panel"
+      ],
+      "step_header": {
+        "file_name": "'UV_Light_Panel.STEP', '2020-03-13T09:06:56', ( 'a' ), ( 'Microsoft' ), 'SwSTEP 2.0', 'SolidWorks 2016', ''",
+        "file_schema": "( 'CONFIG_CONTROL_DESIGN' )"
+      },
+      "geometry_counts": {
+        "ADVANCED_FACE": 215,
+        "MANIFOLD_SOLID_BREP": 3,
+        "SHELL_BASED_SURFACE_MODEL": 0,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 3,
+        "STYLED_ITEM": 0
+      },
+      "url": "https://rm-static.djicdn.com/tem/17348/UV_Light_Panel.STEP",
+      "bbox_mm_tessellated": [
+        11.0,
+        12.0,
+        37.49
+      ],
+      "bbox_note": "3 bodies: product \"1\" = finned heat sink 11.00 x 10.00 x 17.14; \"3\" = UV LED aluminium board 9.00 x 2.00 x 19.60; \"2\" = lead stub and connector 7.0 x 4.5 x 21.7 (the real lead is 300 mm, truncated in CAD). Kit has 2 of these."
+    },
+    {
+      "path": "cad/raw/projectile-charger/LED_Driver.STEP",
+      "format": "step",
+      "role": "secondary",
+      "bytes": 3710430,
+      "md5": "ef5736ec0c250131a13e113cecfb83ae",
+      "units": "mm",
+      "products": [
+        "LED_Driver"
+      ],
+      "step_header": {
+        "file_name": "'LED_Driver.STEP', '2020-03-13T09:16:37', ( 'a' ), ( 'Microsoft' ), 'SwSTEP 2.0', 'SolidWorks 2016', ''",
+        "file_schema": "( 'CONFIG_CONTROL_DESIGN' )"
+      },
+      "geometry_counts": {
+        "ADVANCED_FACE": 1419,
+        "MANIFOLD_SOLID_BREP": 43,
+        "SHELL_BASED_SURFACE_MODEL": 0,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 0,
+        "STYLED_ITEM": 0
+      },
+      "url": "https://rm-static.djicdn.com/tem/17348/LED_Driver.STEP",
+      "bbox_mm_tessellated": [
+        14.61,
+        66.39,
+        6.25
+      ],
+      "bbox_note": "Driver PCB 14 x 30 with components (43 bodies, single product LED_Driver) plus a truncated XT30 lead stub (real lead 160 mm). No colours in file."
+    },
+    {
+      "path": "cad/raw/projectile-charger/manual_en.pdf",
+      "format": "pdf",
+      "role": "user-manual",
+      "bytes": 637097,
+      "md5": "3bc45c6bcb8ad692bf90e0fa52fe3e4c",
+      "units": null,
+      "products": [],
+      "url": "https://rm-static.djicdn.com/tem/17348/RoboMaster 17mm Fluorescent Projectile Charger User Manual.pdf",
+      "what": "User Manual v1.0 (2020.02); dimensioned drawing on p.3"
+    },
+    {
+      "path": "cad/raw/projectile-charger/manual_zh.pdf",
+      "format": "pdf",
+      "role": "user-manual",
+      "bytes": 726986,
+      "md5": "03a451f3de820032bfc6b88d544395a1",
+      "units": null,
+      "products": [],
+      "url": "https://rm-static.djicdn.com/tem/17348/ROBOMASTER 17mm荧光弹丸充能装置用户手册（中）.pdf"
+    },
+    {
+      "path": "cad/raw/projectile-charger/ref.jpg",
+      "format": "jpg",
+      "role": "photo",
+      "bytes": 328607,
+      "md5": "0164438dfe59c7d074953baee3a6f99a",
+      "units": null,
+      "products": [],
+      "url": "https://rm-static.djicdn.com/tem/17348/1547d480cbeea158626946260528625.jpg"
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/detail/2479",
+  "source_urls_more": [
+    "https://www.robomaster.com/zh-CN/products/components/detail/2478",
+    "https://bbs.robomaster.com/wiki/20204847/810121"
+  ],
+  "download_url": "https://rm-static.djicdn.com/tem/17348/UV_Light_Panel.STEP",
+  "download_url_more": [
+    "https://rm-static.djicdn.com/tem/17348/LED_Driver.STEP"
+  ],
+  "provenance": "Official RoboMaster product-page downloads (SolidWorks 2016 AP203 export, 2020-03-13). MD5s match the official RoboMaster wiki attachments (UV_Light_Panel be96e060..., LED_Driver ef5736ec...).",
+  "license": "No explicit license. Published free by the RoboMaster organizing committee (DJI) for participant teams to design robots around the part; DJI copyright. Fine for rendering on our own site; do not redistribute the raw CAD file without checking with DJI/RoboMaster.",
+  "what_it_is": "Not a box: a small kit that bolts onto the team's own 17 mm launcher feed. Two UV light panels (9 x 19.6 mm aluminium LED boards, each on a finned 11 x 17.14 x 10 mm heat sink, M1.4 screws) are mounted on the user-made slot just behind the launching projectile so they \"charge\" the standby projectile; a heat-shrink-wrapped 14 x 30 mm constant-current LED driver feeds them from robot power via XT30. Box: LED driver x1, UV light panel x2, heat sink x2, M1.4x4 screws x6.",
+  "dims_mm": {
+    "led_driver": "PCB 14 x 30; 160 mm lead to XT30 (+/-)",
+    "uv_light_panel": "board 9 wide x 19.60 long x 1 thick (2 incl. LEDs); 7.30 slot width, 3.30 LED pitch feature, 2-R0.75 notches at 9.80; lead 300 mm",
+    "heat_sink": "11 x 17.14 x 10 fin depth; 2x Ø1.60 holes on 7.30 pitch, counterbore Ø3 x 0.5, holes 7.14 from bottom"
+  },
+  "mass_g": 18,
+  "electrical": {
+    "driver_input": "9-28 V",
+    "driver_output": "300 mA constant current",
+    "uv_band_nm": "390-410",
+    "panel_power": "1 W x 2",
+    "operating_temp_C": "0-55"
+  },
+  "colors": {
+    "led_driver": "black PCB (white silkscreen) under clear heat-shrink; two white 2-pin sockets at the panel end",
+    "uv_panel": "white solder-mask aluminium board, three square UV LEDs (dark when off, violet when lit)",
+    "heat_sink": "not shown in any official photo; finish unconfirmed (aluminium)",
+    "wires": "driver: thick red/black leads to a yellow XT30 plug; panels: thin red/black leads to white 2-pin plugs"
+  },
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/1547d480cbeea158626946260528625.jpg",
+    "https://rm-static.djicdn.com/tem/17348/6cbea9a92609b1586269472367747097.jpg",
+    "https://rm-static.djicdn.com/tem/17348/678163619a6f61586269480168823097.jpg"
+  ],
+  "notes": "Two STEP files make up the kit: render 1x LED_Driver + 2x UV_Light_Panel. Neither file carries colours. Exact colours of the LED board and heat sink should be checked against the three product photos (only the driver is clearly visible in ref.jpg). Price USD 13 / RMB 89."
+}

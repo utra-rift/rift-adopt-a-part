@@ -1,0 +1,61 @@
+{
+  "id": "charger-240w",
+  "name": "DJI 240W Power Adapter (Chinese: DJI 240W 桌面充电器, \"240W desktop charger\"), model CDX230-240",
+  "status": "no-cad",
+  "files": [
+    {
+      "path": "cad/raw/charger-240w/DJI_240W_Power_Adapter_PI.pdf",
+      "format": "pdf",
+      "role": "product-info",
+      "bytes": 539993,
+      "md5": "272a7c8b71695d4b729d5bdedf8d7909",
+      "units": null,
+      "products": [],
+      "url": "https://dl.djicdn.com/downloads/DJI_Dock_3/20250227/DJI_240W_Power_Adapter_PI.pdf",
+      "what": "Official product information sheet (multilingual). The Chinese text names it \"DJI 240W 桌面充电器\", confirming the budget name."
+    },
+    {
+      "path": "cad/raw/charger-240w/ref.jpg",
+      "format": "jpg",
+      "role": "photo",
+      "bytes": 25224,
+      "md5": "e84c918456e2fbd8a97cea7808ddc3ec",
+      "units": null,
+      "products": [],
+      "url": "https://se-cdn.djiits.com/tpc/uploads/photo/image/bc450e3d20820efa1b59852990223b20@large.jpg"
+    }
+  ],
+  "source_url": "https://store.dji.com/product/dji-240w-power-adapter",
+  "source_urls_more": [
+    "https://enterprise.dji.com/dock-3/specs",
+    "https://enterprise.dji.com/dock-3/downloads"
+  ],
+  "download_url": null,
+  "drawing_url": null,
+  "search_log": "Checked: enterprise.dji.com/dock-3/downloads, DJI store pages (global, CN), RoboMaster CMS/announcements/wiki, web search for STEP/STL. No CAD and no official dimensioned drawing found.",
+  "license": "n/a (no CAD). Docs and photos are DJI material.",
+  "dims_mm": {
+    "official": "DJI publishes no dimensions or weight for CDX230-240 (store and spec pages checked).",
+    "retailer_unverified": "MediaMarkt BE (EU unit, part 2175166): depth 132.59, height 36.5, width blank, 679 g. Not confirmed.",
+    "do_not_use": "The 120.4 x 70.34 x 36.47 mm / 623 g figures online belong to the different \"DJI Mavic 240W Power Adapter\" (built-in cable, Mavic 4 Pro).",
+    "layout": "Plain rectangular box with softly rounded edges; two-piece shell (lid and base) with a horizontal seam. One end face: a vertical USB-C output port and, beside it, the SDC output socket (orange insert with two round power terminals and small signal pins, in a recessed black frame). Opposite end face: 2-pin IEC C8 (figure-8) AC inlet. Photos 5bded9... (port end) and e116ee... (AC end)."
+  },
+  "mass_g": null,
+  "electrical": {
+    "input": "100-240 V AC, 50/60 Hz, max 3 A",
+    "output": "240 W total; USB-C max 65 W (45 W when both ports in use)",
+    "ports": "SDC out + USB-C out",
+    "in_box": "240W Power Adapter x1, USB-C cable x1, AC cable (region-specific)"
+  },
+  "colors": {
+    "body": "black matte/satin plastic",
+    "sdc_port": "bright orange connector insert",
+    "usb_c": "black port"
+  },
+  "photo_urls": [
+    "https://se-cdn.djiits.com/tpc/uploads/photo/image/bc450e3d20820efa1b59852990223b20@large.jpg",
+    "https://se-cdn.djiits.com/tpc/uploads/photo/image/5bded920e42b871a0c7be017b38d4ef8@large.jpg",
+    "https://se-cdn.djiits.com/tpc/uploads/photo/image/e116eeeefa1dc8c5e5b34be7a3410a18@large.jpg"
+  ],
+  "notes": "Identity: \"240W Desktop Charger\" is the direct translation of DJI's Chinese name 240W 桌面充电器 for the DJI 240W Power Adapter, the adapter the Matrice 4D charging hub requires (RoboMaster lists it as the 新充电器, RMB 270 reference). ref.jpg is a plain 3/4 view; photo 5bded9... shows the SDC/USB-C end. Note that DJI's spec page heading calls it \"Aircraft - Power Adapter\"."
+}

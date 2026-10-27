@@ -1,0 +1,18 @@
+{
+  "src": "cad/raw/devboard-c/DevBoardC_asm.stp",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    180
+  ],
+  "deflection": 0.0015,
+  "angular": 0.3,
+  "drop": "/1_0/#1$",
+  "lit": "/1_0/#0$",
+  "view": {
+    "azimuth": 45,
+    "elevation": 30
+  },
+  "notes": "DJI RoboMaster Development Board Type C, official STEP (robomaster.com). Case, board and the bottom plate's four metal eyelets as shipped; a hidden 10 x 10 mm pad under the case left out."
+}

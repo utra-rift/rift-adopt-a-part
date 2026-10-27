@@ -1,0 +1,9 @@
+{
+  "src": "cad/models/filament-spool.step",
+  "up": "z",
+  "rotate": [90, 0, 0],
+  "deflection": 0.0012,
+  "angular": 0.26,
+  "view": { "azimuth": 45, "elevation": 30 },
+  "notes": "Generic 1 kg spool modelled to the common size (RepRap wiki): Ø200 × 68 mm, Ø52 bore, Ø100 hub. Nylon-CF filament drawn as one wound band, Ø179 mm for 1 kg at 1.17 g/cm³."
+}

@@ -1,0 +1,51 @@
+{
+  "id": "li01",
+  "name": "RoboMaster Referee System Light Indicator Module LI01",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/li01/RoboMaster_LI01_2020.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 17037696,
+      "units": "mm",
+      "products": [
+        "裁判系统-灯条模块 (Referee System - Light Bar Module)"
+      ],
+      "bodies": 32,
+      "advanced_faces": 2504,
+      "colours": false,
+      "origin": "SolidWorks 2016, 2018-11-20, FILE_NAME '裁判系统-灯条模块.STEP'",
+      "sha256": "9305fb57a15454e0e9bf7d6890e04d11bce4ad5eb2be4b2339b155c94568a06f",
+      "vertex_bbox_mm": [
+        285.0,
+        108.32,
+        85.92
+      ],
+      "note": "Single multi-body part, 32 bodies. 285 length matches spec; 108 mm extent likely includes the cable/aviation connector (spec 50 mm)."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/811452",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/2609",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/26de3706387d419ea73cce941b6fb11f1758944577660/RoboMaster 灯条模块 LI01 2020 .STEP",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/17348/RoboMaster Referee System Light Indicator Module LI01.STEP (same byte size, 17037696; wiki also lists 'LI01 2019.STEP', same size)",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "overall": [
+      285,
+      50,
+      84.75
+    ],
+    "source": "LI01 spec (wiki 811452 / LI01 user guide)"
+  },
+  "mass_g": 350,
+  "colors": "Black housing/end caps with a long milky-white translucent diffuser that lights red or blue to show team and HP; two black mounting brackets; black cable to an aviation connector.",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/aca4980ca5d4d1592470062006545609.jpg",
+    "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/14108610e8a34be8adb615c4777494461758471880585/image.png"
+  ],
+  "ref_photo": "cad/raw/li01/ref.jpg",
+  "docs": [
+    "cad/raw/li01/docs/LI01_user_guide_CN_EN.pdf"
+  ],
+  "notes": "12 V, 1-3.5 A. Mounts on the small or large armor support frame with M3 screws."
+}

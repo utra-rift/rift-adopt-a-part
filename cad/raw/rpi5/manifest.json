@@ -1,0 +1,103 @@
+{
+  "id": "rpi5",
+  "name": "Raspberry Pi 5 Model B (8GB variant; one model covers all RAM sizes)",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/rpi5/x/rpi-5b_with_graphics.step",
+      "role": "main (includes silkscreen/logo graphics as thin white solids)",
+      "format": "STEP AP214 (AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }), B-rep; FreeCAD / Open CASCADE 7.8 export",
+      "bytes": 142473529,
+      "sha256": "625683b44669593fbeba2fecb9b3555b7e5a16c846c7fde0eab505c66478b3e0",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) )",
+      "header_file_name": "'Open CASCADE Shape Model','2026-05-27T13:28:21', 'Open CASCADE STEP processor 7.8','FreeCAD'",
+      "geometry": {
+        "ADVANCED_FACE": 83152,
+        "MANIFOLD_SOLID_BREP": 3467,
+        "SHELL_BASED_SURFACE_MODEL": 22,
+        "PRODUCT": 5183,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 5182,
+        "STYLED_ITEM": 3489,
+        "COLOUR_RGB": 27
+      },
+      "products": [
+        "5183 products, all anonymised as OBJ0..OBJn (FreeCAD export); no meaningful part names. Extra over no_graphics: ~780 white ('predef:white') silkscreen/graphics solids"
+      ]
+    },
+    {
+      "path": "cad/raw/rpi5/x/rpi-5b_no_graphics.step",
+      "role": "alternate (same board without silkscreen graphics; lighter)",
+      "format": "STEP AP214 (AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }), B-rep; FreeCAD / Open CASCADE 7.8 export",
+      "bytes": 77627469,
+      "sha256": "78164070c1cc7ab854382950d2e85926c6e35432f1e5a146b733397a7c6afb44",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) )",
+      "header_file_name": "'Open CASCADE Shape Model','2026-05-27T13:27:50', 'Open CASCADE STEP processor 7.8','FreeCAD'",
+      "geometry": {
+        "ADVANCED_FACE": 45689,
+        "MANIFOLD_SOLID_BREP": 2689,
+        "SHELL_BASED_SURFACE_MODEL": 22,
+        "PRODUCT": 4287,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 4286,
+        "STYLED_ITEM": 2711,
+        "COLOUR_RGB": 27
+      },
+      "products": [
+        "4287 products, all anonymised OBJ0..OBJn. Identified by colour/size: PCB = single solid coloured rgb(0,140,73), local bbox exactly 85.0 x 56.0 x 1.276 mm; 2x20 GPIO header body 50.8 long; USB stacks ~21.6 x 15.9 x 14.7"
+      ]
+    }
+  ],
+  "embedded_colours_rgb_by_styled_item_count": {
+    "(204,204,204) silver metal shells/shields": 2139,
+    "(34,34,34) black plastics": 1676,
+    "(55,142,255) blue (USB 3.0 tongues etc.)": 1650,
+    "(51,51,51) dark grey ICs": 1019,
+    "(255,235,135) gold pins/pads": 829,
+    "(187,187,187) light metal": 461,
+    "(97,69,55) brown (MLCC bodies)": 320,
+    "(0,140,73) PCB green": 1,
+    "predef white (silkscreen, graphics file only)": 894
+  },
+  "archives": [
+    "cad/raw/rpi5/rpi5-step-with-graphics.zip (25114809 bytes) <- https://pip-assets.raspberrypi.com/categories/892-raspberry-pi-5/documents/RP-010082-CA-1-rpi-5%203D%20STEP%20-%20With%20Graphics%20large%20file.zip",
+    "cad/raw/rpi5/rpi5-step-no-graphics.zip (13270704 bytes) <- https://pip-assets.raspberrypi.com/categories/892-raspberry-pi-5/documents/RP-010083-CA-1-rpi-5%203D%20STEP%20-%20No%20Graphics%20small%20file.zip (also the redirect target of https://datasheets.raspberrypi.com/rpi5/RaspberryPi5-step.zip)"
+  ],
+  "docs": [
+    {
+      "path": "cad/raw/rpi5/raspberry-pi-5-mechanical-drawing.pdf",
+      "url": "https://pip-assets.raspberrypi.com/categories/892-raspberry-pi-5/documents/RP-008347-DS-1-raspberry-pi-5-mechanical-drawing.pdf"
+    },
+    {
+      "path": "cad/raw/rpi5/x/LICENSE.txt",
+      "what": "MIT licence + disclaimer shipped in both zips"
+    }
+  ],
+  "source_url": "https://pip.raspberrypi.com/categories/892-raspberry-pi-5",
+  "download_url": "https://pip-assets.raspberrypi.com/categories/892-raspberry-pi-5/documents/RP-010082-CA-1-rpi-5%203D%20STEP%20-%20With%20Graphics%20large%20file.zip",
+  "license": "MIT License, Copyright (c) 2026 Raspberry Pi Ltd (LICENSE.txt in the zip). Disclaimer: provided for guidance only, without guarantee of accuracy; may include third-party component models redistributed with permission.",
+  "dims_mm": {
+    "pcb": "85 x 56 (official drawing; CAD PCB solid is exactly 85.0 x 56.0)",
+    "pcb_thickness_cad": 1.276,
+    "mounting_holes": "4x Ø2.7 on a 58 x 49 rectangle, 3.5 from the left edge (yellow/gold ring pads)",
+    "gpio_header": "2x20, 2.54 pitch, centre 29 from the left mounting hole (drawing)",
+    "port_side_bottom_edge": "USB-C power centre 11.2, HDMI0 centre 25.8, HDMI1 centre 39.2 from the left edge",
+    "port_side_right_edge": "Ethernet centre 10.2, USB stack centres 29.1 and 47 from the bottom edge; USB/Ethernet overhang the board edge by about 3",
+    "drawing_note": "Raspberry Pi: 'All dimensions are approximate and for reference purposes only'"
+  },
+  "mass_g": null,
+  "colors": {
+    "pcb": "Raspberry Pi green solder mask (CAD rgb(0,140,73)), white silkscreen ('Raspberry Pi 5', raspberry logo, HDMI logo, port labels)",
+    "mounting_holes": "yellow/gold ring pads",
+    "usb_ethernet": "silver metal shells; the two USB 3.0 ports (middle stack) have blue tongues. Ethernet jack is silver with 'Trxcom' marking",
+    "gpio_header": "black plastic with gold pins",
+    "soc": "Broadcom BCM2712 with a silver metal heat-spreader lid; RP1 and LPDDR4X RAM are black packages",
+    "other": "silver shielded Wi-Fi module can, two white FPC CAM/DISP connectors (cream/beige), white fan connector, silver USB-C and micro-HDMI shells"
+  },
+  "photo_urls": [
+    "https://assets.raspberrypi.com/static/c671804c05a51efc4e3c2a1bdcbafbcf/e58b5/raspberry-pi-5.png"
+  ],
+  "ref_photo": "cad/raw/rpi5/ref.png",
+  "notes": "Official Raspberry Pi Ltd STEP models, published on the Product Information Portal 11 Jun 2026 (files dated 2026-05-27). They supersede the older datasheets.raspberrypi.com/rpi5/RaspberryPi5-step.zip, which now redirects to the no-graphics zip. Matches the team render (green Pi 5 with silver USB/Ethernet). One model covers all RAM variants; on real boards a silkscreen checkbox (1G/2G/4G/8G) marks the RAM size, so the 8GB variant is not modelled separately. Mass is not published by Raspberry Pi. Product names inside the STEP are anonymised (OBJn), so identify sub-bodies by colour and geometry. Raw vertex bboxes are in local frames and are not world-space.",
+  "conversion_warning": "tools/inspect.mjs (occt-import-js 0.0.23) and an absolute-deflection run (0.05 mm, angular 0.5) both read rpi-5b_no_graphics.step with success=true and 2711 meshes (one per STYLED_ITEM), but every mesh has 0 triangles, so no bbox comes out. The B-rep looks normal (PLANE/CYLINDRICAL/SPHERICAL surfaces, mm units, uncertainty 2e-5), so this is an importer problem, not missing geometry. Parse time about 4.5 min for the 77 MB file. To tessellate it, try FreeCAD/CadQuery (OCP) or a newer occt-import-js. The with_graphics file was not tried with occt (same exporter, 142 MB)."
+}

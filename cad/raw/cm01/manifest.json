@@ -1,0 +1,75 @@
+{
+  "id": "cm01",
+  "name": "RoboMaster Referee System Supercapacitor Management Module CM01",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/cm01/RoboMaster_CM01.stp",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 5413505,
+      "units": "mm",
+      "products": [
+        "BC_RM_PP000238_01_ASM",
+        "3D_FQ1702_DZ_SP0001_V1_0428A_20_ASM",
+        "DRB_1_1 (PCB)",
+        "XT30PW-F_1_2_ASM",
+        "XT30PW-F_SJ",
+        "MR30PW-F20__V01",
+        "XT30__-_3",
+        "USER_LIBRARY-XT30PW-M",
+        "SM04B-GHS-TB",
+        "QFP_48-0P5-7P2X7P2-1P6",
+        "VSON_8-1P27-5X5-1",
+        "DFN_9-0P65-3X3-1-H2P4X1P65",
+        "SOT-23/SOT-363 parts",
+        "R0201/R0402/R0805/R2512_S",
+        "C0201/C0402/C0603",
+        "L0402_B",
+        "LED_4-1P6X0P8-0P7",
+        "X3225",
+        "SOD-523",
+        "GH_4-1P25",
+        "HOLE_PC4P2DC2P2",
+        "TP_C1",
+        "QRCODE_3P5X3P5"
+      ],
+      "bodies": 34,
+      "advanced_faces": 2339,
+      "colours": true,
+      "origin": "Creo Parametric 2015, 2020-08-04 (vicky.chen)",
+      "sha256": "228bbf35df8d48b10568079f028741436d806ba581d688ae610b9c1d4f06f99e",
+      "vertex_bbox_mm": [
+        49.85,
+        13.3,
+        28.0
+      ],
+      "note": "Full PCBA assembly (35 products, 108 NAUO) with component colours. bbox ignores assembly transforms; not a reliable overall size."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/804781",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/2678",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/d4ac265fda6440d1928f688d9c77c41c1758944407720/RoboMaster 超级电容管理模块 CM01.stp",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/43259/RoboMaster Referee System Supercapacitor Management Module CM01.stp (same byte size, 5413505)",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "overall": [
+      56,
+      28,
+      7.15
+    ],
+    "pcb_thickness": 1.2,
+    "mounting": "drawing labels: 56.00 length, 24.00 hole spacing, 2-d2.20 and 2-d4.30 holes",
+    "source": "CM01 spec + user guide drawing (docs/CM01_user_guide_CN_EN.pdf)"
+  },
+  "mass_g": 9.8,
+  "colors": "Bare PCBA: black solder mask with white silkscreen ('CM01'), yellow XT30 connectors (SuperCap and PwrCtrl ports), white 4-pin GH (SM04B-GHS-TB) CAN/power port, small SMD parts; the current official photo shows it inside a clear protective sleeve.",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/43259/e65f41c0654121596613428898447852.jpg",
+    "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/a3e07597e4224715b7115d89814e5bd01758468362352/image.png"
+  ],
+  "ref_photo": "cad/raw/cm01/ref.jpg",
+  "docs": [
+    "cad/raw/cm01/docs/CM01_user_guide_CN_EN.pdf"
+  ],
+  "notes": "5 V, 55 mA, detects up to 16 A charge/discharge. Required on robots with supercapacitors (ARCC 2026 spec A11 references it)."
+}

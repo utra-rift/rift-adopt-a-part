@@ -1,0 +1,51 @@
+{
+  "src": "cad/raw/am03/RoboMaster_AM02_2019_small_armor.STEP",
+  "up": "y",
+  "deflection": 0.0012,
+  "angular": 0.26,
+  "defaultMaterial": "black-plastic",
+  "customMaterials": {
+    "satin-black": {
+      "color": "#232227",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "black-oxide": {
+      "color": "#26252a",
+      "mr": [
+        0.6,
+        0.38
+      ]
+    }
+  },
+  "materials": [
+    {
+      "match": "#1$",
+      "mat": "satin-black"
+    },
+    {
+      "match": "#(2|3)$",
+      "mat": "blue-led"
+    },
+    {
+      "match": "#([4-7])$",
+      "mat": "black-oxide"
+    },
+    {
+      "match": "#(8|9|10|11)$",
+      "mat": "black-anodized"
+    },
+    {
+      "match": "#(12|13|14|15)$",
+      "mat": "matte-black"
+    }
+  ],
+  "lit": "#(2|3)$",
+  "view": {
+    "azimuth": 60,
+    "elevation": 25
+  },
+  "notes": "DJI RoboMaster AM02 small armor, official STEP: DJI publishes no AM03 CAD, and its referee-system manual documents AM02/AM03 under one drawing (same 140 x 125 mm outline). Geometry unchanged."
+}

@@ -1,0 +1,106 @@
+{
+  "id": "m2006-p36",
+  "name": "DJI RoboMaster M2006 P36 Brushless DC Gear Motor",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/m2006-p36/M2006_P36.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 14285559,
+      "sha256": "aa0d85d6a48a4a2091ad80f069bdfc850813542ea67b8ff03af340eb98b44ea6",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT ( ) NAMED_UNIT ( * ) SI_UNIT ( .MILLI., .METRE. ) )",
+      "header_file_name": "'M2006 P36 3.STEP', '2018-02-06T13:05:55', ( '' ), ( '' ), 'SwSTEP 2.0', 'SolidWorks 2016', ''",
+      "geometry": {
+        "ADVANCED_FACE": 3048,
+        "MANIFOLD_SOLID_BREP": 0,
+        "BREP_WITH_VOIDS": 0,
+        "SHELL_BASED_SURFACE_MODEL": 1,
+        "PRODUCT": 1,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 0
+      },
+      "embedded_colours": "none (no STYLED_ITEM entities; any COLOUR_RGB entries are an unlinked palette)",
+      "tessellated_bbox_mm": {
+        "size": [
+          146.45,
+          147.7,
+          64.8
+        ],
+        "min": [
+          -147.89,
+          3.06,
+          -46.9
+        ],
+        "max": [
+          -1.44,
+          150.76,
+          17.9
+        ],
+        "note": "world-space bbox of occt-import-js tessellation, includes cables/connectors"
+      },
+      "mesh_count_occt_import_js": 35,
+      "products": [
+        {
+          "name": "M2006 P36 3",
+          "role": "single product; geometry is ONE SHELL_BASED_SURFACE_MODEL (no MANIFOLD_SOLID_BREP) made of 35 shells"
+        }
+      ],
+      "shell_roles_inferred_occt_mesh_index": {
+        "17": "motor body, OD 24.4, z -46.9..-4.9 (42 mm)",
+        "0,2,3": "gearbox housing segments OD 24, z -9.4..13.9",
+        "1,7": "27.9 mm flange/shims at z~-1.4..0.2",
+        "4": "6 mm output shaft, to z 17.9",
+        "5,6": "7 mm bushings/bearings on the shaft",
+        "8-11": "4 planet gears (6.2 dia)",
+        "16": "14.7 dia part near the motor",
+        "12-15": "3 phase leads (~110 mm) + harness",
+        "18-34": "lead-end connector (15.2 x 15.2 x 5.3 housing) and terminals"
+      },
+      "same_bytes_also_served_at": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20M2006%20P36.STEP (English product page, identical sha256)"
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/detail/1277",
+  "download_url": "https://rm-static.djicdn.com/tem/RoboMaster%20M2006%20P36%E7%9B%B4%E6%B5%81%E6%97%A0%E5%88%B7%E5%87%8F%E9%80%9F%E7%94%B5%E6%9C%BA.STEP",
+  "download_index": "https://rm-static.djicdn.com/live_json/simple_cms.json and https://www.robomaster.com/api/simple_cms/1277/product",
+  "license": "No explicit license on the CAD. Published by DJI (SZ DJI Technology Co., Ltd.) as a free public download on the official RoboMaster site for customers integrating the product. DJI user guides state the product and documents are copyrighted by DJI, all rights reserved, no reproduction without written consent. Treat as proprietary: OK for internal reference/rendering, ask DJI before redistributing the raw STEP.",
+  "dims_mm": {
+    "outer_diameter": 24.4,
+    "outer_diameter_drawing": "24.40 +/-0.10",
+    "total_length": 64.8,
+    "total_length_drawing": "64.80 +/-1",
+    "output_shaft_diameter": 6,
+    "output_shaft": "6 mm with D-flat (5.50 -0.10), radial through hole 3 mm, axial M3 thread depth 5.5",
+    "mounting": "3x M3-6H depth 4 EQS on the output face; 3x M2-6H depth 3 EQS on the rotor end",
+    "other_drawing_values_unlabeled": [
+      13,
+      9,
+      4,
+      11.5,
+      14.4,
+      17,
+      19,
+      11
+    ],
+    "cad_check": "CAD Z extent 64.8 and OD 24.4 match"
+  },
+  "mass_g": 90,
+  "colors": {
+    "housing": "matte black anodized aluminium (motor and gearbox)",
+    "band": "thin copper/bronze ring visible at the gap between upper and lower black sections (winding/air gap)",
+    "branding": "white 'R ROBOMASTER' logo and 'M2006 P36' text; one black Phillips screw on the side",
+    "output_shaft": "bright steel 6 mm D-shaft",
+    "rear": "steel rear shaft stub"
+  },
+  "photo_urls": [
+    "https://se-cdn.djiits.com/tpc/uploads/sku/cover/1aa579b5-f2f5-4ec0-8c46-e377af1cc96d@ultra.png",
+    "https://rm-static.djicdn.com/tem/17348/%E7%94%B5%E6%9C%BA.jpg"
+  ],
+  "ref_photo": "cad/raw/m2006-p36/ref.png",
+  "docs": [
+    {
+      "path": "cad/raw/m2006-p36/docs/M2006_P36_UserGuide_zh.pdf",
+      "url": "https://rm-static.djicdn.com/tem/17348/RM%20M2006%20P36%E7%9B%B4%E6%B5%81%E6%97%A0%E5%88%B7%E5%87%8F%E9%80%9F%E7%94%B5%E6%9C%BA%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.pdf"
+    }
+  ],
+  "notes": "Official SolidWorks 2016 export 2018-02-06. Surface model rather than solids (17 open + 18 closed shells), fine for rendering but not watertight per part. No product names: the gearbox is separable only by shell, not by name. Reduction 36:1. Only a Chinese user guide exists for the M2006; specs cross-checked against the English product API."
+}

@@ -1,0 +1,108 @@
+{
+  "id": "gm6020",
+  "name": "DJI RoboMaster GM6020 Brushless DC Motor",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/gm6020/x/GM6020.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 3896960,
+      "sha256": "113b2ea1a8f82d653bcd9183728ae80441249d6229cccb438cafda0398ab2350",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT ( ) NAMED_UNIT ( * ) SI_UNIT ( .MILLI., .METRE. ) )",
+      "header_file_name": "'RoboMaster GM6020 直流无刷电机.STEP', '2018-10-23T04:52:20', ( '' ), ( '' ), 'SwSTEP 2.0', 'SolidWorks 2016', ''",
+      "geometry": {
+        "ADVANCED_FACE": 1292,
+        "MANIFOLD_SOLID_BREP": 12,
+        "BREP_WITH_VOIDS": 2,
+        "SHELL_BASED_SURFACE_MODEL": 0,
+        "PRODUCT": 1,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 0
+      },
+      "embedded_colours": "none (no STYLED_ITEM entities; any COLOUR_RGB entries are an unlinked palette)",
+      "tessellated_bbox_mm": {
+        "size": [
+          66.7,
+          66.7,
+          45
+        ],
+        "min": [
+          -33.35,
+          -33.35,
+          -118.55
+        ],
+        "max": [
+          33.35,
+          33.35,
+          -73.55
+        ],
+        "note": "world-space bbox of occt-import-js tessellation, includes cables/connectors"
+      },
+      "mesh_count_occt_import_js": 14,
+      "products": [
+        {
+          "name": "RoboMaster GM6020 直流无刷电机",
+          "role": "single product, 14 solids (12 manifold + 2 with voids)"
+        }
+      ],
+      "solid_roles_inferred_occt_mesh_index": {
+        "13": "main body/stator housing, dia 66.7, z -118.55..-80.72",
+        "12,2": "rotor shell, dia 66.7, z -104.45..-80.95",
+        "0": "top rotor cap, dia 66.64, 10.9 tall",
+        "1": "hollow shaft/boss, dia 24, 42.5 long",
+        "3-11": "rear port block: XT30 + 2 GH ports, DIP switch, LED parts"
+      },
+      "extracted_from": "cad/raw/gm6020/GM6020_en.step.zip"
+    },
+    {
+      "path": "cad/raw/gm6020/GM6020_en.step.zip",
+      "format": "zip archive (contains the same STEP twice: English and Chinese folder names, identical CRC32 0xf7bfe3cf)",
+      "bytes": 1510080,
+      "sha256": "64adb1a2ef67d455aa172e6cc5b0781367e50443950c63437d62d4320df09203",
+      "units": "n/a",
+      "products": []
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/general/GM6020",
+  "download_url": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20GM6020%20Brushless%20DC%20Motor.step.zip",
+  "download_index": "https://rm-static.djicdn.com/live_json/simple_cms.json",
+  "license": "No explicit license on the CAD. Published by DJI (SZ DJI Technology Co., Ltd.) as a free public download on the official RoboMaster site for customers integrating the product. DJI user guides state the product and documents are copyrighted by DJI, all rights reserved, no reproduction without written consent. Treat as proprietary: OK for internal reference/rendering, ask DJI before redistributing the raw STEP.",
+  "dims_mm": {
+    "diameter": 66.7,
+    "diameter_drawing": "66.70 +/-0.10",
+    "height": 45,
+    "hollow_shaft_inner_diameter": 18,
+    "bosses": "top and bottom boss OD 22 / ID 18; top blind hole dia 4 depth 4.2; bottom boss OD 8 x 1.5 tall",
+    "mounting": "rotor 3x M3 depth 4.2 EQS (drawing 40.00 dimension); stator 3x M4 depth 6 EQS (drawing 58.00, 38.50)",
+    "other_drawing_values": [
+      42.0,
+      1.5
+    ],
+    "cable_lengths": {
+      "XT30_power": 500,
+      "CAN": 500,
+      "PWM": 500
+    },
+    "cad_check": "CAD 66.7 x 66.7 x 45.0 exact"
+  },
+  "mass_g": 468,
+  "mass_note": "user guide says 'Approx. 468 g'",
+  "colors": {
+    "body": "matte black anodized aluminium",
+    "top_face": "black with a lighter grey machined ring/annulus and a bright steel hollow-shaft bearing collar; 'GM6020' and logo engraved",
+    "side_print": "large white 'GM6020' and 'MADE IN CHINA  WWW.ROBOMASTER.COM'",
+    "rear_ports": "black port panel with yellow XT30 socket between two white GH ports, labels 'CAN 24V PWM' in white"
+  },
+  "photo_urls": [
+    "https://se-cdn.djiits.com/tpc/uploads/spu/cover/297d73b860e2463459a4a706b9f225b8@ultra.png",
+    "https://rm-static.djicdn.com/tem/17348/8AC5CD0A-D4A9-847D-CA3E-CE8D55638A57.jpeg"
+  ],
+  "ref_photo": "cad/raw/gm6020/ref.png",
+  "docs": [
+    {
+      "path": "cad/raw/gm6020/docs/GM6020_UserGuide_en_20231103.pdf",
+      "url": "https://rm-static.djicdn.com/tem/17348/RM%20GM6020%20%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%EF%BC%88%E8%8B%B1%EF%BC%8920231103.pdf"
+    }
+  ],
+  "notes": "Official SolidWorks 2016 export 2018-10-23 (zip dated 2019-01-25). The zh zip (tem/3724/...) holds the identical STEP. Integrated driver; no cables modelled. Use x/GM6020.STEP."
+}

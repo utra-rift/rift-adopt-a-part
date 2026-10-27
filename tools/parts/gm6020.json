@@ -1,0 +1,24 @@
+{
+  "src": "cad/raw/gm6020/x/GM6020.STEP",
+  "up": "z",
+  "rotate": [0, 0, 165],
+  "deflection": 0.0008,
+  "angular": 0.15,
+  "drop": "#12$",
+  "defaultMaterial": "black-anodized",
+  "customMaterials": {
+    "xt30-amber": { "color": "#d4973a", "mr": [0, 0.45] }
+  },
+  "materials": [
+    { "match": "#1$", "mat": "steel" },
+    { "match": "#6$", "mat": "xt30-amber" },
+    { "match": "#(4|5|7|8|9)$", "mat": "gold" },
+    { "match": "#(10|11)$", "mat": "white-plastic" },
+    { "match": "#3$", "mat": "black-plastic" }
+  ],
+  "lit": "#1$",
+  "groups": { "rotor": "#(0|1|2)$" },
+  "groupMeta": { "rotor": { "spin": { "axis": "y", "rpm": 20 } } },
+  "view": { "azimuth": 45, "elevation": 30 },
+  "notes": "DJI RoboMaster GM6020, official STEP (robomaster.com). Driver is built in, so no leads are modelled; one duplicate rotor-shell surface left out."
+}

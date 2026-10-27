@@ -1,0 +1,76 @@
+{
+  "id": "omni-wheel",
+  "name": "goBILDA 96mm Omni Wheel (14mm Bore, 50A Durometer), SKU 3624-0014-0096",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/omni-wheel/x/3624-0014-0096.step",
+      "role": "main",
+      "format": "STEP AP214 (AUTOMOTIVE_DESIGN { 1 0 10303 214 3 1 1 }), B-rep",
+      "bytes": 9733652,
+      "sha256": "2d00aabe5586487599c1b83375ec162e122141a924092d7be27b3e3667a3d0da",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.) )",
+      "header_file_name": "'3624-0014-0096.step', '2024-05-17T11:16:40-05:00', ST-DEVELOPER v20, originating_system 'Autodesk Translation Framework v13.14.0.145' (Fusion/Inventor export)",
+      "geometry": {
+        "ADVANCED_FACE": 3567,
+        "MANIFOLD_SOLID_BREP": 6,
+        "PRODUCT": 10,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 32,
+        "STYLED_ITEM": 6
+      },
+      "tessellated_bbox_mm": {
+        "size": [96.0, 24.0, 96.0],
+        "min": [-48.0, -12.0, -48.0],
+        "max": [48.0, 12.0, 48.0],
+        "axis_note": "wheel axle is +Y in the file; tools/inspect.mjs (occt-import-js) gives 59 meshes"
+      },
+      "products": [
+        "[O] 3624-0014-0096 (root)",
+        "Sideplate x2 (each 1 solid, 1146 faces; Y -12..-2 and +2..+12)",
+        "Core x1 (hub with 14mm bore, 8x 16mm-pattern and 8x 32mm-pattern Ø4 holes; Y -5.7..+5.7)",
+        "Rollers (sub-assembly) -> Roller x16, each = Pin (steel) + RollerCore + RollerTire (50A rubber)",
+        "HARDWARE -> 90380A346 Phillips rounded-head thread-forming screw x8 (McMaster part no.)"
+      ],
+      "embedded_colours_rgb": {
+        "Sideplate": [60, 60, 60],
+        "Core": [60, 60, 60],
+        "RollerCore": [60, 60, 60],
+        "RollerTire": [50, 50, 50],
+        "Pin": [217, 217, 217],
+        "screws": [90, 90, 90]
+      }
+    }
+  ],
+  "archive": "cad/raw/omni-wheel/3624-0014-0096.zip (1798612 bytes, contains only 3624-0014-0096.step)",
+  "docs": [
+    {"path": "cad/raw/omni-wheel/3624-0014-0096_spec-sheet.pdf", "url": "https://www.gobilda.com/content/spec_sheets/3624-0014-0096_spec-sheet.pdf", "what": "15-view line-drawing spec sheet; SKU, weight 119g, material"},
+    {"path": "cad/raw/omni-wheel/schematic.png", "url": "https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2278/13497/3624-0014-0096-Schematic__16716__13353.1728656571.png", "what": "dimensioned drawing (CDN serves WebP; converted to PNG locally)"}
+  ],
+  "source_url": "https://www.gobilda.com/96mm-omni-wheel-14mm-bore-50a-durometer/",
+  "download_url": "https://www.gobilda.com/content/step_files/3624-0014-0096.zip",
+  "license": "No explicit CAD license. goBILDA publishes STEP files free on every product page for builders. Drawings carry 'Copyright Base10 Assets. All Rights Reserved. No part of this image or the product itself may be reproduced ... without permission in writing from Base10 Assets.' Treat as proprietary: fine for rendering our own robot, ask goBILDA before redistributing the raw STEP.",
+  "dims_mm": {
+    "outer_diameter": 96,
+    "overall_width_cad": 24.0,
+    "bore": 14,
+    "hub_offsets": "core offset 8 mm on one side and 12 mm on the other; 4 mm centre web (product page text + schematic)",
+    "hole_patterns": "8x thru-holes on 16 mm pattern and 8x outer thru-holes on 32 mm pattern, Ø4 mm (goBILDA standard patterns)",
+    "rollers": "16 rollers in two offset rows of 8 (CAD)"
+  },
+  "mass_g": 119,
+  "colors": {
+    "hub_and_sideplates": "matte black plastic (photo median ~rgb(54,52,50); CAD uses rgb(60,60,60))",
+    "rollers": "black 50A rubber (CAD rgb(50,50,50))",
+    "roller_pins": "steel, silver (CAD rgb(217,217,217)) - visible as small silver dots at roller ends",
+    "screws": "8 black Phillips rounded-head screws on the outer sideplate face",
+    "print": "pad-printed yellow-gold ring arc plus text 'Ø96mm - 50A' and 'goBILDA.com' on the outer sideplate face; sampled ~#FAD32E (rgb 250,211,46) from the official product image. NOT in the CAD: must be added as a decal/texture."
+  },
+  "photo_urls": [
+    "https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2278/13565/Ang1__72399.1728660639.jpg",
+    "https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2278/13567/Ang2__14223.1728660639.jpg",
+    "https://cdn11.bigcommerce.com/s-x56mtydx1w/images/stencil/original/products/2278/13497/3624-0014-0096-Schematic__16716__13353.1728656571.png"
+  ],
+  "ref_photo": "cad/raw/omni-wheel/ref.jpg",
+  "notes": "Exact part matches the team render (black hub, gold ring, 'goBILDA.com · Ø96mm · 50A'). The part number is 3624 series (omni wheel), not 3606 (3606 is the mecanum set). The STEP is the official goBILDA download, 2024-05-17. The printed yellow ring and text are a surface print, not geometry. The small goBILDA logos in two of the hub triangles appear in the CAD-derived spec-sheet line drawings, so they are probably modelled (not checked face by face). The product image is a CG render on goBILDA's site, so the sampled colours are approximate."
+}

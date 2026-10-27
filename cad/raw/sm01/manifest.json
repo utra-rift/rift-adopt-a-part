@@ -1,0 +1,51 @@
+{
+  "id": "sm01",
+  "name": "RoboMaster Referee System Speed Monitor Module SM01 (17 mm)",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/sm01/RoboMaster_SM01_2019.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 11063854,
+      "units": "mm",
+      "products": [
+        "17mm总装 (17mm assembly)"
+      ],
+      "bodies": 32,
+      "advanced_faces": 2963,
+      "colours": false,
+      "origin": "SolidWorks 2016, 2018-02-08, FILE_NAME '17mm总装.STEP'",
+      "sha256": "80278dfaa114c9313c8870c66e147d0900554fab3826c7c82bcdb574fe9a92c0",
+      "vertex_bbox_mm": [
+        43.4,
+        42.4,
+        195.32
+      ],
+      "note": "Single multi-body part, 32 bodies. bbox length includes the cables/aviation connectors; cross-section 43.4 x 42.4 vs official 43.5 x 38.9 (check which feature sets the 42.4)."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/811827",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/2612",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/8b22a4415d104241a4dde7d8a727392d1761019227185/RoboMaster 测速模块 SM01 2019.STEP",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/17348/Speed Monitor Modules SM01.STEP (same byte size, 11063854)",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "body": [
+      110.4,
+      43.5,
+      38.9
+    ],
+    "source": "SM01 spec (wiki 811827, robomaster.com 2612)"
+  },
+  "mass_g": 175,
+  "colors": "Black housing with RoboMaster 'R' logo near the muzzle end; LED dot-matrix strip (120 LEDs) behind a translucent window along both sides that lights when a projectile passes; black cables to two aviation connectors (silver rings).",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/ed20850d442e21592471369745998281.jpg",
+    "https://bbs-web-static.robomaster.com/bd173e7762274d00bbddb02d5c40c22b1758472361457/image.png"
+  ],
+  "ref_photo": "cad/raw/sm01/ref.jpg",
+  "docs": [
+    "cad/raw/sm01/docs/SM01_SM11_user_guide_CN_EN.pdf"
+  ],
+  "notes": "Specs: 12 V, 17 W max, 1-50 m/s, 1-35 Hz. Current module per 2026 user manual (SM01 = 17 mm, SM11 = 42 mm)."
+}

@@ -1,0 +1,52 @@
+{
+  "id": "fi02",
+  "name": "RoboMaster Referee System RFID Interaction Module FI02",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/fi02/RoboMaster_FI02_2019.STEP",
+      "format": "STEP AP214 (AUTOMOTIVE_DESIGN)",
+      "bytes": 2299080,
+      "units": "mm",
+      "products": [
+        "RFID装配体 (RFID assembly)"
+      ],
+      "bodies": 6,
+      "advanced_faces": 564,
+      "colours": true,
+      "origin": "SolidWorks 2016, 2018-02-08, FILE_NAME 'RFID装配体.STEP'",
+      "sha256": "0193c128177a2b099771366cb64c5f1c42e8407376208cf084a896e220566f9a",
+      "vertex_bbox_mm": [
+        121.675,
+        17.8,
+        105.675
+      ],
+      "note": "Single multi-body part, 6 bodies; colours are white/SolidWorks default, not real. bbox matches the official drawing exactly (121.67 x 105.67 x 17.80)."
+    }
+  ],
+  "source_url": "https://bbs.robomaster.com/wiki/20204847/811837",
+  "source_url_alt": "https://www.robomaster.com/en-US/products/components/detail/2619",
+  "download_url": "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/52eb38daac854c839f420b35a6caf4c01758944262045/RoboMaster 场地交互模块 FI02 2019.STEP",
+  "download_url_alt": "https://rm-static.djicdn.com/tem/17348/RoboMaster Referee System RFID Interaction Module FI02.STEP (same byte size, 2299080)",
+  "license": "No explicit license on the file. Published publicly by DJI/RoboMaster as a free download for teams' robot design; DJI manuals state the products/manuals are (c) DJI, all rights reserved, no modification/redistribution without permission. Treat as reference geometry: rendering a stylized model is a judgment call; do not redistribute the raw STEP.",
+  "dims_mm": {
+    "body": [
+      121.67,
+      105.67,
+      17.8
+    ],
+    "mounting_holes": "4x M3 depth 4, 62 x 50",
+    "source": "FI02 user guide 'Interfaces and Dimensions' drawing (docs/FI02_user_guide.pdf p4)"
+  },
+  "mass_g": 138,
+  "colors": "Black chamfered housing with a large RoboMaster 'R' logo on top; an LED light bar on each of the 4 sides: solid red/blue normally, flashing red/blue on a valid card, white when a card is written, yellow on error.",
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/126a578746cf81592474506250300858.jpg",
+    "https://hz-rm-bbs-web-prod.oss-cn-hangzhou.aliyuncs.com/a5b1f43fa9664ee681d5c6b5e028e9071758944114083/image.png"
+  ],
+  "ref_photo": "cad/raw/fi02/ref.jpg",
+  "docs": [
+    "cad/raw/fi02/docs/FI02_user_guide.pdf"
+  ],
+  "notes": "13.56 MHz ISO15693 reader, 100 mm range, 5 V 100 mA. Mounted face-down under the chassis."
+}

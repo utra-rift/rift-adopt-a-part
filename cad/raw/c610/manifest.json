@@ -1,0 +1,93 @@
+{
+  "id": "c610",
+  "name": "DJI RoboMaster C610 Brushless DC Motor Speed Controller",
+  "status": "cad",
+  "files": [
+    {
+      "path": "cad/raw/c610/C610.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 7189320,
+      "sha256": "f3f0b019b1440a892e0c9963297b51f09e674627407f31672aa4826cf6a9e92c",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT ( ) NAMED_UNIT ( * ) SI_UNIT ( .MILLI., .METRE. ) )",
+      "header_file_name": "'C610 6666.STEP', '2018-02-06T13:18:18', ( '' ), ( '' ), 'SwSTEP 2.0', 'SolidWorks 2016', ''",
+      "geometry": {
+        "ADVANCED_FACE": 2419,
+        "MANIFOLD_SOLID_BREP": 50,
+        "BREP_WITH_VOIDS": 0,
+        "SHELL_BASED_SURFACE_MODEL": 0,
+        "PRODUCT": 1,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 0
+      },
+      "embedded_colours": "none (no STYLED_ITEM entities; any COLOUR_RGB entries are an unlinked palette)",
+      "tessellated_bbox_mm": {
+        "size": [
+          22.14,
+          353.33,
+          7.25
+        ],
+        "min": [
+          -150.86,
+          -31.8,
+          -4.1
+        ],
+        "max": [
+          -128.72,
+          321.53,
+          3.15
+        ],
+        "note": "world-space bbox of occt-import-js tessellation, includes cables/connectors"
+      },
+      "mesh_count_occt_import_js": 50,
+      "products": [
+        {
+          "name": "C610 6666",
+          "role": "single product, 50 flat solids (no sub-products)"
+        }
+      ],
+      "solid_roles_inferred_occt_mesh_index": {
+        "36": "PCB/base 22 x 44.8 x 2.4",
+        "44,43": "top cover/label 22 x 10 x 0.9 and 20 x 9 x 0.5",
+        "0-35,37,38": "SMD components and pads",
+        "45-49": "3-phase connector + 3 wire stubs at -Y",
+        "39-42": "~302 mm power/CAN leads and plug at +Y"
+      },
+      "same_bytes_also_served_at": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20C610.STEP (English product page, identical sha256)"
+    }
+  ],
+  "source_url": "https://www.robomaster.com/en-US/products/components/detail/1277",
+  "download_url": "https://rm-static.djicdn.com/tem/RoboMaster%20C610%E6%97%A0%E5%88%B7%E7%94%B5%E6%9C%BA%E8%B0%83%E9%80%9F%E5%99%A8.STEP",
+  "download_index": "https://rm-static.djicdn.com/live_json/simple_cms.json and https://www.robomaster.com/api/simple_cms/1277/product",
+  "license": "No explicit license on the CAD. Published by DJI (SZ DJI Technology Co., Ltd.) as a free public download on the official RoboMaster site for customers integrating the product. DJI user guides state the product and documents are copyrighted by DJI, all rights reserved, no reproduction without written consent. Treat as proprietary: OK for internal reference/rendering, ask DJI before redistributing the raw STEP.",
+  "dims_mm": {
+    "length": 50,
+    "width": 22,
+    "height": 7.3,
+    "note": "50 x 22 x 7.3 excludes wires; drawing body length 44.8, width 22.0, height 7.3, R1.0 corners",
+    "mounting": "2 semicircular side notches, inner dia 2 mm, for M2 screws",
+    "cad_check": "CAD 22.14 wide, 7.25 thick, body 44.8 long"
+  },
+  "mass_g": 17,
+  "colors": {
+    "body": "black PCB with components visible through a clear heat-shrink sleeve",
+    "label": "salmon-red label with white 'R' logo and 'C610'",
+    "connectors": "amber/yellow XT30-style connector at the motor end; white 4-pin sensor port",
+    "leads": "red and black power wires with a black ferrite bead"
+  },
+  "photo_urls": [
+    "https://rm-static.djicdn.com/tem/17348/2W4A9853-1(2).jpg",
+    "https://se-cdn.djiits.com/tpc/uploads/sku/cover/558cd530-82db-40ce-811e-016067958dda@ultra.png"
+  ],
+  "ref_photo": "cad/raw/c610/ref.jpg",
+  "docs": [
+    {
+      "path": "cad/raw/c610/docs/C610_UserGuide_en.pdf",
+      "url": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20C610%20Brushless%20DC%20Motor%20Speed%20Controller%20User%20Guide.pdf"
+    },
+    {
+      "path": "cad/raw/c610/docs/C610_UserGuide_zh.pdf",
+      "url": "https://rm-static.djicdn.com/tem/RM%20C610%E6%97%A0%E5%88%B7%E7%94%B5%E6%9C%BA%E8%B0%83%E9%80%9F%E5%99%A8%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E%20%E5%8F%91%E5%B8%83%E7%89%88.pdf"
+    }
+  ],
+  "notes": "Official SolidWorks 2016 export 2018-02-06. One flat product with 50 solids, no names. Ships with a heat-shrink tube (in-box list); the DJI store photo shows it bare, the RoboMaster photo shows it sleeved. Max continuous current 10 A."
+}

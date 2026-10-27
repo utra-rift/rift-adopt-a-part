@@ -1,0 +1,142 @@
+{
+  "id": "m3508-kit",
+  "name": "DJI RoboMaster M3508 Accessories Kit",
+  "status": "cad",
+  "contents": [
+    {
+      "item": "Terminal Board (power/CAN hub)",
+      "qty": 1,
+      "detail": "60 x 45 mm board; ports: 8-pin (to Development Board, 20 A), CAN pads, CAN ports to C620, XT30 power ports (20 A each), XT60 power cable (40 A)"
+    },
+    {
+      "item": "XT60 Power Cable (Female)",
+      "qty": 1,
+      "length_mm": 300,
+      "pins": 2,
+      "continuous_current_A": 40
+    },
+    {
+      "item": "XT30 Extension Power Cable (male+female)",
+      "qty": 4,
+      "length_mm": 150,
+      "pins": 2,
+      "continuous_current_A": 20
+    },
+    {
+      "item": "Longer CAN Cable for C620 (identical ends)",
+      "qty": 4,
+      "length_mm": 430,
+      "pins": 2
+    },
+    {
+      "item": "Longer 7-Pin M3508 Cable (identical ends)",
+      "qty": 4,
+      "length_mm": 320,
+      "pins": 7
+    },
+    {
+      "item": "3-Phase M3508 Extension Cable (male+female)",
+      "qty": 4,
+      "length_mm": 150,
+      "pins": 3,
+      "continuous_current_A": 20
+    },
+    {
+      "item": "Development Board Cable (identical ends)",
+      "qty": 1,
+      "length_mm": 400,
+      "pins": 8,
+      "continuous_current_A": 20
+    },
+    {
+      "item": "Insulation Patch",
+      "qty": 1
+    }
+  ],
+  "contents_source": "RoboMaster M3508 Accessories Kit User Guide V1.0 (2017.08), 'In the Box' and 'Specifications'",
+  "files": [
+    {
+      "path": "cad/raw/m3508-kit/M3508_AccessoriesKit_HubBoard.STEP",
+      "format": "STEP AP203 (CONFIG_CONTROL_DESIGN)",
+      "bytes": 3995381,
+      "sha256": "58a8b32c6031c138777fb1213bbf94748e5bd6d72a98d2346492de38b7605909",
+      "units": "mm",
+      "units_evidence": "( LENGTH_UNIT ( ) NAMED_UNIT ( * ) SI_UNIT ( .MILLI., .METRE. ) )",
+      "header_file_name": "'M3508 集线板.STEP', '2017-08-11T02:45:01', ( 'dji-n505' ), ( '' ), 'SwSTEP 2.0', 'SolidWorks 2016', ''",
+      "geometry": {
+        "ADVANCED_FACE": 1234,
+        "MANIFOLD_SOLID_BREP": 11,
+        "BREP_WITH_VOIDS": 0,
+        "SHELL_BASED_SURFACE_MODEL": 0,
+        "PRODUCT": 1,
+        "NEXT_ASSEMBLY_USAGE_OCCURRENCE": 0
+      },
+      "embedded_colours": "none (no STYLED_ITEM entities; any COLOUR_RGB entries are an unlinked palette)",
+      "tessellated_bbox_mm": {
+        "size": [
+          60,
+          23.7,
+          189.2
+        ],
+        "min": [
+          35.36,
+          -9.82,
+          -22.5
+        ],
+        "max": [
+          95.36,
+          13.88,
+          166.7
+        ],
+        "note": "world-space bbox of occt-import-js tessellation, includes cables/connectors"
+      },
+      "mesh_count_occt_import_js": 11,
+      "products": [
+        {
+          "name": "M3508 集线板",
+          "role": "single product = terminal board ('集线板' = hub/terminal board) with its XT60 lead; 11 solids"
+        }
+      ],
+      "solid_roles_inferred_occt_mesh_index": {
+        "0": "board body/shell 60 x 45 x 11.7",
+        "1,2,3,4": "board layers/insulation patch (60 x 45 / 60 x 40.6)",
+        "5,6": "XT60 lead wires, ~137 mm",
+        "7,8,9,10": "XT60 connector housing and contacts"
+      }
+    }
+  ],
+  "source_url": "https://www.robomaster.com/zh-CN/products/components/general/M3508",
+  "download_url": "https://rm-static.djicdn.com/tem/17348/M3508%E9%99%84%E4%BB%B6%E5%8C%85_%E9%9B%86%E7%BA%BF%E6%9D%BF.STEP",
+  "download_index": "https://rm-static.djicdn.com/live_json/simple_cms.json",
+  "store_url": "https://store.dji.com/product/rm-m3508-accessories-kit",
+  "license": "No explicit license on the CAD. Published by DJI (SZ DJI Technology Co., Ltd.) as a free public download on the official RoboMaster site for customers integrating the product. DJI user guides state the product and documents are copyrighted by DJI, all rights reserved, no reproduction without written consent. Treat as proprietary: OK for internal reference/rendering, ask DJI before redistributing the raw STEP.",
+  "dims_mm": {
+    "terminal_board": {
+      "length": 60,
+      "width": 45,
+      "mounting_holes": "dia 3.20 for M3; drawing values 16 and 32"
+    },
+    "cad_check": "CAD board 60.0 x 45.0"
+  },
+  "mass_g": null,
+  "mass_note": "not published",
+  "colors": {
+    "terminal_board": "black octagonal board with white 'R ROBOMASTER' logo, gold XT30 pads/sockets at the corners, white connector at the top edge",
+    "power_cables": "red and black silicone wires with yellow XT60/XT30 plugs",
+    "CAN_cables": "grey/white twisted pair with red tracer, white JST plugs",
+    "7_pin_cables": "black braided sleeve with white plugs",
+    "3_phase_extensions": "red/black/blue wires with yellow connectors"
+  },
+  "photo_urls": [
+    "https://se-cdn.djiits.com/tpc/uploads/sku/cover/c29b6674-ce4b-471d-b056-3862ec570197@ultra.png",
+    "https://rm-static.djicdn.com/tem/17348/6abc6109c4f7f1516863287431375910.png"
+  ],
+  "ref_photo": "cad/raw/m3508-kit/ref.png",
+  "docs": [
+    {
+      "path": "cad/raw/m3508-kit/docs/M3508_AccessoriesKit_V1.0.pdf",
+      "url": "https://rm-static.djicdn.com/tem/17348/RoboMaster%20M3508%20Accessories%20Kit%20V1.0.pdf"
+    }
+  ],
+  "notes": "CAD covers only the terminal board (+ its XT60 lead); the cables have no CAD. Official SolidWorks 2016 export 2017-08-11 from the Chinese listing 'RoboMaster M3508附件包_集线板（STEP）'. DJI's English listing 'RoboMaster M3508 Accessories Kit (STEP)' links to a P19 motor file instead (a CMS mislabel); that file is kept at cad/raw/m3508-p19/alt/. The 3-phase extension colours are as seen in the store photo."
+}

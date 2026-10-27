@@ -1,0 +1,13 @@
+# Manufacturer CAD and anything generated from it: re-fetch from the manifests' URLs.
+cad/*
+!cad/raw/
+cad/raw/*/*
+!cad/raw/*/manifest.json
+
+# Tooling
+tools/node_modules/
+tools/.venv/
+__pycache__/
+shots/
+.claude/
+.DS_Store
