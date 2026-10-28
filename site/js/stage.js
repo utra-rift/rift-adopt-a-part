@@ -51,6 +51,36 @@ export function loadPart(url) {
   return cache.get(url);
 }
 
+// A stand-in for a part with no model yet: a plain 100 mm cube in the same form decode()
+// returns, its twelve edges drawn as creases.
+let placeholder = null;
+export const placeholderPart = () => (placeholder ??= cube(100));
+
+function cube(size) {
+  const h = size / 2, position = [], normal = [], index = [], creases = [], edges = new Set();
+  for (const axis of [0, 1, 2]) for (const sign of [1, -1]) {
+    const u = (axis + 1) % 3, v = (axis + 2) % 3, base = position.length / 3;
+    for (const [a, b] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const p = [0, 0, 0], n = [0, 0, 0];
+      p[axis] = sign * h; p[u] = a * h; p[v] = b * h; n[axis] = sign * 127;
+      position.push(...p); normal.push(...n);
+    }
+    index.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    for (let k = 0; k < 4; k++) {
+      const a = base + k, b = base + ((k + 1) % 4);
+      const key = [a, b].map((i) => position.slice(i * 3, i * 3 + 3).join()).sort().join("|");
+      if (!edges.has(key)) { edges.add(key); creases.push(a, b); }
+    }
+  }
+  const P = new Float32Array(position), I = new Uint32Array(index), n = P.length / 3;
+  return {
+    header: { palette: [[208, 209, 212]] }, position: P, normal: new Int8Array(normal),
+    lit: new Uint8Array(n), mat: new Uint8Array(n), index: I,
+    groups: [{ name: "placeholder", triStart: 0, triCount: I.length / 3, creases: new Uint32Array(creases) }],
+    ...opticalCentre(P, I),
+  };
+}
+
 function decode(buf) {
   const dv = new DataView(buf);
   if (String.fromCharCode(...new Uint8Array(buf, 0, 4)) !== "RIFT") throw new Error("not a part file");
@@ -303,28 +333,40 @@ export class Figure {
 // their footprints on the floor, so nothing passes through anything, cables included.
 // `frame` is the screen box the bodies fill, centred on the origin, for the View to fit.
 // Parts are rescaled so each covers UNIT² of screen (model units), well inside the camera's depth range.
+//
+// With `hero`, the first part stands full size in front and the rest, SMALL of its size,
+// stand in a row behind it, split to either side with their inner edges tucked behind its
+// body (the middle TUCK of its width is left open for it). Up to HERO_OVERLAP of a part
+// may hide behind another.
 const UNIT = 100, GAP = 0.1, OVERLAP = 0.1, FRAME_ASPECT = 0.86;
+const SMALL = 0.72, TUCK = 0.5, HERO_OVERLAP = 0.3;
 export class Group {
-  constructor(datas, { azimuth = 45, elevation = 30 } = {}) {
+  constructor(datas, { azimuth = 45, elevation = 30, hero = false } = {}) {
     this.figures = datas.map((d) => new Figure(d));
     this.root = new THREE.Group();
     const az = THREE.MathUtils.degToRad(azimuth), el = THREE.MathUtils.degToRad(elevation);
     const R = [Math.cos(az), 0, -Math.sin(az)], D = [Math.sin(az), 0, Math.cos(az)];
     const U = [-Math.sin(az) * Math.sin(el), Math.cos(el), -Math.cos(az) * Math.sin(el)];
-    const parts = this.figures.map((f) => {
-      const cell = projectedRadius(f.data.cov, R, U) / 24;
-      const sil = coverage(f.data, R, U, 1, cell);
-      return { f, sil, cell, size: Math.sqrt(sil.count) * cell };
-    });
     const unit = UNIT, cell = unit / 28, gap = GAP * unit, g = Math.ceil(gap / cell);
-    for (const p of parts) {
-      p.k = unit / p.size;
-      p.box = bodyOf(p.sil).map((v) => v * p.cell * p.k); // [left, right, bottom, top] on screen
-      p.lift = -p.f.data.yRange[0] * p.k * Math.cos(el); // centre above its floor, on screen
-      p.top = p.lift + p.box[3];
-      p.foot = footprint(coverage(p.f.data, R, D, p.k, cell)); // per floor row (along D): extent along R, in cells
-      p.screen = coverage(p.f.data, R, U, p.k, cell);
-    }
+    const measure = (data, s) => {
+      const pc = projectedRadius(data.cov, R, U) / 24;
+      const sil = coverage(data, R, U, 1, pc);
+      const k = (s * unit) / (Math.sqrt(sil.count) * pc);
+      const box = bodyOf(sil).map((v) => v * pc * k); // [left, right, bottom, top] on screen
+      const lift = -data.yRange[0] * k * Math.cos(el); // centre above its floor, on screen
+      return { k, box, lift, top: lift + box[3],
+        foot: footprint(coverage(data, R, D, k, cell)), // per floor row (along D): extent along R, in cells
+        screen: coverage(data, R, U, k, cell) };
+    };
+    // A part shown several times (five of the same motor) is measured once per size.
+    const measured = new Map();
+    const parts = this.figures.map((f, i) => {
+      const s = hero && i ? SMALL : 1;
+      if (!measured.has(f.data)) measured.set(f.data, new Map());
+      const sizes = measured.get(f.data);
+      if (!sizes.has(s)) sizes.set(s, measure(f.data, s));
+      return { f, ...sizes.get(s) };
+    });
     // One row, left to right: each part as close as its footprint and its body allow.
     const row = (list) => {
       const sky = new Map(); // floor row -> rightmost occupied cell
@@ -342,18 +384,21 @@ export class Group {
       return out;
     };
     // Two rows, front first. The back row steps back until its footprints clear the front
-    // row's, then on until no two parts overlap on screen by more than OVERLAP of either.
-    const lay = (rows) => {
+    // row's, then on until no two parts overlap on screen by more than `limit` of either.
+    // A row may hold a `hole`: empty space, centred on the front row.
+    const lay = (rows, limit = OVERLAP) => {
       const placed = [], seen = new Map();
       let ahead = null;
       rows.forEach((list, r) => {
-        const out = row(list);
+        let out = row(list);
+        const hole = out.find((q) => q.p.hole);
+        if (hole) out = out.filter((q) => q !== hole).map((q) => ({ ...q, x: q.x - hole.x }));
         if (rows.length > 1 && rows[0].length === list.length) for (const q of out) q.x += (r ? 0.25 : -0.25) * (out.at(-1).x - out[0].x + unit) / list.length;
         let s = 0;
         if (ahead) {
           for (const [c, [, hi]] of columns(out, cell)) for (let e = -g; e <= g; e++) if (ahead.has(c + e)) s = Math.max(s, hi - ahead.get(c + e)[0] + 1 + g);
           let rise = Math.ceil(s * Math.sin(el));
-          while (rise < 200 && out.some((q) => overlap(q.p.screen, Math.round(q.x / cell), rise + Math.round(q.p.lift / cell), seen, placed) > OVERLAP)) rise++;
+          while (rise < 200 && out.some((q) => overlap(q.p.screen, Math.round(q.x / cell), rise + Math.round(q.p.lift / cell), seen, placed) > limit)) rise++;
           s = (rise * cell) / Math.sin(el);
         }
         for (const q of out) {
@@ -369,13 +414,27 @@ export class Group {
       }
       return { placed, b, fit: Math.min(1 / (b[1] - b[0]), FRAME_ASPECT / (b[3] - b[2])) };
     };
-    let best = lay([parts]);
-    if (parts.length > 2) {
-      const tall = [...parts].sort((a, b) => b.top - a.top);
-      for (const back of new Set([Math.floor(parts.length / 2), Math.ceil(parts.length / 2)])) {
-        const inBack = new Set(tall.slice(0, back));
-        const two = lay([parts.filter((p) => !inBack.has(p)), parts.filter((p) => inBack.has(p))]);
-        if (two.fit > best.fit * 1.25) best = two;
+    let best;
+    if (hero && parts.length > 1) {
+      // Centred behind it (two or more), tucked behind the edges of its body, or (when its
+      // leads cover the floor and would push the row far back) clear of its whole footprint:
+      // whichever fills the box most.
+      const [lead, ...rest] = parts, mid = (lead.box[0] + lead.box[1]) / 2;
+      let reach = 0;
+      for (const [lo, hi] of lead.foot.values()) reach = Math.max(reach, Math.abs(lo * cell - mid), Math.abs((hi + 1) * cell - mid));
+      const behind = (w) => (w ? [...rest.filter((_, i) => i % 2), { hole: true, box: [-w / 2, w / 2, 0, 0], foot: new Map() }, ...rest.filter((_, i) => !(i % 2))] : rest);
+      best = [...(rest.length > 1 ? [0] : []), (lead.box[1] - lead.box[0]) * TUCK, 2 * reach]
+        .map((w) => lay([[lead], behind(w)], HERO_OVERLAP))
+        .reduce((a, b) => (b.fit > a.fit ? b : a));
+    } else {
+      best = lay([parts]);
+      if (parts.length > 2) {
+        const tall = [...parts].sort((a, b) => b.top - a.top);
+        for (const back of new Set([Math.floor(parts.length / 2), Math.ceil(parts.length / 2)])) {
+          const inBack = new Set(tall.slice(0, back));
+          const two = lay([parts.filter((p) => !inBack.has(p)), parts.filter((p) => inBack.has(p))]);
+          if (two.fit > best.fit * 1.25) best = two;
+        }
       }
     }
     const { placed, b } = best, cx = (b[0] + b[1]) / 2, cy = (b[2] + b[3]) / 2;
@@ -395,11 +454,12 @@ export class Group {
       pts.push({ ...q.p, a, o: pos });
     }
     this.frame = { w: b[1] - b[0], h: b[3] - b[2] };
-    // The shadow sits under the front row.
-    const front = placed.filter((q) => !q.row);
+    // The shadow sits under the front row, and under a hero's whole group, which stands
+    // close behind it.
+    const front = placed.filter((q) => !q.row), spread = hero ? placed : front;
     this.ground = {
       below: cy - Math.min(...front.map((q) => q.y + q.p.box[2])),
-      width: Math.max(...front.map((q) => q.x + q.p.box[1])) - Math.min(...front.map((q) => q.x + q.p.box[0])),
+      width: Math.max(...spread.map((q) => q.x + q.p.box[1])) - Math.min(...spread.map((q) => q.x + q.p.box[0])),
     };
     // Combined statistics (parallel-axis) about the origin, for the extent and the shadow.
     const cov = [0, 0, 0, 0, 0, 0];

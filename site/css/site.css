@@ -54,7 +54,21 @@ main { padding: 92px var(--gutter) 40px; }
 @media (min-width: 720px) { .cell { width: 33.333%; } }
 @media (min-width: 1100px) { .cell { width: 20%; } }
 @media (min-width: 1280px) { .cell { width: 16.666%; } }
+/* Everything still up for adoption: fewer, larger cells. */
+.featured .cell { width: 50%; }
+@media (min-width: 1100px) { .featured .cell { width: 25%; } }
 .cell[data-in] { opacity: 1; }
+
+/* The trip: each picture runs the full width of the page, its slider and readout under it. */
+.trip, .trip + .tier { margin-top: clamp(56px, 9vw, 128px); }
+.trip-part + .trip-part { margin-top: clamp(48px, 7vw, 96px); }
+.trip-art { margin: 14px calc(-1 * var(--gutter)) 0; }
+.trip-ctl { max-width: 1600px; margin: 0 auto; padding-top: 16px; }
+.trip-read { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-top: 12px; }
+.trip-now { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.trip-now b { font-weight: 400; font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.trip-read .adopt { width: auto; min-width: 260px; margin: 0; }
+@media (max-width: 719px) { .trip-read .adopt { width: 100%; } }
 .hit { display: block; width: 100%; text-align: center; }
 @media (hover: hover) { .hit { cursor: default; } .cell[data-hot] .hit { cursor: pointer; } }
 .fig { position: relative; aspect-ratio: 1 / .86; }

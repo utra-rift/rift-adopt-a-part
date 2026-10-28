@@ -1,0 +1,98 @@
+/* Tier slider: see js/tierslider.js. Geometry constants there (16 px labels, 32 px input,
+   12 px thumb, 20 px canvas bleed) must match the numbers here. */
+
+.tslider {
+  position: relative;
+  width: 100%;
+  height: 48px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tslider-canvas {
+  position: absolute;
+  left: 0;
+  top: -20px;
+  width: 100%;
+  height: 88px;
+  pointer-events: none;
+}
+
+.tslider-marks {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 16px;
+  pointer-events: none;
+}
+
+.tslider-label {
+  position: absolute;
+  top: 0;
+  font: 400 10.5px/16px var(--mono, "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--muted, #9a9a9e);
+  transform-origin: 50% 100%;
+  transition: color .6s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
+}
+
+/* The lit face is a second copy of the text painted in the tier's material, faded in over the grey. */
+.tslider-label::after {
+  content: attr(data-name);
+  position: absolute;
+  inset: 0;
+  color: transparent;
+  background: var(--mat);
+  -webkit-background-clip: text;
+  background-clip: text;
+  opacity: 0;
+  transition: opacity .6s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
+}
+.tslider-label.is-lit { color: transparent; }
+.tslider-label.is-lit::after { opacity: 1; }
+
+.tslider-label[data-tier="bronze"] { --mat: linear-gradient(100deg, #6e3819 0%, #b06a36 30%, #d08c58 50%, #a45f2d 70%, #6e3819 100%); --glow: rgba(196, 120, 60, .55); }
+.tslider-label[data-tier="silver"] { --mat: linear-gradient(100deg, #4f565e 0%, #7c858f 30%, #a2abb5 50%, #78818b 70%, #4f565e 100%); --glow: rgba(130, 144, 160, .55); }
+.tslider-label[data-tier="gold"]   { --mat: linear-gradient(100deg, #7a5408 0%, #b98a1a 30%, #dcae35 50%, #b0821a 70%, #7a5408 100%); --glow: rgba(214, 160, 30, .6); }
+.tslider-label[data-tier="title"]  { --mat: linear-gradient(100deg, #e0406a, #e88a2a, #b9b020, #2fb47a, #2a8fd8, #8a5ae0, #e0406a); --glow: rgba(150, 110, 230, .5); }
+.tslider-label[data-tier="title"]::after { background-size: 200% 100%; }
+.tslider-label[data-tier="title"].is-lit::after { animation: tslider-iri 6s linear infinite; }
+
+.tslider-label.is-flare { animation: tslider-flare .7s cubic-bezier(.2, .9, .3, 1); }
+
+@keyframes tslider-flare {
+  0%   { transform: none; filter: none; }
+  18%  { transform: translateY(-2px) scale(1.16); filter: drop-shadow(0 0 4px var(--glow)); }
+  100% { transform: none; filter: drop-shadow(0 0 0 transparent); }
+}
+@keyframes tslider-iri { to { background-position: -200% 0; } }
+
+/* The native control: full size, transparent, its thumb as wide as the drawn one so values map alike. */
+.tslider-input {
+  position: absolute;
+  left: 0;
+  top: 16px;
+  width: 100%;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+  touch-action: pan-y;
+  outline: none;
+}
+.tslider-input::-webkit-slider-runnable-track { height: 32px; background: transparent; border: 0; }
+.tslider-input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 32px; background: transparent; border: 0; }
+.tslider-input::-moz-range-track { height: 32px; background: transparent; border: 0; }
+.tslider-input::-moz-range-progress { background: transparent; }
+.tslider-input::-moz-range-thumb { width: 12px; height: 32px; background: transparent; border: 0; border-radius: 0; }
+.tslider-input:active { cursor: grabbing; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tslider-label, .tslider-label::after { transition: none; }
+  .tslider-label.is-flare, .tslider-label[data-tier="title"].is-lit::after { animation: none; }
+}

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Tier slider · dev</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/site.css">
+  <link rel="stylesheet" href="css/tierslider.css">
+  <style>
+    .dev { padding: 48px var(--gutter) 96px; display: grid; gap: 72px; }
+    .dev h2 { margin: 0 0 28px; font: 400 11px/16px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+    .dev .log { margin-top: 18px; font: 400 11px/16px var(--mono); color: #555; }
+    .fps { position: fixed; right: 12px; bottom: 10px; font: 400 10px/14px var(--mono); color: var(--muted); }
+  </style>
+  <script>
+    // Count animation frames so we can see the loop go idle. With ?timer, frames come from
+    // setTimeout so the loop can be measured in a hidden tab, where real rAF never fires.
+    window.__raf = 0;
+    // ?reduce pretends prefers-reduced-motion is on (the browser pane can't emulate it).
+    if (location.search.includes("reduce")) {
+      const mm = window.matchMedia.bind(window);
+      window.matchMedia = (q) => q.includes("reduced-motion")
+        ? { matches: true, media: q, addEventListener() {}, removeEventListener() {} }
+        : mm(q);
+    }
+    if (location.search.includes("timer")) {
+      window.requestAnimationFrame = (cb) => { window.__raf++; return setTimeout(() => cb(performance.now()), 16); };
+      window.cancelAnimationFrame = (id) => clearTimeout(id);
+    } else {
+      const raf = window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame = (cb) => { window.__raf++; return raf(cb); };
+    }
+  </script>
+</head>
+<body>
+  <main class="dev">
+    <section>
+      <h2>Drive · km</h2>
+      <div id="drive"></div>
+      <p class="log" id="drive-log"></p>
+    </section>
+    <section>
+      <h2>Flights · seats</h2>
+      <div id="flights"></div>
+      <p class="log" id="flights-log"></p>
+    </section>
+  </main>
+  <p class="fps" id="fps"></p>
+
+  <script type="module">
+    import { tierSlider } from "./js/tierslider.js";
+    import { tierFor, money } from "./js/catalog.js";
+
+    const configs = {
+      drive: {
+        label: "Kilometres to fund", max: 4534, step: 1, amountOf: (km) => km * 0.5,
+        valueText: (km) => `${km.toLocaleString("en-CA")} km, ${money(km * 0.5)}${tierFor(km * 0.5) ? ", " + tierFor(km * 0.5).name : ""}`,
+      },
+      flights: {
+        label: "Seats to fund", max: 8, step: 1, amountOf: (n) => n * 916.74,
+        valueText: (n) => `${n} seat${n === 1 ? "" : "s"}, ${money(n * 916.74)}${tierFor(n * 916.74) ? ", " + tierFor(n * 916.74).name : ""}`,
+      },
+    };
+
+    window.sliders = {};
+    for (const [id, cfg] of Object.entries(configs)) {
+      const log = document.getElementById(`${id}-log`);
+      let count = 0;
+      const show = (v) => {
+        const a = cfg.amountOf(v);
+        log.textContent = `${v} · ${money(a)} · ${tierFor(a)?.name ?? "—"} · onInput ×${count}`;
+      };
+      const s = tierSlider(document.getElementById(id), { ...cfg, onInput: (v) => { count++; show(v); console.log(id, v); } });
+      window.sliders[id] = s;
+      show(s.value);
+    }
+
+    // Console helpers: drive a slider as a user would (fires onInput and the crossing effects),
+    // and magnify a slice of a slider's canvas at device resolution.
+    window.setv = (id, v) => {
+      const i = document.querySelector(`#${id} input`);
+      i.value = v;
+      i.dispatchEvent(new Event("input", { bubbles: true }));
+    };
+    window.mag = (id, sx = 0, sw = 400, scale = 2) => {
+      document.getElementById("mag")?.remove();
+      if (sw === 0) return;
+      const c = document.querySelector(`#${id} canvas`);
+      const d = c.width / c.clientWidth;
+      const o = document.createElement("canvas");
+      o.id = "mag";
+      o.width = sw * d;
+      o.height = c.height;
+      o.getContext("2d").drawImage(c, sx * d, 0, sw * d, c.height, 0, 0, sw * d, c.height);
+      o.style.cssText = `position:fixed;left:0;bottom:0;width:${(sw * d * scale) / 2}px;image-rendering:pixelated;background:#fff;outline:1px solid #f00;z-index:9`;
+      document.body.append(o);
+    };
+
+    // Frames per second actually requested by the page.
+    const fps = document.getElementById("fps");
+    let lastCount = window.__raf;
+    setInterval(() => { fps.textContent = `raf/s ${window.__raf - lastCount}`; lastCount = window.__raf; }, 1000);
+  </script>
+</body>
+</html>

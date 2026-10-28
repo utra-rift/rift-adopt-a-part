@@ -1,0 +1,5 @@
+/* The cabin strip: a full-bleed plate; its height is set from its width by cabin.js. */
+.cabin { position: relative; width: 100%; height: 240px; overflow: hidden; background: #fff; }
+.cabin-plate { display: block; width: 100%; height: 100%; }
+/* The seat is painted here by the shared renderer, then copied; never seen. */
+.cabin-probe { position: absolute; left: 0; top: 0; visibility: hidden; pointer-events: none; }

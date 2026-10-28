@@ -1,7 +1,10 @@
 // Everything RIFT's first season needs, from the 2026–27 budget (CAD, tax included).
 //
-// LINES are the budget lines. Items 1–25 (less the donated wheels, item 4) were funded
-// by the Skule Endowment Fund; the wheels were donated in kind. Everything else is open.
+// LINES are the budget lines. Items 1–25, less the omni wheels (item 4), were funded by
+// the Skule Endowment Fund. Everything else is open, the wheels included: the sheet counts
+// them as an in-kind donation, but that isn't certain, so they're priced as a purchase.
+// Like every DJI line, that's the US price × 1.3864 CAD/USD × 1.13 HST: 4 × $21.99 at
+// goBILDA (SKU 3624-0014-0096) is $137.80. The sheet's $121.95 leaves out the HST.
 //
 // OFFERS are what a sponsor can pick: a single part, a bundle, or part of the trip. An
 // offer's price is the sum of its lines, which places it in a tier. The same line can
@@ -25,7 +28,6 @@ export const tierFor = (amount) => [...TIERS].reverse().find((t) => amount >= t.
 
 export const ADOPTERS = {
   sef: "the Skule Endowment Fund",
-  donation: "an in-kind donation",
 };
 
 // The first argument is the item number in the budget.
@@ -34,7 +36,7 @@ export const LINES = {
   m3508: L(1, "M3508 P19 brushless gear motor", 5, 509.16, "m3508-p19", { note: "4 installed + 1 spare", adopted: "sef" }),
   c620d: L(2, "C620 motor speed controller", 5, 266.33, "c620", { note: "drivetrain, 4 + 1 spare", adopted: "sef" }),
   kit: L(3, "M3508 accessories kit", 1, 59.53, "m3508-kit", { note: "CAN hub board and leads", adopted: "sef" }),
-  wheels: L(4, "goBILDA omni wheel, 96 mm", 4, 121.95, "omni-wheel", { adopted: "donation" }),
+  wheels: L(4, "goBILDA omni wheel, 96 mm", 4, 137.8, "omni-wheel", { note: "one per drive motor" }),
   gm6020: L(5, "GM6020 gimbal motor", 3, 549.89, "gm6020", { note: "2 installed + 1 spare", adopted: "sef" }),
   m2006: L(6, "M2006 P36 feeder motor", 2, 112.8, "m2006-p36", { note: "1 installed + 1 spare", adopted: "sef" }),
   c610: L(7, "C610 motor speed controller", 2, 78.33, "c610", { adopted: "sef" }),
@@ -76,27 +78,27 @@ const O = (id, code, name, lines, show, line, extra = {}) => ({ id, code, name, 
 export const OFFERS = [
   // Open: still needs a sponsor.
   O("trip", "TRIP", "The whole trip", [...SEATS(8), "van", "entry"], ["cargo-van", "airline-seat", "airline-seat"], "Eight flights, the drive and the entry fee: everything that gets RIFT to its first competition."),
-  O("fly8", "FLY-8", "Fly the team", SEATS(8), ["airline-seat", "airline-seat", "airline-seat", "airline-seat"], "Return flights for the eight members who pilot, repair and run the robot at the competition."),
+  O("fly8", "8 SEATS", "Fly the team", SEATS(8), ["airline-seat", "airline-seat", "airline-seat", "airline-seat"], "Return flights for the eight members who pilot, repair and run the robot at the competition."),
   O("finish", "FINISH", "Finish it and drive it there", ["mat", "vt03", "ammo", "cm01", "van", "entry"], ["filament-spool", "cargo-van", "vt03"], "Everything the robot still needs, and the 4,534 km drive to Arlington and back."),
-  O("fly4", "FLY-4", "Fly half the team", SEATS(4), ["airline-seat", "airline-seat", "airline-seat"], "Four of the eight return flights."),
-  O("chassis", "CF-04", "Chassis materials", ["mat"], ["filament-spool", "cf-sheet"], "Carbon-fibre sheet for the frame plates and nylon-carbon filament for printed brackets and mounts."),
-  O("fly2", "FLY-2", "Two seats", SEATS(2), ["airline-seat", "airline-seat"], "Two return flights to the competition."),
+  O("fly4", "4 SEATS", "Fly half the team", SEATS(4), ["airline-seat", "airline-seat", "airline-seat"], "Four of the eight return flights."),
+  O("chassis", "CHASSIS", "Chassis materials", ["mat"], ["filament-spool", "cf-sheet"], "Carbon-fibre sheet for the frame plates and nylon-carbon filament for printed brackets and mounts."),
+  O("fly2", "2 SEATS", "Two seats", SEATS(2), ["airline-seat", "airline-seat"], "Two return flights to the competition."),
   O("road", "ROAD", "The road trip", ["van", "entry"], ["cargo-van"], "4,534 km there and back with the robot in the van, and the team's ARC 1v1 entry fee."),
   O("seat", "SEAT", "A seat on the plane", ["seat1"], ["airline-seat"], "One member's return flight to the competition. Eight seats to fill.", { seat: true }),
   O("van", "VAN", "The van", ["van"], ["cargo-van"], "The robot rides 4,534 km to Arlington, Texas, and back."),
-  O("match", "VT03", "Match kit", ["vt03", "ammo", "cm01"], ["vt03", "projectile-17mm", "cm01"], "The pilot's video link, a package of test projectiles and the supercapacitor monitor."),
+  O("match", "MATCH KIT", "Match kit", ["vt03", "ammo", "cm01"], ["vt03", "projectile-17mm", "cm01"], "The pilot's video link, a package of test projectiles and the supercapacitor monitor."),
   // Adopted: funded already, shown so sponsors can see what's done.
   O("turret", "TURRET", "The turret", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l", "devc", "cam", "rpi5", "hat"], ["gm6020", "m2006-p36", "rpi5"], "Aims, feeds, fires and sees: gimbal motors, launcher, vision computer and control board."),
-  O("referee", "REFEREE", "Referee and armor", ["mc02", "sm01", "fi02", "pm02", "li01", "am03"], ["am03", "mc02"], "The competition electronics that score hits, check projectile speed and limit power."),
+  O("referee", "SCORING", "Referee and armor", ["mc02", "sm01", "fi02", "pm02", "li01", "am03"], ["am03", "mc02"], "The competition electronics that score hits, check projectile speed and limit power."),
   O("power", "POWER", "Power and charging", ["batt", "rack", "supercap", "hub", "adapter"], ["matrice-4d-battery", "battery-rack-2"], "Four batteries in rotation, the rack, the supercapacitor bank and the charging station."),
   O("drive", "DRIVE", "Drivetrain", ["m3508", "c620d", "kit"], ["m3508-p19", "c620"], "Four motors for the X-drive base, their controllers and a spare of each."),
-  O("armor", "AM03", "Armor panels", ["am03"], ["am03"], "Four armor modules that register every hit."),
-  O("refkit", "MC02", "Referee electronics", ["mc02", "sm01", "fi02", "pm02", "li01"], ["mc02", "li01"], "Main control, speed monitor, RFID, power module and light bar."),
-  O("brain", "RPI-5", "Brain and eyes", ["rpi5", "hat", "cam", "devc"], ["rpi5", "devboard-c"], "The vision computer, its AI accelerator, the camera and the control board."),
-  O("batteries", "TB-4D", "Batteries", ["batt"], ["matrice-4d-battery"], "Four DJI Matrice 4D batteries: one running, three charging."),
-  O("gimbal", "GM6020", "Gimbal motors", ["gm6020"], ["gm6020"], "Yaw and pitch for the turret, plus a spare."),
-  O("motors", "M3508", "Drive motors", ["m3508"], ["m3508-p19"], "Four M3508 gear motors and a spare."),
-  O("wheels", "OMNI-96", "Omni wheels", ["wheels"], ["omni-wheel"], "Four goBILDA 96 mm omni wheels, our very first adoption."),
+  O("armor", "ARMOR", "Armor panels", ["am03"], ["am03"], "Four armor modules that register every hit."),
+  O("refkit", "REFEREE", "Referee electronics", ["mc02", "sm01", "fi02", "pm02", "li01"], ["mc02", "li01"], "Main control, speed monitor, RFID, power module and light bar."),
+  O("brain", "BRAIN", "Brain and eyes", ["rpi5", "hat", "cam", "devc"], ["rpi5", "devboard-c"], "The vision computer, its AI accelerator, the camera and the control board."),
+  O("batteries", "BATTERIES", "Batteries", ["batt"], ["matrice-4d-battery"], "Four DJI Matrice 4D batteries: one running, three charging."),
+  O("gimbal", "AIM MOTORS", "Gimbal motors", ["gm6020"], ["gm6020"], "Yaw and pitch for the turret, plus a spare."),
+  O("motors", "MOTORS", "Drive motors", ["m3508"], ["m3508-p19"], "Four M3508 gear motors and a spare."),
+  O("wheels", "WHEELS", "Omni wheels", ["wheels"], ["omni-wheel"], "Four goBILDA 96 mm omni wheels for the X-drive base."),
 ];
 
 export const priceOf = (o) => o.lines.reduce((s, k) => s + LINES[k].price, 0);
@@ -106,7 +108,7 @@ export const BUDGET = Object.values(LINES).reduce((s, l) => s + l.price, 0);
 export const ADOPTED_TOTAL = Object.values(LINES).filter((l) => l.adopted).reduce((s, l) => s + l.price, 0);
 
 // Sections, highest tier first; open offers before adopted ones, dearest first. Adopted
-// offers under $500 (the donated wheels) sit with Bronze.
+// offers under $500 sit with Bronze.
 export const SECTIONS = [...TIERS].reverse().map((t, i, all) => {
   const hi = i ? all[i - 1].min : Infinity;
   const items = OFFERS.filter((o) => {
@@ -115,6 +117,49 @@ export const SECTIONS = [...TIERS].reverse().map((t, i, all) => {
   }).sort((a, b) => isAdopted(a) - isAdopted(b) || priceOf(b) - priceOf(a));
   return { tier: t, items };
 }).filter((s) => s.items.length);
+
+// Every budget line on its own, grouped the way the budget groups them. This is what the
+// site shows (app.js keeps the bundles above at ?bundles).
+const ITEM_LABELS = {
+  m3508: "DRIVE MOTORS", c620d: "DRIVE CONTROL", kit: "WIRING KIT", wheels: "WHEELS",
+  gm6020: "AIM MOTORS", m2006: "FEED MOTORS", c610: "FEED CONTROL", uv: "UV CHARGER", m3508bare: "LAUNCH MOTORS", c620l: "LAUNCH CONTROL",
+  devc: "CONTROL BOARD", cam: "CAMERA", rpi5: "COMPUTER", hat: "AI CHIP", vt03: "VIDEO LINK",
+  rack: "BATTERY RACK", batt: "BATTERIES", supercap: "SUPERCAPS", hub: "CHARGING HUB", adapter: "POWER ADAPTER", cm01: "CAP MONITOR",
+  mc02: "REFEREE", am03: "ARMOR", sm01: "SPEED MONITOR", fi02: "RFID", pm02: "POWER MODULE", li01: "LIGHT BAR",
+  mat: "CHASSIS", ammo: "AMMO", entry: "ENTRY", van: "VAN",
+};
+const BUDGET_GROUPS = [
+  ["Drivetrain", ["m3508", "c620d", "kit", "wheels"]],
+  ["Turret and launcher", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l"]],
+  ["Control, vision and video", ["devc", "cam", "rpi5", "hat", "vt03"]],
+  ["Power and charging", ["rack", "batt", "supercap", "hub", "adapter", "cm01"]],
+  ["Scoring system", ["mc02", "am03", "sm01", "fi02", "pm02", "li01"]],
+  ["Materials and projectiles", ["mat", "ammo"]],
+  ["Getting there", ["entry", "van", "seat"]],
+];
+// A line shows each of its parts as many times as it buys them; a measure (4 kg, 4,534 km)
+// shows once. The first one shown is the big one, so a one-off part leads its multiples.
+const copiesOf = (l) => (l.parts ?? [l]).filter((p) => p.cad).map((p) => Array(p.unit ? 1 : p.qty).fill(p.cad))
+  .sort((a, b) => a.length - b.length).flat();
+const itemOf = (k) => {
+  if (k === "seat") return OFFERS.find((o) => o.seat);
+  const l = LINES[k];
+  return O(`item-${k}`, ITEM_LABELS[k], l.name, [k], copiesOf(l), l.note ?? "", { hero: true });
+};
+export const ITEM_SECTIONS = BUDGET_GROUPS.map(([name, keys]) => ({
+  name,
+  total: keys.flatMap((k) => (k === "seat" ? SEATS(8) : [k])).reduce((s, k) => s + LINES[k].price, 0),
+  items: keys.map(itemOf),
+}));
+// The robot parts (and the entry ticket) still up for adoption, dearest first. The drive
+// and the flights have their own section, where a sponsor picks how many km or seats.
+const TRAVEL = new Set(["van", ...SEATS(8)]);
+export const ITEMS = ITEM_SECTIONS.flatMap((g) => g.items);
+export const OPEN_ITEMS = ITEMS.filter((o) => !isAdopted(o) && !o.lines.some((k) => TRAVEL.has(k))).sort((a, b) => priceOf(b) - priceOf(a));
+export const TRIP = {
+  km: LINES.van.qty, perKm: LINES.van.price / LINES.van.qty,
+  seats: SEATS(8).length, perSeat: LINES.seat1.price,
+};
 
 export const money = (v, cents = true) =>
   "$" + v.toLocaleString("en-CA", { minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });

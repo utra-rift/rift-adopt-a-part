@@ -1,11 +1,11 @@
-import { LINES, OFFERS, SECTIONS, TIERS, BUDGET, ADOPTED_TOTAL, tierFor, priceOf, isAdopted, adopterOf, money } from "./catalog.js";
-import { loadPart, Figure, Group, View } from "./stage.js";
+import { LINES, OFFERS, SECTIONS, ITEMS, ITEM_SECTIONS, OPEN_ITEMS, TRIP, TIERS, BUDGET, ADOPTED_TOTAL, tierFor, priceOf, isAdopted, adopterOf, money } from "./catalog.js";
+import { loadPart, placeholderPart, Figure, Group, View } from "./stage.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canHover = matchMedia("(hover: hover)").matches;
 const partUrl = (id) => `parts/${id}.bin`;
-const byId = new Map(OFFERS.map((o) => [o.id, o]));
+const byId = new Map([...OFFERS, ...ITEMS].map((o) => [o.id, o]));
 
 // Every part is drawn at the same optical size: its visual mass (area-weighted spread,
 // as the camera sees it) takes this fraction of the cell width, like a row of products
@@ -14,17 +14,26 @@ const byId = new Map(OFFERS.map((o) => [o.id, o]));
 const VISUAL = 0.165, GROUP_FRAME = 0.66;
 
 // ------------------------------------------------------------------ crate state
-// The crate holds offer ids, plus "seat:N" for single seats. What it costs is the sum of
-// the distinct budget lines those cover, so overlapping offers never double up.
+// The crate holds offer ids, "seat:N" for single seats, and at most one "km:N" for part of
+// the drive. What it costs is the sum of the distinct budget lines those cover, so
+// overlapping offers never double up; km count only until something covers the whole drive.
 const STORE = "rift-crate-v3";
-const crate = new Set(read().filter((k) => (k.startsWith("seat:") ? LINES[`seat${k.slice(5)}`] : byId.has(k) && !isAdopted(byId.get(k)))));
+const crate = new Set(read().filter((k) => (k.startsWith("seat:") ? LINES[`seat${k.slice(5)}`]
+  : k.startsWith("km:") ? +k.slice(3) > 0 && +k.slice(3) <= TRIP.km
+  : byId.has(k) && !isAdopted(byId.get(k)))));
 function read() { try { return JSON.parse(localStorage.getItem(STORE) ?? "[]"); } catch { return []; } }
 function save() { try { localStorage.setItem(STORE, JSON.stringify([...crate])); } catch {} }
-const linesOf = (key) => (key.startsWith("seat:") ? [`seat${key.slice(5)}`] : byId.get(key).lines);
+const linesOf = (key) => (key.startsWith("seat:") ? [`seat${key.slice(5)}`] : key.startsWith("km:") ? [] : byId.get(key).lines);
 const covered = () => new Set([...crate].flatMap(linesOf));
-const crateTotal = () => [...covered()].reduce((s, k) => s + LINES[k].price, 0);
+const kmKey = () => [...crate].find((k) => k.startsWith("km:"));
+const kmIn = (have = covered()) => (have.has("van") ? TRIP.km : +(kmKey()?.slice(3) ?? 0));
+const crateTotal = () => {
+  const have = covered();
+  return [...have].reduce((s, k) => s + LINES[k].price, 0) + (have.has("van") ? 0 : kmIn(have) * TRIP.perKm);
+};
 const seatsIn = (set = covered()) => [...set].filter((k) => k.startsWith("seat")).length;
-const nameOf = (key) => (key.startsWith("seat:") ? "A seat on the plane" : byId.get(key).name);
+const kmText = (km) => `${km.toLocaleString("en-CA")} km`;
+const nameOf = (key) => (key.startsWith("seat:") ? "A seat on the plane" : key.startsWith("km:") ? `${kmText(+key.slice(3))} of the drive` : byId.get(key).name);
 
 function add(o) {
   const have = covered();
@@ -35,12 +44,25 @@ function add(o) {
     return true;
   }
   if (o.lines.every((k) => have.has(k))) { toast(`${o.name} is already covered by your crate`); return false; }
-  const swallowed = [...crate].filter((k) => linesOf(k).every((l) => o.lines.includes(l)));
+  const swallowed = [...crate].filter((k) => (k.startsWith("km:") ? o.lines.includes("van") : linesOf(k).every((l) => o.lines.includes(l))));
   for (const k of swallowed) crate.delete(k);
   crate.add(o.id);
   if (swallowed.length) toast(`${o.name} includes ${[...new Set(swallowed.map(nameOf))].join(" and ")}`);
   return true;
 }
+
+// The trip's sliders set an amount rather than add one: this many km of the drive, this
+// many seats in all (seats already covered by an offer in the crate count toward it).
+function setKm(km) {
+  const k = kmKey();
+  if (k) crate.delete(k);
+  if (km > 0 && !covered().has("van")) crate.add(`km:${Math.min(km, TRIP.km)}`);
+}
+function setSeats(n) {
+  for (const k of [...crate]) if (k.startsWith("seat:")) crate.delete(k);
+  for (let i = 1; i <= TRIP.seats && seatsIn() < n; i++) if (!covered().has(`seat${i}`)) crate.add(`seat:${i}`);
+}
+let trip = null; // the trip section, once it has loaded
 
 // ------------------------------------------------------------------ motion
 // Each live figure eases toward its targets; the loop sleeps when nothing moves.
@@ -104,23 +126,34 @@ function revealOff(s) {
 }
 
 // Load the parts an offer shows; one part is a Figure, several stand together as a Group.
+// An offer with nothing modelled yet stands in as a cube.
 async function figureFor(o) {
-  const datas = (await Promise.all(o.show.map((id) => loadPart(partUrl(id)).catch(() => null)))).filter(Boolean);
+  const datas = o.show.length ? (await Promise.all(o.show.map((id) => loadPart(partUrl(id)).catch(() => null)))).filter(Boolean) : [placeholderPart()];
   if (!datas.length) throw new Error(`no figures for ${o.id}`);
-  const fig = datas.length > 1 ? new Group(datas) : new Figure(datas[0]);
+  const fig = datas.length > 1 ? new Group(datas, { hero: o.hero }) : new Figure(datas[0]);
   fig.holo = isAdopted(o) ? 1 : 0;
   return { fig, multi: datas.length > 1 };
 }
 
 // ------------------------------------------------------------------ grid
 const shelves = $("#shelves");
-const cells = new Map();
+const cells = [];
 
-SECTIONS.forEach((sec, si) => {
+// The shelves list every budget line on its own: first, larger, the robot parts still up
+// for adoption, then the trip (added below), then every line in its budget group. The
+// older tier-and-bundle layout stays at ?bundles until the bundles are redesigned.
+const ITEM_VIEW = !new URLSearchParams(location.search).has("bundles");
+const openTotal = OPEN_ITEMS.reduce((s, o) => s + priceOf(o), 0);
+const SHELVES = ITEM_VIEW
+  ? [{ name: "Up for adoption", note: money(openTotal), aria: `Up for adoption, ${money(openTotal)}`, items: OPEN_ITEMS, featured: true },
+    ...ITEM_SECTIONS.map((g) => ({ name: g.name, note: money(g.total), aria: `${g.name}, ${money(g.total)}`, items: g.items }))]
+  : SECTIONS.map((s) => ({ name: s.tier.name, note: `${money(s.tier.min, false)}+`, aria: `${s.tier.name}, ${money(s.tier.min, false)} and up`, items: s.items }));
+
+SHELVES.forEach((sec, si) => {
   const el = document.createElement("section");
-  el.className = "tier";
-  el.setAttribute("aria-label", `${sec.tier.name}, ${money(sec.tier.min, false)} and up`);
-  el.innerHTML = `<p class="tier-label">${sec.tier.name} <span>${money(sec.tier.min, false)}+</span></p><ul class="grid" role="list"></ul>`;
+  el.className = sec.featured ? "tier featured" : "tier";
+  el.setAttribute("aria-label", sec.aria);
+  el.innerHTML = `<p class="tier-label">${sec.name} <span>${sec.note}</span></p><ul class="grid" role="list"></ul>`;
   shelves.append(el);
   const ul = el.querySelector("ul");
   sec.items.forEach((o, i) => {
@@ -138,7 +171,7 @@ SECTIONS.forEach((sec, si) => {
       </button>`;
     ul.append(li);
     const cell = { el: li, o, s: null, mask: null, hot: false, focused: false, on: false };
-    cells.set(o.id, cell);
+    cells.push(cell);
     const hit = li.querySelector(".hit");
     const update = () => {
       const on = cell.hot || cell.focused, s = cell.s;
@@ -222,7 +255,7 @@ function overPart(cell, e) {
 
 // The grid is the whole page, so every figure loads straight away and paints a still
 // frame before it animates (no frame loop needed to see it).
-for (const cell of cells.values()) {
+for (const cell of cells) {
   figureFor(cell.o).then(({ fig, multi }) => {
     cell.s = liveFigure(cell.el.querySelector("canvas"), fig, multi ? { frame: GROUP_FRAME } : { visual: VISUAL });
     cell.s.sync = true;
@@ -243,7 +276,7 @@ function placeHalo(cell) {
 
 function paintCells() {
   const have = covered(), seats = seatsIn(have);
-  for (const c of cells.values()) {
+  for (const c of cells) {
     if (isAdopted(c.o)) continue;
     const inCrate = c.o.seat ? seats > 0 : c.o.lines.every((k) => have.has(k));
     if (inCrate) c.el.dataset.state = "crate"; else delete c.el.dataset.state;
@@ -280,17 +313,19 @@ const crateEl = $("#crate"), crateBtn = $("#crate-btn");
 
 function render(bump = false) {
   paintCells();
+  trip?.sync();
   const count = $("#crate-count");
   count.textContent = crate.size;
   if (bump) { count.classList.remove("bump"); void count.offsetWidth; count.classList.add("bump"); }
   const total = crateTotal();
-  const offers = [...crate].filter((k) => !k.startsWith("seat:"));
+  const offers = [...crate].filter((k) => !k.startsWith("seat:") && !k.startsWith("km:"));
   const seatKeys = [...crate].filter((k) => k.startsWith("seat:"));
   const rows = offers.map((k) => {
     const o = byId.get(k);
     return `<li><span class="n">${o.name}<small>${o.code}</small></span><span class="p">${money(priceOf(o))}</span><button class="x" type="button" data-remove="${k}" aria-label="Remove ${o.name}">×</button></li>`;
   });
   if (seatKeys.length) rows.push(`<li><span class="n">A seat on the plane${seatKeys.length > 1 ? ` ×${seatKeys.length}` : ""}<small>SEAT</small></span><span class="p">${money(seatKeys.length * LINES.seat1.price)}</span><button class="x" type="button" data-remove="${seatKeys.at(-1)}" aria-label="Remove a seat">×</button></li>`);
+  if (kmKey() && !covered().has("van")) rows.push(`<li><span class="n">The drive, ${kmText(kmIn())}<small>VAN</small></span><span class="p">${money(kmIn() * TRIP.perKm)}</span><button class="x" type="button" data-remove="${kmKey()}" aria-label="Remove the drive">×</button></li>`);
   $("#crate-list").innerHTML = rows.length ? rows.join("") : `<li class="crate-empty">Nothing here yet.</li>`;
   $("#crate-total").textContent = money(total);
   const tier = tierFor(total), i = tier ? TIERS.indexOf(tier) : -1, next = TIERS[i + 1];
@@ -304,12 +339,13 @@ function render(bump = false) {
 
 function summary(total, tier) {
   const seats = [...crate].filter((k) => k.startsWith("seat:")).length;
-  const lines = [...crate].filter((k) => !k.startsWith("seat:")).map((k) => { const o = byId.get(k); return `• ${o.name} (${o.code}): ${money(priceOf(o))}`; });
+  const lines = [...crate].filter((k) => !k.startsWith("seat:") && !k.startsWith("km:")).map((k) => { const o = byId.get(k); return `• ${o.name} (${o.code}): ${money(priceOf(o))}`; });
   if (seats) lines.push(`• ${seats} seat${seats > 1 ? "s" : ""} on the plane: ${money(seats * LINES.seat1.price)}`);
+  if (kmKey() && !covered().has("van")) lines.push(`• The drive, ${kmText(kmIn())}: ${money(kmIn() * TRIP.perKm)}`);
   return [`We'd like to adopt these for RIFT:`, "", ...lines, "", `Total: ${money(total)} CAD${tier ? ` (${tier.name} tier)` : ""}`, "", "Name / company:", "Logo and contact for recognition:"].join("\n");
 }
 function mailto(total, tier) {
-  const codes = [...new Set([...crate].map((k) => (k.startsWith("seat:") ? "SEAT" : byId.get(k).code)))];
+  const codes = [...new Set([...crate].map((k) => (k.startsWith("seat:") ? "SEAT" : k.startsWith("km:") ? "VAN" : byId.get(k).code)))];
   return `mailto:arcrobotics@utra.ca?subject=${encodeURIComponent(`Adopt a Part: ${codes.join(", ")} (${money(total)})`)}&body=${encodeURIComponent(summary(total, tier))}`;
 }
 $("#crate-list").addEventListener("click", (e) => { const k = e.target.closest("[data-remove]")?.dataset.remove; if (k) { crate.delete(k); save(); render(); paintAdopt(); } });
@@ -363,12 +399,14 @@ function openView(id) {
   const adopted = isAdopted(o);
   $("#view-code").textContent = o.code;
   $("#view-name").textContent = o.name;
-  $("#view-price").textContent = adopted ? `${money(priceOf(o))} · Adopted by ${adopterOf(o)}` : `${money(priceOf(o))} · ${tierFor(priceOf(o)).name}`;
+  $("#view-price").textContent = adopted ? `${money(priceOf(o))} · Adopted by ${adopterOf(o)}` : [money(priceOf(o)), tierFor(priceOf(o))?.name].filter(Boolean).join(" · ");
   $("#view-line").textContent = o.line;
-  const things = insideOf(o), drawn = things.filter((t) => t.cad), plain = things.filter((t) => !t.cad);
+  // A single thing with no model yet is named like a drawn one, not listed as "also inside".
+  const things = insideOf(o), drawn = things.filter((t) => t.cad), lead = drawn[0] ?? (things.length === 1 ? things[0] : null);
+  const plain = things.filter((t) => !t.cad && t !== lead);
   const inside = $("#view-inside");
   inside.innerHTML = drawn.length > 1 || o.show.length > 1 ? drawn.map((t, k) => `<li><button type="button" data-k="${k}" aria-label="${t.name}"><canvas aria-hidden="true"></canvas><span>${amount(t)}</span></button></li>`).join("") +
-    `<li style="grid-column:1/-1" class="inside-name" id="inside-name"></li>` : `<li style="grid-column:1/-1" class="inside-name" id="inside-name">${drawn[0] ? (drawn[0].unit ? `${drawn[0].name}, ${amount(drawn[0])}` : `${drawn[0].qty > 1 ? `${drawn[0].qty} × ` : ""}${drawn[0].name}`) : ""}</li>`;
+    `<li style="grid-column:1/-1" class="inside-name" id="inside-name"></li>` : `<li style="grid-column:1/-1" class="inside-name" id="inside-name">${lead ? (lead.unit ? `${lead.name}, ${amount(lead)}` : `${lead.qty > 1 ? `${lead.qty} × ` : ""}${lead.name}`) : ""}</li>`;
   inside.querySelectorAll("button[data-k]").forEach((btn) => {
     const t = drawn[+btn.dataset.k];
     btn.addEventListener("click", () => showPart(t));
@@ -503,13 +541,21 @@ let resizeTimer = 0;
 addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    for (const c of cells.values()) if (c.s) { c.s.view.resize(); placeHalo(c); measureMask(c); }
+    for (const c of cells) if (c.s) { c.s.view.resize(); placeHalo(c); measureMask(c); }
     if (big) { big.view.resize(); big.view.paint(); }
   }, 120);
 });
 
 render();
 const deep = location.hash.match(/^#part-([\w-]+)/);
+if (ITEM_VIEW) import("./trip.js").then(({ tripSection }) => {
+  trip = tripSection({
+    km: () => kmIn(), seats: () => seatsIn(),
+    setKm: (km) => { setKm(km); save(); render(true); },
+    setSeats: (n) => { setSeats(n); save(); render(true); },
+  });
+  shelves.querySelector(".featured").after(trip.el);
+}).catch((err) => console.warn(`trip: ${err.message}`));
 if (deep && byId.has(deep[1])) openView(deep[1]);
 
 // Inspection hook for automated checks.
