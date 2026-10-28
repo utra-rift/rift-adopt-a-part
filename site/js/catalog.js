@@ -7,6 +7,13 @@
 // offer's price is the sum of its lines, which places it in a tier. The same line can
 // appear in several offers (a motor on its own and inside its subsystem); the crate
 // counts each line once, so nothing is ever paid for twice.
+//
+// The budget sheet estimated the trip (items 31 and 32) for Purdue, last season's venue.
+// The competition is now at UT Arlington, so those two lines are re-estimated the same way:
+// the drive is Google Maps' fastest route from campus to UTA, 2,267 km each way, at the
+// sheet's $0.50/km; the flight is the sheet's $850.50 scaled by Toronto–Dallas over
+// Toronto–Indianapolis, the cheapest nonstop return for the same dates (Jun 29 – Jul 5,
+// 2027, checked Oct 27, 2026): CA$775 / CA$719.
 
 export const TIERS = [
   { id: "bronze", name: "Bronze", min: 500, perks: ["Website logo", "Pit signage", "Sponsor acknowledgement", "Scheduled build update"] },
@@ -59,10 +66,10 @@ export const LINES = {
     ] }),
   ammo: L(29, "17 mm fluorescent projectiles", 1, 142.56, "projectile-17mm", { note: "one package, for testing" }),
   entry: L(30, "ARC 1v1 event registration", 1, 207.96, null),
-  van: L(31, "Return drive with the robot", 1632, 816.0, "cargo-van", { unit: "km", note: "estimated from last season's venue" }),
+  van: L(31, "Return drive with the robot", 4534, 2267.0, "cargo-van", { unit: "km", note: "estimated, Toronto to UT Arlington" }),
 };
 // Eight return flights, one line per seat so seats can be taken one at a time.
-for (let i = 1; i <= 8; i++) LINES[`seat${i}`] = L(32, "Return flight to the competition", 1, 850.5, "airline-seat");
+for (let i = 1; i <= 8; i++) LINES[`seat${i}`] = L(32, "Return flight to the competition", 1, 916.74, "airline-seat");
 const SEATS = (n) => Array.from({ length: n }, (_, i) => `seat${i + 1}`);
 
 const O = (id, code, name, lines, show, line, extra = {}) => ({ id, code, name, lines, show, line, ...extra });
@@ -70,13 +77,13 @@ export const OFFERS = [
   // Open: still needs a sponsor.
   O("trip", "TRIP", "The whole trip", [...SEATS(8), "van", "entry"], ["cargo-van", "airline-seat", "airline-seat"], "Eight flights, the drive and the entry fee: everything that gets RIFT to its first competition."),
   O("fly8", "FLY-8", "Fly the team", SEATS(8), ["airline-seat", "airline-seat", "airline-seat", "airline-seat"], "Return flights for the eight members who pilot, repair and run the robot at the competition."),
-  O("finish", "FINISH", "Finish it and drive it there", ["mat", "vt03", "ammo", "cm01", "van", "entry"], ["filament-spool", "cargo-van", "vt03"], "Everything the robot still needs, and the 1,632 km drive to the arena."),
+  O("finish", "FINISH", "Finish it and drive it there", ["mat", "vt03", "ammo", "cm01", "van", "entry"], ["filament-spool", "cargo-van", "vt03"], "Everything the robot still needs, and the 4,534 km drive to Arlington and back."),
   O("fly4", "FLY-4", "Fly half the team", SEATS(4), ["airline-seat", "airline-seat", "airline-seat"], "Four of the eight return flights."),
   O("chassis", "CF-04", "Chassis materials", ["mat"], ["filament-spool", "cf-sheet"], "Carbon-fibre sheet for the frame plates and nylon-carbon filament for printed brackets and mounts."),
   O("fly2", "FLY-2", "Two seats", SEATS(2), ["airline-seat", "airline-seat"], "Two return flights to the competition."),
-  O("road", "ROAD", "The road trip", ["van", "entry"], ["cargo-van"], "1,632 km there and back with the robot in the van, and the team's ARC 1v1 entry fee."),
+  O("road", "ROAD", "The road trip", ["van", "entry"], ["cargo-van"], "4,534 km there and back with the robot in the van, and the team's ARC 1v1 entry fee."),
   O("seat", "SEAT", "A seat on the plane", ["seat1"], ["airline-seat"], "One member's return flight to the competition. Eight seats to fill.", { seat: true }),
-  O("van", "VAN", "The van", ["van"], ["cargo-van"], "The robot rides 1,632 km to the arena and back."),
+  O("van", "VAN", "The van", ["van"], ["cargo-van"], "The robot rides 4,534 km to Arlington, Texas, and back."),
   O("match", "VT03", "Match kit", ["vt03", "ammo", "cm01"], ["vt03", "projectile-17mm", "cm01"], "The pilot's video link, a package of test projectiles and the supercapacitor monitor."),
   // Adopted: funded already, shown so sponsors can see what's done.
   O("turret", "TURRET", "The turret", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l", "devc", "cam", "rpi5", "hat"], ["gm6020", "m2006-p36", "rpi5"], "Aims, feeds, fires and sees: gimbal motors, launcher, vision computer and control board."),

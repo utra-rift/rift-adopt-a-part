@@ -354,6 +354,8 @@ function insideOf(o) {
   }
   return [...seen.values()];
 }
+// "×4" for a count, "4,534 km" for a measure.
+const amount = (t) => t.unit ? `${t.qty.toLocaleString("en-CA")} ${t.unit}` : `×${t.qty}`;
 
 function openView(id) {
   const o = byId.get(id); if (!o) return;
@@ -365,8 +367,8 @@ function openView(id) {
   $("#view-line").textContent = o.line;
   const things = insideOf(o), drawn = things.filter((t) => t.cad), plain = things.filter((t) => !t.cad);
   const inside = $("#view-inside");
-  inside.innerHTML = drawn.length > 1 || o.show.length > 1 ? drawn.map((t, k) => `<li><button type="button" data-k="${k}" aria-label="${t.name}"><canvas aria-hidden="true"></canvas><span>×${t.qty}${t.unit ? ` ${t.unit}` : ""}</span></button></li>`).join("") +
-    `<li style="grid-column:1/-1" class="inside-name" id="inside-name"></li>` : `<li style="grid-column:1/-1" class="inside-name" id="inside-name">${drawn[0] ? `${drawn[0].qty > 1 ? `${drawn[0].qty} × ` : ""}${drawn[0].name}` : ""}</li>`;
+  inside.innerHTML = drawn.length > 1 || o.show.length > 1 ? drawn.map((t, k) => `<li><button type="button" data-k="${k}" aria-label="${t.name}"><canvas aria-hidden="true"></canvas><span>${amount(t)}</span></button></li>`).join("") +
+    `<li style="grid-column:1/-1" class="inside-name" id="inside-name"></li>` : `<li style="grid-column:1/-1" class="inside-name" id="inside-name">${drawn[0] ? (drawn[0].unit ? `${drawn[0].name}, ${amount(drawn[0])}` : `${drawn[0].qty > 1 ? `${drawn[0].qty} × ` : ""}${drawn[0].name}`) : ""}</li>`;
   inside.querySelectorAll("button[data-k]").forEach((btn) => {
     const t = drawn[+btn.dataset.k];
     btn.addEventListener("click", () => showPart(t));
@@ -377,7 +379,7 @@ function openView(id) {
       new View(btn.querySelector("canvas"), f, { fill: 0.84, dpr: 2 }).paint();
     }).catch(() => btn.querySelector("canvas").replaceWith(Object.assign(document.createElement("span"), { className: "ph", textContent: "·" })));
   });
-  $("#view-note").textContent = plain.length ? `Also inside: ${plain.map((p) => p.name.charAt(0).toLowerCase() + p.name.slice(1)).join(", ")}.` : "";
+  $("#view-note").textContent = plain.length ? `Also inside: ${plain.map((p) => p.name).join(", ")}.` : "";
   paintAdopt();
   viewEl.hidden = false;
   document.documentElement.style.overflow = "hidden";
