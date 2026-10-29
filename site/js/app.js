@@ -353,24 +353,38 @@ function boot(cell) {
   for (const c of cells) if (canHover || !c.poster) near.observe(c.el);
 }
 
-// Touch screens have no hover to bring a part to life, so scrolling does: the row of parts
-// nearest the middle of the screen (below the header) shows its real colours, and hands them
-// on to the next row as it goes by. Positions are measured once and again when the layout
-// changes, so a scroll frame only compares numbers.
+// Touch screens have no hover to bring a part to life, so scrolling does: the two neighbouring
+// rows of parts whose middle is nearest the middle of the screen (below the header) show their
+// real colours, and pass them on a row at a time as the page goes by. A new pair takes over
+// only once it is clearly nearer, so a slow scroll near the hand-off doesn't flicker.
+// Positions are measured once and again when the layout changes, so a scroll frame only
+// compares numbers.
 if (!canHover) {
-  let rows = [], lit = new Set(), queued = false;
+  const HEADER = 52, SLACK = 24;
+  let rows = [], at = -1, lit = new Set(), queued = false;
   const measure = () => {
-    rows = cells.filter((c) => c.el.querySelector(".poster-c")).map((c) => {
-      const r = c.el.querySelector(".fig").getBoundingClientRect();
-      return { c, y: r.top + scrollY + r.height / 2, h: r.height };
-    });
+    rows = [];
+    for (const c of cells) {
+      if (!c.el.querySelector(".poster-c")) continue;
+      const r = c.el.querySelector(".fig").getBoundingClientRect(), y = r.top + scrollY + r.height / 2;
+      const row = rows.find((w) => Math.abs(w.y - y) < r.height * 0.3);
+      if (row) row.cells.push(c); else rows.push({ y, cells: [c] });
+    }
+    rows.sort((a, b) => a.y - b.y);
+    at = -1;
   };
   const focusRows = () => {
     queued = false;
-    const mid = scrollY + 52 + (innerHeight - 52) * 0.46;
-    let best = null;
-    for (const e of rows) if (!best || Math.abs(e.y - mid) < Math.abs(best.y - mid)) best = e;
-    const next = new Set(best && Math.abs(best.y - mid) < innerHeight * 0.32 ? rows.filter((e) => Math.abs(e.y - best.y) < best.h * 0.3).map((e) => e.c) : []);
+    const top = scrollY + HEADER, bottom = scrollY + innerHeight, mid = (top + bottom) / 2;
+    const seen = (i) => !!rows[i] && rows[i].y > top && rows[i].y < bottom;
+    // A pair's middle; a row whose neighbour is off screen (across the trip) stands alone.
+    const off = (i) => Math.abs((seen(i + 1) ? (rows[i].y + rows[i + 1].y) / 2 : rows[i].y) - mid);
+    let best = -1;
+    for (let i = 0; i < rows.length; i++) if (seen(i) && (best < 0 || off(i) < off(best))) best = i;
+    if (best >= 0 && seen(at) && off(at) - off(best) < SLACK) best = at;
+    at = best;
+    const next = new Set();
+    for (const i of best < 0 ? [] : [best, best + 1]) if (seen(i)) for (const c of rows[i].cells) next.add(c);
     for (const c of lit) if (!next.has(c)) c.el.removeAttribute("data-focus");
     for (const c of next) c.el.setAttribute("data-focus", "");
     lit = next;
