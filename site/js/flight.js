@@ -81,6 +81,12 @@ export function flightStrip(host, { seats = 8 } = {}) {
   el.style.height = `${heightFor(el.clientWidth || host.clientWidth || 1)}px`;   // the placeholder: white, at its final height
 
   const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+  // Frame pacing. The air around the aeroplane loops on its own, so it never needs more than
+  // 60 frames a second (a 120 Hz phone would otherwise draw it twice as often, nonstop), and on
+  // a touch screen, while nothing is changing, 30. Anything moving (the level easing, a seat
+  // pulse, a boom) takes it back to 60 at once.
+  const touch = !matchMedia("(hover: hover) and (pointer: fine)").matches;
+  let lively = true;
   let renderer = null, ready = false, dead = false;
   let W = 0, H = 0, dpr = 1, raf = 0, last = 0, visible = false, dirty = true;
   let clock = 0, travel = 0, flow = 0, target = 0, baseFov = 30, phone = false;
@@ -323,10 +329,12 @@ export function flightStrip(host, { seats = 8 } = {}) {
     raf = 0;
     if (dead || !ready) return;
     const still = reduce.matches;
+    const every = touch && !lively ? 1 / 30 : 1 / 60;
+    if (last && !dirty && (nowMs - last) / 1000 < every - 0.004) { raf = requestAnimationFrame(tick); return; }
     const gap = last ? (nowMs - last) / 1000 : 1 / 60;
     const dt = Math.min(gap, 1 / 20);
     last = nowMs;
-    if (maxRatio > 1) { slow = gap > 0.024 && gap < 0.25 ? slow + 1 : Math.max(0, slow - 2); if (slow > 45) { maxRatio = 1; W = 0; layout(); } }
+    if (maxRatio > 1) { slow = gap > every * 1.45 && gap < 0.25 ? slow + 1 : Math.max(0, slow - 2); if (slow > 45) { maxRatio = 1; W = 0; layout(); } }
     if (!still) clock += dt;
 
     // the level: a critically damped spring, quicker up than down
@@ -448,6 +456,7 @@ export function flightStrip(host, { seats = 8 } = {}) {
     if (!el.dataset.live) el.dataset.live = "";      // first frame drawn (CSS or tests may key on it)
 
     const settling = lvl.x !== target || events.length > 0 || sp < 1;
+    lively = settling || !!boom;
     dirty = false;
     if (!raf && ((!still && visible) || (still && settling))) raf = requestAnimationFrame(tick);
   }

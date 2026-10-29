@@ -794,8 +794,14 @@ export function tierSlider(host, {
     if (!reduced && fx - movedAt < 0.12) return true;
     return tier >= 0 && !reduced;
   }
+  // Frame pacing: at most 60 frames a second, and on a touch screen 30 while only the live tier's
+  // shimmer is moving (no drag, no pulse, no sweep), so a 120 Hz phone isn't kept busy by it.
+  const calm = () => !dragging && !effects.length && !sparks.length && !queue.length && !wipe &&
+    shown === target && kick <= 0 && hover === hoverTarget && !flash.some((a) => a >= 0);
   function frame(now) {
     raf = 0;
+    const every = touch && calm() ? 1000 / 30 : 1000 / 60;
+    if (now - last < every - 4) { raf = requestAnimationFrame(frame); return; }
     const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
     last = now;
     update(dt);
@@ -805,7 +811,7 @@ export function tierSlider(host, {
   function kickLoop() {
     if (raf) return;
     if (!busy()) { draw(); return; }
-    last = performance.now();
+    last = performance.now() - 1000 / 60;
     raf = requestAnimationFrame(frame);
   }
 
