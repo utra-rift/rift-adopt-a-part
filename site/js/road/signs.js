@@ -1,54 +1,72 @@
 // The welcome signs at either end of the drive, each in its own place's style, pared down to the
 // name and drawn larger than life so they read at the strip's size:
-// - Toronto: the blue city-limit sign on the 401 and 427 (Wikimedia Commons, "Toronto Welcome
-//   Sign along 401, June 16 2025"): the white name on blue, over a white band lettered in blue.
+// - Toronto: the frame of the city-limit sign on the 401 and 427 (Wikimedia Commons, "Toronto
+//   Welcome Sign along 401, June 16 2025"): a white-bordered panel over a white band, the city's
+//   logo beside the name. Here the logo is the CN Tower, and the panel takes the University of
+//   Toronto's navy and serif capitals.
 // - Texas: TxDOT's state-line sign ("Welcome to Texas sign Texarkana TX 2013"): white script on
 //   green, the Texas flag waving on a gold staff.
 // The panels and posts are solids like any landmark; each face is a textured quad that shares the
 // strip's reveal, drawn in ink on plaster until the colour arrives.
 import * as THREE from "../../vendor/three.module.min.js";
 
-const PANEL = { w: 5.6, h: 3.5, clear: 2.0, depth: 0.08 };   // metres; clear: ground to the panel's foot
-const TILE = { w: 512, h: 320, pad: 6 };                      // texels per face; the atlas is 2 × 2 tiles
-const BLUE = "#1e5aa8", GREEN = "#0f6a48", INK = "#4a4a50";
+const PAD = 6, CLEAR = 2.0, DEPTH = 0.08;          // texels round each tile; metres from ground to panel, panel thickness
+const NAVY = "#1e3765", GREEN = "#0f6a48", INK = "#4a4a50";
 
 // Fit a line of text into `maxW` texels, starting from `size`.
 function fitFont(ctx, text, font, size, maxW) {
   for (; size > 8; size -= 1) { ctx.font = font(size); if (ctx.measureText(text).width <= maxW) break; }
   return size;
 }
-function line(ctx, text, font, size, maxW, x, y, align = "center") {
+function line(ctx, text, font, size, maxW, x, y, align = "center", spacing = 0) {
+  ctx.letterSpacing = `${spacing}px`;
   fitFont(ctx, text, font, size, maxW);
   ctx.textAlign = align;
   ctx.fillText(text, x, y);
+  ctx.letterSpacing = "0px";
 }
 function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath();
   ctx.roundRect(x, y, w, h, r);
 }
 const SANS = (s) => `bold ${s}px "Helvetica Neue", Helvetica, Arial, sans-serif`;
+const SERIF = (s) => `600 ${s}px "Trajan Pro", Georgia, "Times New Roman", serif`;
 const SCRIPT = (s) => `italic bold ${s}px Georgia, "Times New Roman", serif`;
 
-// Each face is drawn twice: in colour, and as ink on white for the plaster state.
-function toronto(ctx, ink) {
-  const { w, h } = TILE, fg = ink ? INK : "#ffffff";
-  ctx.fillStyle = ink ? "#ffffff" : BLUE; ctx.fillRect(-TILE.pad, -TILE.pad, w + 2 * TILE.pad, h + 2 * TILE.pad);
-  ctx.strokeStyle = fg; ctx.lineWidth = 5;
-  roundRect(ctx, 9, 9, w - 18, h - 18, 16); ctx.stroke();
-  ctx.fillStyle = fg; ctx.textBaseline = "alphabetic";
-  line(ctx, "University of", SANS, 52, w - 90, w / 2, 74);
-  line(ctx, "Toronto", SANS, 104, w - 70, w / 2, 168);
-  // The white band, lettered in blue.
-  ctx.fillStyle = "#ffffff";
-  roundRect(ctx, 24, 196, w - 48, h - 220, 8);
-  if (ink) { ctx.lineWidth = 3; ctx.stroke(); } else ctx.fill();
-  ctx.fillStyle = ink ? INK : BLUE;
-  line(ctx, "Welcome", SANS, 64, w - 120, w / 2, 272);
+// The CN Tower in silhouette: the tapering shaft, the main pod and its decks, the SkyPod and the
+// antenna, at their heights on the real tower (pod 342 m, SkyPod 447 m of 553 m). x: centre, y: base.
+function cnTower(ctx, x, y, H) {
+  const top = y - H, pod = y - H * 0.62, sky = y - H * 0.808;
+  ctx.beginPath();
+  ctx.moveTo(x - H * 0.055, y); ctx.lineTo(x - H * 0.016, pod + H * 0.03); ctx.lineTo(x - H * 0.012, sky); ctx.lineTo(x - H * 0.004, sky - H * 0.02);
+  ctx.lineTo(x - H * 0.003, top); ctx.lineTo(x + H * 0.003, top); ctx.lineTo(x + H * 0.004, sky - H * 0.02);
+  ctx.lineTo(x + H * 0.012, sky); ctx.lineTo(x + H * 0.016, pod + H * 0.03); ctx.lineTo(x + H * 0.055, y); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(x, pod, H * 0.062, H * 0.03, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillRect(x - H * 0.045, pod - H * 0.05, H * 0.09, H * 0.03);
+  ctx.beginPath(); ctx.ellipse(x, sky, H * 0.022, H * 0.011, 0, 0, Math.PI * 2); ctx.fill();
 }
 
-function texas(ctx, ink) {
-  const { w, h } = TILE, fg = ink ? INK : "#ffffff";
-  ctx.fillStyle = ink ? "#ffffff" : GREEN; ctx.fillRect(-TILE.pad, -TILE.pad, w + 2 * TILE.pad, h + 2 * TILE.pad);
+// Each face is drawn twice: in colour, and as ink on white for the plaster state.
+function toronto(ctx, ink, w, h) {
+  const fg = ink ? INK : "#ffffff";
+  ctx.fillStyle = ink ? "#ffffff" : NAVY; ctx.fillRect(-PAD, -PAD, w + 2 * PAD, h + 2 * PAD);
+  ctx.strokeStyle = fg; ctx.lineWidth = 5;
+  roundRect(ctx, 9, 9, w - 18, h - 18, 18); ctx.stroke();
+  ctx.fillStyle = fg; ctx.textBaseline = "alphabetic";
+  cnTower(ctx, 92, 196, 168);
+  line(ctx, "UNIVERSITY OF", SERIF, 40, 400, 168, 92, "left", 6);
+  line(ctx, "TORONTO", SERIF, 96, 440, 164, 182, "left", 4);
+  // The white band, lettered in the panel's colour.
+  ctx.fillStyle = "#ffffff";
+  roundRect(ctx, 26, 212, w - 52, h - 238, 9);
+  if (ink) { ctx.lineWidth = 3; ctx.stroke(); } else ctx.fill();
+  ctx.fillStyle = ink ? INK : NAVY;
+  line(ctx, "WELCOME", SANS, 36, 400, w / 2, h - 40, "center", 9);
+}
+
+function texas(ctx, ink, w, h) {
+  const fg = ink ? INK : "#ffffff";
+  ctx.fillStyle = ink ? "#ffffff" : GREEN; ctx.fillRect(-PAD, -PAD, w + 2 * PAD, h + 2 * PAD);
   ctx.strokeStyle = fg; ctx.lineWidth = 5;
   roundRect(ctx, 9, 9, w - 18, h - 18, 16); ctx.stroke();
   ctx.fillStyle = fg; ctx.textBaseline = "alphabetic";
@@ -94,25 +112,36 @@ function texas(ctx, ink) {
   ctx.beginPath(); ctx.moveTo(fx - 4, fy - 10); ctx.lineTo(fx - 12, fy + fh + 32); ctx.stroke();
 }
 
-// One canvas, 2 × 2 tiles: Toronto and Texas across, colour over ink.
+// Each face: how it is drawn, its tile in the atlas (texels) and its panel (metres).
+const FACES = [
+  { draw: toronto, tile: [640, 300], panel: [6.4, 3.0] },
+  { draw: texas, tile: [512, 320], panel: [5.6, 3.5] },
+];
+
+// One canvas: the faces side by side, colour in the top half and ink in the bottom half.
 function atlas() {
-  const W = TILE.w + 2 * TILE.pad, H = TILE.h + 2 * TILE.pad;
+  const rowH = Math.max(...FACES.map((f) => f.tile[1])) + 2 * PAD;
   const canvas = document.createElement("canvas");
-  canvas.width = W * 2; canvas.height = H * 2;
+  canvas.width = FACES.reduce((a, f) => a + f.tile[0] + 2 * PAD, 0); canvas.height = rowH * 2;
   const ctx = canvas.getContext("2d");
-  [[toronto, 0], [texas, 1]].forEach(([draw, col]) => [false, true].forEach((ink, row) => {
-    ctx.save();
-    ctx.translate(col * W + TILE.pad, row * H + TILE.pad);
-    ctx.beginPath(); ctx.rect(-TILE.pad, -TILE.pad, W, H); ctx.clip();
-    draw(ctx, ink);
-    ctx.restore();
-  }));
+  let x = 0;
+  const uv = FACES.map(({ draw, tile: [w, h] }) => {
+    for (const ink of [false, true]) {
+      ctx.save();
+      ctx.translate(x + PAD, (ink ? rowH : 0) + PAD);
+      ctx.beginPath(); ctx.rect(-PAD, -PAD, w + 2 * PAD, h + 2 * PAD); ctx.clip();
+      draw(ctx, ink, w, h);
+      ctx.restore();
+    }
+    // The UV box of the colour tile (its ink tile is half the atlas below it).
+    const box = { u0: (x + PAD) / canvas.width, u1: (x + PAD + w) / canvas.width, v0: 1 - (PAD + h) / canvas.height, v1: 1 - PAD / canvas.height };
+    x += w + 2 * PAD;
+    return box;
+  });
   const map = new THREE.CanvasTexture(canvas);
   map.colorSpace = THREE.SRGBColorSpace;
   map.anisotropy = 8;
-  // The UV box of a face's colour tile (the ink tile is half the atlas below it).
-  const uvOf = (col) => ({ u0: (col * W + TILE.pad) / canvas.width, u1: (col * W + TILE.pad + TILE.w) / canvas.width, v0: 1 - (TILE.pad + TILE.h) / canvas.height, v1: 1 - TILE.pad / canvas.height });
-  return { map, uvOf };
+  return { map, uv };
 }
 
 // Where each sign stands, by its offset from the route's start or end (metres along it) and
@@ -121,28 +150,30 @@ function atlas() {
 // square-on at the start and 30° ahead of the van at the end). Scale: the parked shot is wider,
 // so the Texas sign is drawn larger to read at the same size.
 const PLACES = [
-  { col: 0, at: (R) => R.s0 - 10, side: -1, turn: -0.12, scale: 1.5 },   // the far shoulder in front of Convocation Hall's lawn
-  { col: 1, at: (R) => R.s1 - 21, side: 1, turn: 0.42, scale: 1.9 },     // the near verge before the parking spot
+  { face: 0, at: (R) => R.s0 - 10, side: -1, turn: -0.12, scale: 1.4 },  // the far shoulder in front of Convocation Hall's lawn
+  { face: 1, at: (R) => R.s1 - 21, side: 1, turn: 0.42, scale: 1.9 },    // the near verge before the parking spot
 ];
 
 // Posts and panels go into the landmark solids through `k`; returns the faces' mesh data.
 export function buildSigns(k, R, T, half) {
   const { site, add, box, put } = k;
-  const { map, uvOf } = atlas();
+  const { map, uv: uvs } = atlas();
   const P = [], N = [], UV = [], AS = [], AH = [], AD = [];
   for (const p of PLACES) {
+    const [pw, ph] = FACES[p.face].panel;
     const st = site(p.at(R), p.side * (half + 2.4 * p.scale));
     const turn = (g) => g.scale(p.scale, p.scale, p.scale).rotateY(p.turn);
-    // Two galvanised posts behind the panel, and the panel's aluminium back.
-    for (const x of [-PANEL.w * 0.3, PANEL.w * 0.3]) add(turn(box(0.15, PANEL.clear + PANEL.h - 0.25, 0.15, x, 0, -0.14)), st, "#9ea4a8", { jitter: 0.02, edge: 40 });
-    add(turn(box(PANEL.w, PANEL.h, PANEL.depth, 0, PANEL.clear, -0.02)), st, "#b4b9bd", { jitter: 0.01, edge: 40 });
-    put(st, (PANEL.w / 2 + 0.6) * p.scale, (PANEL.clear + PANEL.h) * p.scale);
+    // Two galvanised posts up to the panel's foot (any higher, their outlines show through the
+    // face), and the panel's aluminium back.
+    for (const x of [-pw * 0.3, pw * 0.3]) add(turn(box(0.15, CLEAR + 0.06, 0.15, x, 0, -0.1)), st, "#9ea4a8", { jitter: 0.02, edge: 40 });
+    add(turn(box(pw, ph, DEPTH, 0, CLEAR, -0.02)), st, "#b4b9bd", { jitter: 0.01, edge: 40 });
+    put(st, (pw / 2 + 0.6) * p.scale, (CLEAR + ph) * p.scale);
     // The face, just proud of the panel, set down the same way `add` sets a part.
-    const g = turn(new THREE.PlaneGeometry(PANEL.w, PANEL.h).translate(0, PANEL.clear + PANEL.h / 2, PANEL.depth / 2 + 0.005)).toNonIndexed();
+    const g = turn(new THREE.PlaneGeometry(pw, ph).translate(0, CLEAR + ph / 2, DEPTH / 2 + 0.005)).toNonIndexed();
     g.rotateY(-st.yaw).translate(st.x, T.heightAt(st.x, st.z), st.z);
     g.computeBoundingBox();
     const c = g.boundingBox.getCenter(new THREE.Vector3()), nr = R.near(c.x, c.z);
-    const { u0, u1, v0, v1 } = uvOf(p.col), pos = g.attributes.position.array, nor = g.attributes.normal.array, uv = g.attributes.uv.array;
+    const { u0, u1, v0, v1 } = uvs[p.face], pos = g.attributes.position.array, nor = g.attributes.normal.array, uv = g.attributes.uv.array;
     for (let i = 0; i < pos.length / 3; i++) {
       P.push(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
       N.push(nor[i * 3], nor[i * 3 + 1], nor[i * 3 + 2]);
