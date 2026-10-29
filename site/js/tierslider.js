@@ -52,10 +52,14 @@ const LEVELS = [
 
 const reducedQuery = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
 
+// Returns true when the browser held the buzz back: it allows vibration only once the page has
+// had a completed tap (scrolling never counts, and a finger drag counts only as it lifts), so
+// the first drag on a fresh page can't buzz while the finger is down.
 function vibrate(pattern) {
-  // Chrome refuses (and logs an error) before the page has had a user gesture.
-  if (!(navigator.userActivation?.hasBeenActive ?? true)) return;
-  try { navigator.vibrate?.(pattern); } catch {}
+  if (!navigator.vibrate) return false;
+  if (!(navigator.userActivation?.hasBeenActive ?? true)) return true;
+  try { navigator.vibrate(pattern); } catch {}
+  return false;
 }
 
 export function tierSlider(host, {
@@ -161,6 +165,10 @@ export function tierSlider(host, {
   let wipe = null;                 // { from, to, x, t, dur, up }
   let target = val / max, shown = target;
   let dragging = false, hover = 0, hoverTarget = 0, focusRing = false;
+  // A buzz the browser held back during this drag, played as the finger lifts (the lift is what
+  // lets the page vibrate); a tier change's pattern outranks a milestone tick.
+  let missed = null;
+  const buzz = (p) => { if (vibrate(p) && !Array.isArray(missed)) missed = p; };
   let fx = 0, hue = 210;           // effect clock and Title hue; frozen under reduced motion
   let kick = 0;                    // short glow boost after a pulse
   let queue = [], gap = 0;         // milestone pulses waiting their turn
@@ -291,7 +299,7 @@ export function tierSlider(host, {
     if (!animate || reduced) { wipe = null; return; }
     const at = marks.find((m) => m.i === (up ? next : prev));
     wipe = { from: prev, to: next, x: xOf(at ? at.frac : shown), t: 0, dur: up ? 0.85 : 1.1, up };
-    if (up) vibrate([14, 45, 26]);
+    if (up) buzz([14, 45, 26]);
   }
 
   // Milestone pulse
@@ -318,7 +326,7 @@ export function tierSlider(host, {
     m.label.classList.remove("is-pop");
     void m.label.offsetWidth;
     m.label.classList.add("is-pop");
-    if (fx - lastBuzz > 0.06) { lastBuzz = fx; vibrate(w < 1 ? 6 : 10); }
+    if (fx - lastBuzz > 0.06) { lastBuzz = fx; buzz(w < 1 ? 6 : 10); }
     effects = effects.slice(-14);
     sparks = sparks.slice(-320);
   }
@@ -810,7 +818,7 @@ export function tierSlider(host, {
     morph?.update(thumbLabel(v));
     if (fromUser && v > prev) {
       const crossed = ms.filter((m) => m.v > prev && m.v <= v);
-      if (reduced) { if (crossed.length) vibrate(10); }
+      if (reduced) { if (crossed.length) buzz(10); }
       else queue.push(...crossed);
     }
     queue = queue.filter((m) => m.v <= v).slice(-8);
@@ -826,7 +834,12 @@ export function tierSlider(host, {
     onInput?.(v);
   };
   const onDown = () => { dragging = true; hoverTarget = 1; focusRing = false; kickLoop(); };
-  const onUp = () => { if (!dragging) return; dragging = false; hoverTarget = input.matches(":hover") ? 1 : 0; kickLoop(); };
+  const onUp = () => {
+    if (!dragging) return;
+    dragging = false; hoverTarget = input.matches(":hover") ? 1 : 0;
+    if (missed !== null) { vibrate(missed); missed = null; }
+    kickLoop();
+  };
   const onEnter = () => { hoverTarget = 1; kickLoop(); };
   const onLeave = () => { if (!dragging) { hoverTarget = 0; kickLoop(); } };
   const onFocus = () => { focusRing = input.matches(":focus-visible"); draw(); };
