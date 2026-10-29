@@ -151,7 +151,7 @@ function atlas() {
 // so the Texas sign is drawn larger to read at the same size.
 const PLACES = [
   { face: 0, at: (R) => R.s0 - 10, side: -1, turn: -0.12, scale: 1.4 },  // the far shoulder in front of Convocation Hall's lawn
-  { face: 1, at: (R) => R.s1 - 21, side: 1, turn: 0.42, scale: 1.9 },    // the near verge before the parking spot
+  { face: 1, at: (R) => R.s1 - 17, side: 1, turn: 0.85, scale: 1.35 },   // the near verge just before the parking spot
 ];
 
 // Posts and panels go into the landmark solids through `k`; returns the faces' mesh data.
@@ -171,10 +171,11 @@ export function buildSigns(k, R, T, half) {
     // The face, just proud of the panel, set down the same way `add` sets a part.
     const g = turn(new THREE.PlaneGeometry(pw, ph).translate(0, CLEAR + ph / 2, DEPTH / 2 + 0.005)).toNonIndexed();
     g.rotateY(-st.yaw).translate(st.x, T.heightAt(st.x, st.z), st.z);
-    g.computeBoundingBox();
-    const c = g.boundingBox.getCenter(new THREE.Vector3()), nr = R.near(c.x, c.z);
+    // Each corner takes its own place on the route, so the colour crosses the face with the land
+    // under it rather than flipping all at once.
     const { u0, u1, v0, v1 } = uvs[p.face], pos = g.attributes.position.array, nor = g.attributes.normal.array, uv = g.attributes.uv.array;
     for (let i = 0; i < pos.length / 3; i++) {
+      const nr = R.near(pos[i * 3], pos[i * 3 + 2]);
       P.push(pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]);
       N.push(nor[i * 3], nor[i * 3 + 1], nor[i * 3 + 2]);
       UV.push(u0 + uv[i * 2] * (u1 - u0), v0 + uv[i * 2 + 1] * (v1 - v0));
@@ -214,9 +215,11 @@ export const signFS = (frag) => /* glsl */ `
     vec3 draw = mix(paper, lin(vec3(0.48, 0.48, 0.52)), ink * 0.9);
     float p = frontP(vS, vH, vD, vW);
     float t = max(clamp(p / uFeather, 0.0, 1.0), baseAt(vS, vD, vW) * (1.0 - smoothstep(10.5, 14.5, vD)));
-    float g = smoothstep(0.2, 0.7, t);
+    // Soaks in like the land does, in pools across the face (in texels of the atlas, about metres).
+    vec2 sk = soak(t, vUv * vec2(26.0, 16.0), 1.0);
+    float g = sk.x;
     // Retroreflective sheeting: bright from any angle, a little brighter facing the light.
-    vec3 c = mix(draw, face * (0.86 + 0.2 * max(dl, 0.0)), g);
+    vec3 c = mix(draw, face * (0.86 + 0.2 * max(dl, 0.0)) * (1.0 - 0.2 * sk.y), g);
     c = holo(c, rimAt(p, vW) * 0.25 * (1.0 - g));
     gl_FragColor = vec4(haze(c, vW), 1.0);
     #include <colorspace_fragment>
