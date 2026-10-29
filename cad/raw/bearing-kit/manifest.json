@@ -1,0 +1,19 @@
+{
+  "id": "bearing-kit",
+  "name": "70-piece miniature bearing assortment (10 sizes x 7) in compartment case",
+  "status": "modelled",
+  "files": [
+    {
+      "path": "cad/models/bearing-kit.step",
+      "format": "step",
+      "role": "model",
+      "what": "CadQuery model written by tools/models script"
+    }
+  ],
+  "download_url": null,
+  "note": "No downloadable manufacturer CAD was available (Kaydon/Timken, McMaster and Amazon listings publish CAD only behind a login or not at all); modelled to the published size.",
+  "model_exactly_as": "case size estimated; bearings drawn as shielded ZZ",
+  "dims": {
+    "sizes_mm": "693 3x8x4; 623 3x10x4; 624 4x13x5; 685 5x11x5; 687 7x14x5; 627 7x22x7; 608 8x22x7; 6000 10x26x8; 6903 17x30x7; 6203 17x40x12"
+  }
+}

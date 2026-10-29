@@ -1,0 +1,21 @@
+{
+  "src": "cad/models/nylock-kit.step",
+  "up": "z",
+  "deflection": 0.0005,
+  "angular": 0.4,
+  "lit": "/nylon/",
+  "notes": "M3 to M8 nylock nut assortment, 150 pieces, modelled to DIN 985 proportions (no CAD is published): zinc-plated hex nuts with white nylon inserts, a heap of each size loose in a five-compartment hinged clear case with removable dividers, lid open.",
+  "defaultMaterial": "clear-plastic",
+  "materials": [
+    { "match": "case-(hinge|latch)", "mat": "case-dark" },
+    { "match": "case-", "mat": "clear-plastic" },
+    { "match": "/nylon", "mat": "nylon-insert" },
+    { "match": "/nut", "mat": "zinc" }
+  ],
+  "customMaterials": {
+    "clear-plastic": { "color": "#cfe0ec", "mr": [0.0, 0.16] },
+    "case-dark": { "color": "#2b2f35", "mr": [0.0, 0.5] },
+    "zinc": { "color": "#b3b9c0", "mr": [0.8, 0.36] },
+    "nylon-insert": { "color": "#2f64b8", "mr": [0.0, 0.5] }
+  }
+}

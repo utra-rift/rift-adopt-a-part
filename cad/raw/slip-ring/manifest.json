@@ -1,0 +1,20 @@
+{
+  "id": "slip-ring",
+  "name": "Capsule slip ring, 22 mm, flanged, gigabit Ethernet + 2 x 20 A + 2 x 2 A",
+  "status": "modelled",
+  "files": [
+    {
+      "path": "cad/models/slip-ring.step",
+      "format": "step",
+      "role": "model",
+      "what": "CadQuery model written by tools/models script"
+    }
+  ],
+  "download_url": null,
+  "note": "No downloadable manufacturer CAD was available (Kaydon/Timken, McMaster and Amazon listings publish CAD only behind a login or not at all); modelled to the published size.",
+  "model_exactly_as": "product class geometry; leads shortened for the figure",
+  "dims": {
+    "body_od_mm": 22,
+    "flange_od_mm": 36
+  }
+}

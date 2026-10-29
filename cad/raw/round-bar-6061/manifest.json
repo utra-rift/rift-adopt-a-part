@@ -1,0 +1,20 @@
+{
+  "id": "round-bar-6061",
+  "name": "6061 aluminium round bar, 1 in x 12 in, pair",
+  "status": "modelled",
+  "files": [
+    {
+      "path": "cad/models/round-bar-6061.step",
+      "format": "step",
+      "role": "model",
+      "what": "CadQuery model written by tools/models script"
+    }
+  ],
+  "download_url": null,
+  "note": "No downloadable manufacturer CAD was available (Kaydon/Timken, McMaster and Amazon listings publish CAD only behind a login or not at all); modelled to the published size.",
+  "model_exactly_as": "plain bar",
+  "dims": {
+    "diameter_mm": 25.4,
+    "length_mm": 304.8
+  }
+}

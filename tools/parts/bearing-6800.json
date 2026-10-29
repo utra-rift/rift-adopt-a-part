@@ -1,0 +1,30 @@
+{
+  "src": "cad/models/bearing-6800.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    8
+  ],
+  "deflection": 0.0008,
+  "angular": 0.3,
+  "lit": "/seal_/",
+  "drop": "/balls_",
+  "notes": "Modelled to the standard 6800 size, 10 \u00d7 19 \u00d7 5 mm, with red 2RS contact seals: four from the 10-pack leaning like dominoes. No manufacturer CAD used. Balls are inside and hidden, so left out.",
+  "defaultMaterial": "steel",
+  "materials": [
+    {
+      "match": "/seal_",
+      "mat": "red-rubber"
+    }
+  ],
+  "customMaterials": {
+    "red-rubber": {
+      "color": "#b42420",
+      "mr": [
+        0,
+        0.8
+      ]
+    }
+  }
+}

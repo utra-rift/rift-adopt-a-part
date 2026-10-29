@@ -1,0 +1,29 @@
+{
+  "src": "cad/models/m3-standoffs.step",
+  "up": "z",
+  "deflection": 0.0006,
+  "angular": 0.3,
+  "lit": "/standoff-blue/",
+  "notes": "M3 aluminium hex standoff kit, 48 pieces (12 types x 4), modelled to the usual kit sizes (no CAD is published): 5 mm hex, M3 x 6 studs and tapped bores, anodised by length, in a 12-compartment hinged case with removable dividers, lid open.",
+  "defaultMaterial": "clear-plastic",
+  "materials": [
+    { "match": "case-(hinge|latch)", "mat": "case-dark" },
+    { "match": "case-", "mat": "clear-plastic" },
+    { "match": "standoff-silver", "mat": "anod-silver" },
+    { "match": "standoff-blue", "mat": "anod-blue" },
+    { "match": "standoff-red", "mat": "anod-red" },
+    { "match": "standoff-gold", "mat": "anod-gold" },
+    { "match": "standoff-black", "mat": "anod-black" },
+    { "match": "standoff-green", "mat": "anod-green" }
+  ],
+  "customMaterials": {
+    "clear-plastic": { "color": "#cfe0ec", "mr": [0.0, 0.16] },
+    "case-dark": { "color": "#2b2f35", "mr": [0.0, 0.5] },
+    "anod-silver": { "color": "#c6c9ce", "mr": [0.85, 0.3] },
+    "anod-blue": { "color": "#2d62c6", "mr": [0.8, 0.3] },
+    "anod-red": { "color": "#c5262c", "mr": [0.8, 0.3] },
+    "anod-gold": { "color": "#cfa23c", "mr": [0.9, 0.28] },
+    "anod-black": { "color": "#25262a", "mr": [0.7, 0.34] },
+    "anod-green": { "color": "#2e9c52", "mr": [0.8, 0.3] }
+  }
+}

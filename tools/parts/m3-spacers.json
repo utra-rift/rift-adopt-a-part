@@ -1,0 +1,19 @@
+{
+  "src": "cad/models/m3-spacers.step",
+  "up": "z",
+  "deflection": 0.0006,
+  "angular": 0.3,
+  "lit": "/spacer/",
+  "notes": "M3 aluminium round spacer kit, 65 pieces in ten lengths (3 to 20 mm), modelled to the usual kit sizes (no CAD is published): 6 mm OD tube with a 3.2 mm bore, in a 10-compartment hinged case with removable dividers, lid open.",
+  "defaultMaterial": "clear-plastic",
+  "materials": [
+    { "match": "case-(hinge|latch)", "mat": "case-dark" },
+    { "match": "case-", "mat": "clear-plastic" },
+    { "match": "spacer", "mat": "anod-silver" }
+  ],
+  "customMaterials": {
+    "clear-plastic": { "color": "#cfe0ec", "mr": [0.0, 0.16] },
+    "case-dark": { "color": "#2b2f35", "mr": [0.0, 0.5] },
+    "anod-silver": { "color": "#d6d9dd", "mr": [0.6, 0.32] }
+  }
+}

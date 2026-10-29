@@ -1,0 +1,29 @@
+{
+  "src": "cad/models/ka040xp0.step",
+  "up": "z",
+  "rotate": [
+    90,
+    0,
+    30
+  ],
+  "deflection": 0.002,
+  "angular": 0.3,
+  "lit": "/separator/",
+  "notes": "Modelled to the Kaydon Reali-Slim KA-series geometry at the exact size 4.000 \u00d7 4.500 \u00d7 0.250 in (101.6 \u00d7 114.3 \u00d7 6.35 mm): two-arc four-point-contact raceways at 35\u00b0, 1/8 in balls (68), nylon spacers between them, open (unsealed). Kaydon CAD is behind a login, so none was used.",
+  "defaultMaterial": "steel",
+  "materials": [
+    {
+      "match": "/separator",
+      "mat": "nylon-cage"
+    }
+  ],
+  "customMaterials": {
+    "nylon-cage": {
+      "color": "#d9c9a0",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
+}

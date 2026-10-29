@@ -1,0 +1,21 @@
+{
+  "src": "cad/models/screw-kit.step",
+  "up": "z",
+  "deflection": 0.0007,
+  "angular": 0.5,
+  "lit": "/hexkey/",
+  "notes": "M2 to M5 socket head cap screw assortment, grade 12.9 black oxide, 1,760 pieces: modelled to ISO 4762 proportions (no CAD is published). 24 compartments, one size and length each, a few screws drawn per compartment, in a hinged clear case with removable dividers, lid open, and two hex keys beside it.",
+  "defaultMaterial": "clear-plastic",
+  "materials": [
+    { "match": "case-(hinge|latch)", "mat": "case-dark" },
+    { "match": "case-", "mat": "clear-plastic" },
+    { "match": "screw", "mat": "black-oxide" },
+    { "match": "hexkey", "mat": "key-steel" }
+  ],
+  "customMaterials": {
+    "clear-plastic": { "color": "#cfe0ec", "mr": [0.0, 0.16] },
+    "case-dark": { "color": "#2b2f35", "mr": [0.0, 0.5] },
+    "black-oxide": { "color": "#383a40", "mr": [0.5, 0.4] },
+    "key-steel": { "color": "#aeb2b8", "mr": [0.9, 0.28] }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "id": "bearing-6800",
+  "name": "6800-2RS deep-groove ball bearing, 10-pack",
+  "status": "modelled",
+  "files": [
+    {
+      "path": "cad/models/bearing-6800.step",
+      "format": "step",
+      "role": "model",
+      "what": "CadQuery model written by tools/models script"
+    }
+  ],
+  "download_url": null,
+  "note": "No downloadable manufacturer CAD was available (Kaydon/Timken, McMaster and Amazon listings publish CAD only behind a login or not at all); modelled to the published size.",
+  "model_exactly_as": "ISO 15 size; red rubber seals",
+  "dims": {
+    "bore_mm": 10,
+    "od_mm": 19,
+    "width_mm": 5
+  }
+}

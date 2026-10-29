@@ -1,0 +1,18 @@
+{
+  "src": "cad/models/al-sheet-quarter.step",
+  "up": "z",
+  "deflection": 0.0008,
+  "angular": 0.2,
+  "lit": "/film/",
+  "notes": "6061 aluminium sheet, 12 x 12 in, modelled to stock dimensions (no CAD is published): two sheets stacked, the upper one slid and turned so both edges show, blue protective film on one face peeled back at a corner.",
+  "defaultMaterial": "mill-aluminium",
+  "materials": [
+    { "match": "/print", "mat": "film-ink" },
+    { "match": "/film", "mat": "pe-film" }
+  ],
+  "customMaterials": {
+    "mill-aluminium": { "color": "#b7bbc0", "mr": [0.9, 0.38] },
+    "film-ink": { "color": "#16316a", "mr": [0.0, 0.5] },
+    "pe-film": { "color": "#4f8ad2", "mr": [0.0, 0.3] }
+  }
+}

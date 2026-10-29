@@ -472,13 +472,13 @@ export default {
   "v": "28644225a2"
  },
  "item-slipring": {
-  "show": "",
+  "show": "slip-ring",
   "hero": true,
   "holo": false,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "565c0239ed"
+  "floor": 0.6783,
+  "width": 0.5092,
+  "parts": "ecc0d99d33",
+  "v": "ecc39b50e4"
  },
  "item-pcb": {
   "show": "",
@@ -490,13 +490,13 @@ export default {
   "v": "565c0239ed"
  },
  "kit-bearings": {
-  "show": "",
+  "show": "ka040xp0",
   "hero": false,
   "holo": false,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "565c0239ed"
+  "floor": 0.7922,
+  "width": 0.3293,
+  "parts": "0440e253b5",
+  "v": "2b4a677478"
  },
  "kit-filament": {
   "show": "filament-spool",
@@ -526,21 +526,21 @@ export default {
   "v": "565c0239ed"
  },
  "kit-aluminium": {
-  "show": "",
+  "show": "al-sheet-quarter",
   "hero": false,
   "holo": false,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "565c0239ed"
+  "floor": 0.7818,
+  "width": 0.3397,
+  "parts": "9165c34bf0",
+  "v": "f80b0256d7"
  },
  "kit-hardware": {
-  "show": "",
+  "show": "screw-kit",
   "hero": false,
   "holo": false,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "565c0239ed"
+  "floor": 0.7462,
+  "width": 0.4374,
+  "parts": "8dc7543e9b",
+  "v": "fe643134ac"
  }
 };

@@ -1,0 +1,31 @@
+{
+  "src": "cad/models/rivet-kit.step",
+  "up": "z",
+  "deflection": 0.0008,
+  "angular": 0.5,
+  "lit": "/rv-grip/",
+  "notes": "Blind rivet assortment with a hand riveter, modelled to common sizes (no CAD is published): a 10 in lever riveter lying on its side, nose to the left, handles open, a rivet loaded in the nose; beside it eight sizes of rivet heaped in an 8-compartment hinged clear case, lid open (the real set is 226 rivets).",
+  "defaultMaterial": "clear-plastic",
+  "materials": [
+    { "match": "case-(hinge|latch)", "mat": "case-dark" },
+    { "match": "case-", "mat": "clear-plastic" },
+    { "match": "rv-frame", "mat": "tool-black" },
+    { "match": "rv-lever", "mat": "tool-black" },
+    { "match": "rv-grip", "mat": "grip-red" },
+    { "match": "rv-rubber", "mat": "rubber" },
+    { "match": "rv-spring", "mat": "spring-steel" },
+    { "match": "rv-steel", "mat": "chrome-steel" },
+    { "match": "rivet-body", "mat": "rivet-alu" },
+    { "match": "rivet-mandrel", "mat": "mandrel-steel" }
+  ],
+  "customMaterials": {
+    "clear-plastic": { "color": "#cfe0ec", "mr": [0.0, 0.16] },
+    "case-dark": { "color": "#2b2f35", "mr": [0.0, 0.5] },
+    "tool-black": { "color": "#26272b", "mr": [0.15, 0.5] },
+    "grip-red": { "color": "#c8282d", "mr": [0.0, 0.55] },
+    "spring-steel": { "color": "#a7abb2", "mr": [0.9, 0.3] },
+    "chrome-steel": { "color": "#c4c8ce", "mr": [0.95, 0.2] },
+    "rivet-alu": { "color": "#d2d5d9", "mr": [0.7, 0.32] },
+    "mandrel-steel": { "color": "#7b7f86", "mr": [0.9, 0.3] }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "src": "cad/models/round-bar-6061.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    90
+  ],
+  "deflection": 0.0006,
+  "angular": 0.3,
+  "lit": "/bar_a/",
+  "notes": "Modelled to the listed size, 1 in \u00d7 12 in (25.4 \u00d7 304.8 mm), two bars as sold. Mill finish with faint die lines; band-saw cut ends with saw-track striations, burr chamfer and a slightly off-square cut. No CAD needed (plain bar).",
+  "defaultMaterial": "mill-aluminium",
+  "customMaterials": {
+    "mill-aluminium": {
+      "color": "#bcbfc4",
+      "mr": [
+        0.85,
+        0.4
+      ]
+    }
+  }
+}

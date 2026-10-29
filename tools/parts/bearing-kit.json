@@ -1,0 +1,29 @@
+{
+  "src": "cad/models/bearing-kit.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    -20
+  ],
+  "deflection": 0.0014,
+  "angular": 0.45,
+  "lit": "/bearing_6203_/",
+  "notes": "Modelled: 70 shielded bearings (10 sizes \u00d7 7: 693, 623, 624, 685, 687, 627, 608, 6000, 6903, 6203) standing in ten troughs of a hinged clamshell case, lid open 125\u00b0. Case size is an estimate; bearings are standard ISO sizes. No maker CAD used.",
+  "defaultMaterial": "steel",
+  "materials": [
+    {
+      "match": "/case_",
+      "mat": "case-clear"
+    }
+  ],
+  "customMaterials": {
+    "case-clear": {
+      "color": "#c9d4dc",
+      "mr": [
+        0,
+        0.18
+      ]
+    }
+  }
+}

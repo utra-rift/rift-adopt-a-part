@@ -1,0 +1,21 @@
+{
+  "id": "ka020xp0",
+  "name": "Kaydon KA020XP0 Reali-Slim thin-section four-point-contact bearing, open type",
+  "status": "modelled",
+  "files": [
+    {
+      "path": "cad/models/ka020xp0.step",
+      "format": "step",
+      "role": "model",
+      "what": "CadQuery model written by tools/models script"
+    }
+  ],
+  "download_url": null,
+  "note": "No downloadable manufacturer CAD was available (Kaydon/Timken, McMaster and Amazon listings publish CAD only behind a login or not at all); modelled to the published size.",
+  "model_exactly_as": "KA-series geometry: 1/8 in balls (36), 35 deg contact angle, nylon spacers",
+  "dims": {
+    "bore_mm": 50.8,
+    "od_mm": 63.5,
+    "width_mm": 6.35
+  }
+}

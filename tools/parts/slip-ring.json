@@ -1,0 +1,72 @@
+{
+  "src": "cad/models/slip-ring.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.001,
+  "angular": 0.33,
+  "lit": "/contacts/",
+  "notes": "Modelled to the product class: 22 mm capsule, 36 mm four-hole flange, rotor and stator each with 2 \u00d7 14 AWG, 2 \u00d7 22 AWG and an Ethernet cable with RJ45 plug. Rests tipped on its flange rim; leads droop to the floor and are shortened (54/48/62 mm) to keep the body readable. No maker CAD used.",
+  "defaultMaterial": "steel",
+  "materials": [
+    {
+      "match": "/(body_stator|body_rotor)/",
+      "mat": "silver-anodized"
+    },
+    {
+      "match": "/(seal_collar|rotor_band|potting_)/",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "/lead_[a-z]+_red",
+      "mat": "red-wire"
+    },
+    {
+      "match": "/lead_[a-z]+_black",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "/lead_[a-z]+_yellow",
+      "mat": "yellow-wire"
+    },
+    {
+      "match": "/lead_[a-z]+_white",
+      "mat": "white-plastic"
+    },
+    {
+      "match": "_tip",
+      "mat": "copper"
+    },
+    {
+      "match": "_(cable|boot)",
+      "mat": "eth-blue"
+    },
+    {
+      "match": "_plug",
+      "mat": "clear-plug"
+    },
+    {
+      "match": "_contacts",
+      "mat": "gold"
+    }
+  ],
+  "customMaterials": {
+    "eth-blue": {
+      "color": "#2f6db4",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "clear-plug": {
+      "color": "#d9dee2",
+      "mr": [
+        0,
+        0.15
+      ]
+    }
+  }
+}

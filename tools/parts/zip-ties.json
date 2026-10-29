@@ -1,0 +1,17 @@
+{
+  "src": "cad/models/zip-ties.step",
+  "up": "z",
+  "deflection": 0.0006,
+  "angular": 0.4,
+  "lit": "/tiehead/",
+  "notes": "Nylon cable ties, 4 to 14 in, modelled (no CAD is published): fifteen ties of six lengths laid parallel and bound at the middle by a 14 in tie of their own, plus three loose ones (a curled 8 in, a curled 12 in, a 4 in closed into a ring). Each strap is 1.1 mm thick with a saw-tooth ratchet face at 1.6 mm pitch and a moulded head with a through-slot.",
+  "defaultMaterial": "nylon-natural",
+  "materials": [
+    { "match": "/tiehead", "mat": "nylon-head" },
+    { "match": "/tie", "mat": "nylon-natural" }
+  ],
+  "customMaterials": {
+    "nylon-natural": { "color": "#e4dfd0", "mr": [0.0, 0.5] },
+    "nylon-head": { "color": "#d8d2bf", "mr": [0.0, 0.45] }
+  }
+}
