@@ -42,7 +42,9 @@
       host.style.transformOrigin = "0 0";
       host.style.transform = `translate(${-x * z}px, ${-y * z}px) scale(${z})`;
     }
-    const strip = roadStrip(host);
+    // ?solo=convocation|cpc: one landmark alone, for checking against its reference photo.
+    // &cam=px,py,pz,tx,ty,tz,fov (landmark metres) puts it on a lawn under a free camera; &aspect=h/w.
+    const strip = roadStrip(host, { solo: qs.get("solo"), cam: qs.get("cam"), aspect: +qs.get("aspect") || 0.62 });
     window.__road = strip;
     const f = document.getElementById("f"), o = document.getElementById("o");
     const q = qs.get("f");

@@ -11,6 +11,7 @@
 // and climbs the rock faces last. The loop renders only while something moves.
 import * as THREE from "../vendor/three.module.min.js";
 import { loadPart, Figure } from "./stage.js";
+import { convocationHall, collegeParkCenter, CH_KEYS, CPC_KEYS } from "./road/landmarks.js";
 
 const VAN_URL = "parts/cargo-van.bin";
 const TRIP_KM = 4534, MILESTONE_KM = 500;
@@ -59,6 +60,10 @@ const ramp = (stops, t) => {
 // Toronto at x = 0, Arlington at x = END. S-curves, a climb over a rise, a drop into a
 // valley, a bridge over a ravine, a second climb past the mesas and a run down to the plain.
 const END = 560, RAVINE_X = 331;
+// The drive south-west, by route x (metres): Toronto and the lake, Ontario, the Midwest's
+// farmland, the Mississippi at St. Louis, the Ozarks, Oklahoma's red dirt, Texas.
+const LAKE = [14, 74], FARM = [96, 300], OZARKS = [362, 470], REDDIRT = [470, 503];
+const band = (x, [a, b], soft = 14) => smooth(a - soft, a + soft, x) * (1 - smooth(b - soft, b + soft, x));
 const CONTROL = [
   [-120, 0, 0], [-60, 2, 0], [0, 0, 0], [35, -4, 0.4], [70, 6, 1.4], [105, -6, 3.8], [140, -15, 8.5], [175, -9, 13],
   [205, 2, 15], [235, 9, 12], [265, 5, 7], [295, -3, 4.2], [318, -6, 4], [344, -5, 4.2], [372, 2, 7.5], [405, 9, 13],
@@ -182,7 +187,7 @@ const FRAG = /* glsl */ `
     return vec2(g, tide);
   }
   // The model fades to paper toward its edges.
-  vec3 haze(vec3 c, vec3 wp) { return mix(c, vec3(1.0), smoothstep(48.0, 78.0, length(wp.xz - uFocus.xz))); }
+  vec3 haze(vec3 c, vec3 wp) { return mix(c, vec3(1.0), smoothstep(70.0, 115.0, length(wp.xz - uFocus.xz))); }
 `;
 
 const SOLID_VS = /* glsl */ `
@@ -425,13 +430,22 @@ async function buildTerrain(R, slice) {
     hint = nr.i;
     const far = nr.u < 0, d = nr.d;
     // Hills either side, taller on the far side, with flat stretches of calm plain between.
-    const amp = (far ? 17 : 5.5) * smooth(HALF + 2.5, HALF + 17, d) * (0.5 + 0.5 * calmOf[i]);
+    const flat = 1 - 0.65 * band(x, FARM) - 0.5 * band(x, REDDIRT) - 0.6 * smooth(500, 540, x);
+    const amp = (far ? 17 : 5.5) * smooth(HALF + 2.5, HALF + 17, d) * (0.5 + 0.5 * calmOf[i]) * flat;
     let nat = nr.y + amp * Math.max(-0.15, fbm(x / 30, z / 30, 3, 9) - 0.32) * 2.2;
     nat += (far ? 2.5 : 0.8) * smooth(HALF + 3, HALF + 18, d) * (noise(x / 9, z / 9, 13) - 0.5);
-    const rav = Math.exp(-(((x - ravineX(z)) / 7.5) ** 2));
+    const rav = Math.exp(-(((x - ravineX(z)) / 9) ** 2));
     nat -= 13 * rav;
-    const keep = Math.max(smooth(HALF + 0.6, HALF + 13, d), Math.exp(-(((x - ravineX(z)) / 12) ** 2)) * smooth(HALF - 1, HALF + 1, d));
-    const h = lerp(nr.y - 0.1, nat, keep);
+    // Flat ground for the two campuses: Toronto at the start, Arlington's plains at the end.
+    nat = lerp(nat, nr.y - 0.1, Math.max(1 - smooth(22, 52, x), smooth(512, 534, x)));
+    // Lake Ontario on the near side, past the city.
+    const lake = !far ? band(x, LAKE, 10) * smooth(HALF + 7, HALF + 13, d) : 0;
+    nat = lerp(nat, nr.y - 1.6, lake);
+    const keep = Math.max(smooth(HALF + 0.6, HALF + 13, d), Math.exp(-(((x - ravineX(z)) / 13) ** 2)) * smooth(HALF - 1, HALF + 1, d));
+    let h = lerp(nr.y - 0.1, nat, keep);
+    // Water lies flat: the Mississippi in the ravine, the lake past the city.
+    if (rav > 0.2) h = Math.max(h, nr.y - 9.5);
+    if (lake > 0.5) h = Math.max(h, nr.y - 1.6);
     H[k] = h; P[k * 3] = x; P[k * 3 + 1] = h; P[k * 3 + 2] = z;
     AS[k] = nr.s; AH[k] = h - nr.y; AD[k] = d; U[k] = nr.u; E[k] = nr.y;
    }
@@ -449,18 +463,27 @@ async function buildTerrain(R, slice) {
   // True colours: lush in Ontario drying to Texas, rock on the steep faces, gravel and mown
   // verges by the road, a creek in the ravine.
   const nrm = geo.attributes.normal.array, AC = new Float32Array(N * 3);
-  const GRASS = ["#7aa451", "#8aae58", "#a3ac62", "#b6a86e"], ROCK = ["#9d9b95", "#b3ab98", "#b98d66", "#ad724f"];
-  const c = new THREE.Color();
+  // Lush Ontario green, the Midwest's patchwork of fields, Ozark green, Oklahoma's red dirt,
+  // dry Texas tan.
+  const GRASS = ["#73a24c", "#7fa955", "#6f9a48", "#a7a463", "#c2ad78"], ROCK = ["#9d9b95", "#b3ab98", "#b98d66", "#ad724f"];
+  const FIELDS = ["#9fb24f", "#c9b25c", "#b6c46b", "#a88d5f", "#88a84c", "#d1bf7a"];
+  const c = new THREE.Color(), fc = new THREE.Color(), lawn = new THREE.Color(), red = col("#b4683f");
   for (let k = 0; k < N; k++) {
     if (k % nx === 0) await slice();
     const x = P[k * 3], z = P[k * 3 + 2], prog = x / END, d = AD[k];
     const v = fbm(x / 16, z / 16, 2, 21);
-    c.copy(ramp(GRASS, prog + (v - 0.5) * 0.25)).multiplyScalar(0.88 + v * 0.24);
+    c.copy(ramp(GRASS, prog + (v - 0.5) * 0.15)).multiplyScalar(0.88 + v * 0.24);
+    const farm = band(x, FARM, 10) * smooth(HALF + 3, HALF + 6, d);
+    if (farm > 0) c.lerp(fc.set(FIELDS[hash(Math.floor(x / 17), Math.floor((z + 3) / 13), 41) % FIELDS.length]).multiplyScalar(0.94 + v * 0.12), farm);
+    c.lerp(red, band(x, REDDIRT, 12) * smooth(0.35, 0.65, noise(x / 12, z / 12, 23)) * 0.85);
+    // Arlington's campus: mown green-tan lawn round the arena, not Oklahoma's dirt.
+    c.lerp(lawn.set("#a3ad63").multiplyScalar(0.92 + v * 0.16), smooth(505, 520, x) * (1 - smooth(566, 586, x)) * 0.85);
     const slope = 1 - nrm[k * 3 + 1];
     c.lerp(ramp(ROCK, prog + (noise(x / 10, z / 10, 22) - 0.5) * 0.3), smooth(0.28, 0.5, slope));
     if (d < HALF + 1.1) c.copy(col("#b8b2a2"));
     else if (d < HALF + 4) c.lerp(col("#b9cb83"), 0.3);
-    if (H[k] < E[k] - 9.5) c.lerp(col("#6f97a4"), smooth(E[k] - 9.5, E[k] - 11, H[k]));
+    if (H[k] < E[k] - 7) c.lerp(col("#5f8fa0"), smooth(E[k] - 7, E[k] - 9.4, H[k]));
+    if (H[k] < E[k] - 0.9 && x < LAKE[1] + 12) c.lerp(col("#5e93b0"), smooth(E[k] - 0.9, E[k] - 1.5, H[k]));
     c.toArray(AC, k * 3);
   }
   attrs(geo, [["aS", AS, 1], ["aH", AH, 1], ["aD", AD, 1], ["aCol", AC, 3]]);
@@ -513,9 +536,11 @@ class Solids {
       const c = base.clone().multiplyScalar(1 + (noise(p[t] * 3.1, p[t + 2] * 2.7, 77) - 0.5) * 2 * faceJitter);
       for (let v = 0; v < 3; v++) { const o = t + v * 3; this.tris.push(p[o], p[o + 1], p[o + 2], c.r, c.g, c.b, ...this.route(p[o], p[o + 1], p[o + 2], at)); }
     }
-    const e = new THREE.EdgesGeometry(g, edgeAngle).attributes.position.array;
-    const lc = base.clone().multiplyScalar(0.6);
-    for (let v = 0; v < e.length; v += 3) this.lines.push(e[v], e[v + 1], e[v + 2], lc.r, lc.g, lc.b, ...this.route(e[v], e[v + 1], e[v + 2], at));
+    if (edgeAngle !== null) {                                   // null: a flat detail that reads without an outline
+      const e = new THREE.EdgesGeometry(g, edgeAngle).attributes.position.array;
+      const lc = base.clone().multiplyScalar(0.6);
+      for (let v = 0; v < e.length; v += 3) this.lines.push(e[v], e[v + 1], e[v + 2], lc.r, lc.g, lc.b, ...this.route(e[v], e[v + 1], e[v + 2], at));
+    }
     g.dispose(); if (g !== geo) geo.dispose();
   }
   line(a, b, colour) {
@@ -583,8 +608,9 @@ async function buildRocks(R, T, slice) {
   };
   const put = (x, z, rad, top) => placed.push({ x, z, r: rad, top });
   // Mesas and buttes on the far side, every so often.
-  for (let x = 20; x < 640; x += 30 + r() * 34) {
+  for (let x = 470; x < 640; x += 30 + r() * 34) {      // buttes on the Oklahoma and Texas plains
     await slice();
+    if (x > 490) break;                                   // the arena stands alone: Arlington and beyond stay open plain
     const rad = 3.5 + r() * 6, h = 3.5 + r() * 7;
     const nr = R.near(x, 0), z = R.Z[nr.i] - (HALF + 6 + rad + r() * 10);
     if (!ok(x, z, rad)) continue;
@@ -606,6 +632,7 @@ async function buildRocks(R, T, slice) {
     const d = HALF + 3 + Math.pow(r(), 1.5) * (side < 0 ? 20 : 14);
     const cx = p.x - p.tz * d * side, cz = p.z + p.tx * d * side;
     const n = 1 + Math.floor(r() * 4), shield = p.x < 90;
+    if (p.x < 40 || (p.x > 505 && p.x < 600) || (!shield && band(p.x, OZARKS) < 0.5 && r() < 0.7)) continue;   // campuses clear; outcrops mostly in the Ozarks
     for (let m = 0; m < n; m++) {
       const br = (shield ? 1.6 + r() * 2.6 : 0.5 + r() * 1.6) * (side > 0 ? 0.7 : 1);
       const bx = cx + (r() - 0.5) * 6, bz = cz + (r() - 0.5) * 5;
@@ -617,21 +644,92 @@ async function buildRocks(R, T, slice) {
   // Long fins of rock on the far side, like strata breaking the surface.
   for (let k = 0; k < 16; k++) {
     const s = R.s0 - 20 + ((k + r()) / 16) * (R.s1 - R.s0 + 40), p = R.at(s);
+    if (band(p.x, OZARKS) < 0.5) continue;               // limestone ledges in the Ozark hills only
     const d = HALF + 6 + r() * 9, x = p.x + p.tz * d, z = p.z - p.tx * d, len = 4 + r() * 5;
     if (!ok(x, z, len * 0.8)) continue;
     S.add(boulder(len, 1.6, 0.55 + r() * 0.3, 0.55, Math.atan2(p.tz, p.tx) * -1 + (r() - 0.5) * 0.6, x, T.heightAt(x, z) - 0.6, z, 500 + k), ramp(ROCK, x / END), 0.08, 24);
     put(x, z, len * 0.8, T.heightAt(x, z) + len * 0.75);
   }
-  // Hoodoos toward Texas.
-  for (let k = 0; k < 7; k++) {
-    const x = 380 + r() * 220, nr = R.near(x, 0), z = R.Z[nr.i] - (HALF + 9 + r() * 22);
-    const rad = 1 + r() * 0.8;
-    if (!ok(x, z, rad)) continue;
-    const hh = 4 + r() * 4;
-    S.add(mesa(rad, hh, x, T.heightAt(x, z), z, k + 900, 2), ramp(ROCK, x / END), 0.08, 30);
-    put(x, z, rad, T.heightAt(x, z) + hh * 1.5);
-  }
   return { S, placed };
+}
+
+// ---- landmarks: where the trip starts and ends, and a few things on the way. Built in each
+// one's local frame (x along the road, -z away from it, toward the far side) and set down beside
+// the route; each part reveals with the ground it stands on.
+function gable(w, h, depth) {
+  // A triangular prism: a pediment or a pitched roof, ridge along x.
+  const x0 = -w / 2, x1 = w / 2, z0 = -depth / 2, z1 = depth / 2;
+  const P = [
+    [x0, 0, z1], [x1, 0, z1], [0, h, z1], [x1, 0, z0], [x0, 0, z0], [0, h, z0],
+  ];
+  const tri = (a, b, c) => [...P[a], ...P[b], ...P[c]];
+  const pos = [...tri(0, 1, 2), ...tri(3, 4, 5), ...tri(0, 2, 5), ...tri(0, 5, 4), ...tri(1, 3, 5), ...tri(1, 5, 2)];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  return g;
+}
+
+// The local-frame kit the landmark builders share: `site(s, u)` is a spot beside the route
+// (u > 0 toward the near side), `add` sets a part down there with its base on the ground.
+function landmarkKit(R, T, S, placed) {
+  const site = (s, u) => { const p = R.at(s); return { x: p.x - p.tz * u, z: p.z + p.tx * u, yaw: Math.atan2(p.tz, p.tx) }; };
+  const add = (g, st, colour, { y = 0, jitter = 0.03, edge = 28 } = {}) => {
+    g.rotateY(-st.yaw);
+    g.translate(st.x, T.heightAt(st.x, st.z) + y, st.z);
+    S.add(g, colour, jitter, edge);
+  };
+  const box = (w, h, d, x = 0, y = 0, z = 0) => new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z);
+  const cyl = (rt, rb, h, seg, x = 0, y = 0, z = 0) => new THREE.CylinderGeometry(rt, rb, h, seg).translate(x, y + h / 2, z);
+  const cap = (r, seg, x = 0, y = 0, z = 0) => new THREE.SphereGeometry(r, seg, Math.max(4, seg / 4), 0, Math.PI * 2, 0, Math.PI / 2).translate(x, y, z);
+  const put = (st, r, top) => placed.push({ x: st.x, z: st.z, r, top: T.heightAt(st.x, st.z) + top });
+  return { site, add, box, cyl, cap, put };
+}
+
+// Sizes in the scene (metres): the hall's dome across its base, the arena's glass front along the road.
+// (Real sizes, sources and parts are in road/landmarks.js.)
+const SIZE = { hallDome: 15, cpcFront: 30 };
+const HALL_BACK = 33;   // metres of road between Convocation Hall's centre and the start
+const CPC_BACK = 30;    // metres between College Park Center's centre and where the van parks
+const CPC_OUT = 17;     // metres from the road's edge to its centre (the plaza faces the road)
+
+// Dev measurement: how long each landmark took to build (ms), read by roadStrip's stats().
+const STATS = { hallMs: 0, cpcMs: 0, hallTris: 0, cpcTris: 0 };
+function buildLandmarks(R, T, S, placed, milestones) {
+  const k = landmarkKit(R, T, S, placed);
+  const { site, add, box, cyl, cap, put } = k;
+  // Toronto, the University of Toronto's St. George campus: Convocation Hall, its colonnade
+  // toward the road, far enough behind the start that all of it is in colour as the van sets
+  // off. (No skyline: the CN Tower cannot be shown whole within the strip's frame.)
+  {
+    const hall = site(R.s0 - HALL_BACK, -(HALF + 26));
+    const t0 = performance.now();
+    const built = convocationHall(k, hall, SIZE.hallDome);
+    STATS.hallMs = performance.now() - t0; STATS.hallTris = built.tris;
+    put(hall, built.R, built.H);
+    put(site(R.s0 - 8, HALF + 12), 10, 0);       // the near side in the opening shot stays open lawn
+  }
+  // The Midwest: grain silos and a barn at a few farmsteads.
+  for (const [x, u] of [[150, -(HALF + 15)], [228, -(HALF + 13)], [284, HALF + 12]]) {
+    const st = site(R.near(x, 0).s, u);
+    add(cyl(1.5, 1.5, 7.5, 14, -2, 0, 0), st, "#c3c7ca", { edge: 40 });
+    add(cap(1.5, 14, -2, 7.5), st, "#b8bcbf", { edge: 40 });
+    add(cyl(1.3, 1.3, 6, 14, 1.2, 0, -0.6), st, "#c9ccce", { edge: 40 });
+    add(cap(1.3, 14, 1.2, 6, -0.6), st, "#b8bcbf", { edge: 40 });
+    add(box(7, 3.6, 4.6, 6.5, 0, 0.5), st, "#9b3b2c");
+    add(gable(7, 2, 4.6).translate(6.5, 3.6, 0.5), st, "#6f6f6c");
+    put(st, 6, 8);
+  }
+  // Arlington: the University of Texas at Arlington's College Park Center beside the end of the
+  // road, just behind where the van parks so it is in colour when it arrives.
+  {
+    const cpc = site(R.s1 - CPC_BACK, -(HALF + CPC_OUT));
+    const t1 = performance.now();
+    const built = collegeParkCenter(k, cpc, SIZE.cpcFront);
+    STATS.cpcMs = performance.now() - t1; STATS.cpcTris = built.tris;
+    put(cpc, built.R, built.H);
+  }
+  // A plain post at each 500 km mark on the near shoulder.
+  for (const m of milestones) add(box(0.26, 1.15, 0.26), site(m, HALF + 1.3), "#f2f1ec", { jitter: 0, edge: 40 });
 }
 
 function buildBridge(R, T, S) {
@@ -684,13 +782,13 @@ async function buildGrowth(R, T, placed, bridge, slice) {
       if (Math.abs(x - T.ravineX(z)) < 9 || T.slopeAt(x, z) > 0.45) continue;
       if (nr.s > bridge[0] - 5 && nr.s < bridge[1] + 5 && nr.d < HALF + 6) continue;
       const y = T.heightAt(x, z);
-      items.push({ x, y, z, scale, colour: it.colour, s: nr.s, h: y - nr.y, d: nr.d, delay: 0.5 + r() * 2.5 });
+      items.push({ x, y, z, scale, sy: it.sy, colour: it.colour, s: nr.s, h: y - nr.y, d: nr.d, delay: 0.5 + r() * 2.5 });
     }
     const mesh = new THREE.InstancedMesh(geo, null, items.length);
     const data = new Float32Array(items.length * 4), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
     items.forEach((it, i) => {
       e.set(0, r() * 6.28, 0);
-      m.compose(new THREE.Vector3(it.x, it.y, it.z), q.setFromEuler(e), new THREE.Vector3(it.scale, it.scale * (0.85 + r() * 0.3), it.scale));
+      m.compose(new THREE.Vector3(it.x, it.y, it.z), q.setFromEuler(e), new THREE.Vector3(it.scale, it.scale * (it.sy ?? 0.85 + r() * 0.3), it.scale));
       mesh.setMatrixAt(i, m);
       mesh.setColorAt(i, it.colour);
       data.set([it.s, it.h, it.d, it.delay], i * 4);
@@ -719,11 +817,17 @@ async function buildGrowth(R, T, placed, bridge, slice) {
   };
   const GREENS = ["#5b7f3a", "#668a40", "#4f7535", "#729446"], FALL = ["#c07a35", "#a9532e", "#d1a13f"];
   let clump = null;
-  await make(tree(), 110, () => {
+  // Woods in Ontario and the Ozarks, windbreaks on the farms, almost none on the red dirt,
+  // wide low live oaks in Texas.
+  await make(tree(), 120, () => {
     if (!clump || r() < 0.25) clump = around(HALF + 5, 34, 11);
     const x = clump.x + (r() - 0.5) * 9, z = clump.z + (r() - 0.5) * 7;
-    const fall = clump.prog > 0.3 && clump.prog < 0.75 && r() < 0.22;
-    return { x, z, scale: 0.8 + r() * 0.7, colour: col((fall ? FALL : GREENS)[Math.floor(r() * 4) % (fall ? 3 : 4)]).lerp(col("#9a9a5a"), clamp(clump.prog - 0.6, 0, 0.4)) };
+    const texas = x > 520;
+    const dens = x < 90 ? 0.9 : band(x, OZARKS) > 0.4 ? 1 : band(x, FARM) > 0.5 ? 0.18 : band(x, REDDIRT) > 0.5 ? 0.06 : texas ? 0.55 : 0.5;
+    if (r() > dens) return null;
+    if (texas) return { x, z, scale: 1.3 + r() * 0.5, sy: 0.5 + r() * 0.12, colour: col(["#5d6b3a", "#66733f", "#56633a"][Math.floor(r() * 3)]) };
+    const fall = x > 90 && r() < 0.18;
+    return { x, z, scale: 0.8 + r() * 0.7, colour: col((fall ? FALL : GREENS)[Math.floor(r() * 4) % (fall ? 3 : 4)]) };
   });
   await make(blob(0.65), 150, () => {
     const p = around(HALF + 2.5, 30, 3);
@@ -769,7 +873,12 @@ function noiseTexture() {
 }
 
 // ------------------------------------------------------------------ the module
-export function roadStrip(host) {
+// `solo` (dev only: "convocation" or "cpc") shows one landmark alone, in colour, from the
+// direction the scene's rest camera sees it. `cam` ("px,py,pz,tx,ty,tz,fov" in the landmark's own
+// metres: x right, y up, z toward the front) puts it on a lawn instead and aims a free camera, and
+// `aspect` sets the strip's height / width, so a render can be matched to a reference photograph.
+// strip.solo then offers cam(), keys() and shot() for scripts.
+export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.62 } = {}) {
   const make = (tag, cls) => { const e = document.createElement(tag); if (cls) e.className = cls; return e; };
   const el = make("div", "road");
   el.setAttribute("role", "img");
@@ -903,9 +1012,12 @@ export function roadStrip(host) {
   // The van is the hero of every shot: the camera stays close (the same distance in every
   // shot) and the beats change only its angle and height, like a chase car alongside.
   const REST = { el: ELEV, az: AZIM, dist: 1, look: 1, lift: 1.2 };
-  // Parked at Arlington the rest view turns to look along the road it came by (az relative to
-  // the van's heading), so the land past the end of the trip stays out of shot.
-  const END_REST = { el: 34, az: -62, dist: 1, look: -1.2, lift: 1.2 };
+  // At the start and the end the rest view drops low, so the campus and the skyline stand up
+  // against the sky: Convocation Hall behind the van in Toronto; at Arlington it looks along
+  // the road it came by (az relative to the heading), with the arena beside it and the land
+  // past the end of the trip out of shot.
+  const START_REST = { el: 9, az: -6, dist: 1, look: -9, lift: 4.6 };
+  const END_REST = { el: 12, az: 30, dist: 1, look: -8, lift: 4.6 };
   const DRIVE = { el: 22, az: -38, dist: 1, look: 1.6, lift: 1.2 };
   const BEATS = [
     [105, 190, { el: 15, az: -62, dist: 1, look: 1.4, lift: 1.3 }],   // the climb: low from behind, the road rising past it
@@ -917,7 +1029,7 @@ export function roadStrip(host) {
   const ROUGH = [[316, 346], [470, 505]];             // bridge joints and a washboard descent: a touch of shake
   const KEYS = ["el", "az", "dist", "look", "lift"];
   const shot = { ...REST }, shotV = { el: 0, az: 0, dist: 0, look: 0, lift: 0 };
-  let drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
+  let centreX = 0.2, centreY = 0.2, campus = 0, drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
   const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), vanTop = new THREE.Vector3();
   const nearRocks = [];
   const blocked = (a, b) => {
@@ -936,11 +1048,21 @@ export function roadStrip(host) {
     let wBeat = 0, beat = null;
     for (const [x0, x1, b] of BEATS) { const w = smooth(x0 - 28, x0, p.x) * (1 - smooth(x1, x1 + 28, p.x)); if (w > wBeat) { wBeat = w; beat = b; } }
     const hy = THREE.MathUtils.radToDeg(Math.atan2(p.tz, p.tx));
-    const atEnd = smooth(0.94, 1, (s - R.s0) / span());
+    const prog = (s - R.s0) / span(), atEnd = smooth(0.89, 0.95, prog), atStart = 1 - smooth(0, 0.05, prog);
+    // How much the shot opens up at the campuses (1: the van at 60% of its usual size); a
+    // narrow phone strip opens further at the start to take in all of Convocation Hall.
+    // Arriving, it stays open even while the van is still driving, so the arena is never cropped.
+    campus = Math.max(atStart * (W < 600 ? 0.62 : 0.4) * (1 - m), atEnd * 0.56) / 0.4;
+    centreY = 0.2 + 0.35 * Math.min(campus, 1.4) * (1 - m * (1 - atEnd));   // arriving, the van rides low so the arena's roof stays in
+    centreX = 0.2 + 0.32 * Math.max(atStart, atEnd) * (1 - m);   // at rest there, the van may sit right of centre
     for (const k of KEYS) {
       const d = beat ? lerp(DRIVE[k], beat[k], wBeat) : DRIVE[k];
-      const rest = lerp(REST[k], k === "az" ? END_REST.az - hy : END_REST[k], atEnd);
-      out[k] = lerp(rest, k === "az" ? d - 0.55 * hy : d, m);
+      const end = k === "az" ? END_REST.az - hy : END_REST[k];
+      // (a phone's narrow strip aims further back at the start, so the hall's left wing stays in)
+      const rest = lerp(lerp(REST[k], end, atEnd), k === "look" && W < 600 ? START_REST.look - 4.5 : START_REST[k], atStart);
+      // Pulling into Arlington the chase eases into the arrival shot, so the arena is framed
+      // the same way while the van is still rolling as once it has parked.
+      out[k] = lerp(rest, lerp(k === "az" ? d - 0.55 * hy : d, end, atEnd), m);
     }
     // Line of sight: lift the camera until nothing stands between it and the van. Checked
     // every third frame (it moves slowly); the lift itself is smoothed with the shot.
@@ -1008,7 +1130,7 @@ export function roadStrip(host) {
       pts.forEach((q, i) => {
         const n = proj.copy(q).project(camera);
         if (!(n.z > -1 && n.z < 1)) return;                // behind the camera or past the far plane
-        const [mx, my] = i < NC ? inner : i === NC ? outer : [0.2, 0.2];
+        const [mx, my] = i < NC ? inner : i === NC ? outer : [centreX, centreY];
         if (n.x > mx) dx = Math.max(dx, n.x - mx); else if (n.x < -mx) dx = Math.min(dx, n.x + mx);
         if (n.y > my) dy = Math.max(dy, n.y - my); else if (n.y < -my) dy = Math.min(dy, n.y + my);
       });
@@ -1019,7 +1141,8 @@ export function roadStrip(host) {
     return at;
   }
   const fitFor = () => {
-    const f = clamp(fit * Math.max(vanBox[0] / (0.34 * sizeK), vanBox[1] / 1.36), 0.5, 2);
+    // At the two campuses the shot opens up (the van a little smaller) to take in the landmarks.
+    const f = clamp(fit * Math.max(vanBox[0] / (0.34 * sizeK * (1 - 0.4 * campus)), vanBox[1] / 1.36), 0.5, 3.5);
     return Number.isFinite(f) ? f : 1;
   };
   // At rest the size is settled at once, so the strip never zooms on its own.
@@ -1177,7 +1300,7 @@ export function roadStrip(host) {
   function layout() {
     const w = Math.round(map.clientWidth);
     if (!w || w === W) return;
-    W = w; H = Math.round(clamp(W * 0.236, 200, 380));
+    W = w; H = solo ? Math.round(W * aspect) : Math.round(clamp(W * 0.236, 200, 380));
     ppm = clamp(W * 0.0245, 16.5, 40);        // starting distance; `fit` then holds the van's size
     sizeK = clamp(100 / (0.17 * W), 1, 1.7);    // a phone keeps it at ~100 px
     map.style.height = H + "px";
@@ -1199,8 +1322,71 @@ export function roadStrip(host) {
   }
 
   // Build: road and van first (one short task, then the first frame), the land after in slices.
+  let soloApi = null;
+  async function startSolo() {
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, preserveDrawingBuffer: true });
+    renderer.setClearColor(soloCam ? 0xbcd2e8 : 0xffffff, 1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    uniforms.uNoise.value = noiseTexture();
+    R = buildRoute();
+    T = { heightAt: () => 0 };
+    const S = new Solids(R), k = landmarkKit(R, T, S, []);
+    const hall = solo === "convocation";
+    // On a free camera the landmark stands at the origin facing +z; otherwise at its place on the route.
+    const st = soloCam ? { x: 0, z: 0, yaw: 0 } : hall ? k.site(R.s0 - HALL_BACK, -(HALF + 26)) : k.site(R.s1 - CPC_BACK, -(HALF + CPC_OUT));
+    const built = hall ? convocationHall(k, st, SIZE.hallDome) : collegeParkCenter(k, st, SIZE.cpcFront);
+    if (soloCam) S.add(new THREE.BoxGeometry(120, 0.2, 120).translate(0, -0.11, 0), hall ? "#7fa656" : "#8fa65e", 0.06, 181);
+    const solids = S.build();
+    scene.add(new THREE.Mesh(solids.solid, mat(SOLID_VS, ROCK_FS, { side: THREE.DoubleSide })));
+    scene.add(new THREE.LineSegments(solids.lines, mat(LINE_VS, LINE_FS)));
+    uniforms.uReveal.value = uniforms.uBase.value = 1e6; uniforms.uMotion.value = 0;
+    s = sOf(solo === "cpc" ? 1 : 0);
+    const w = desired(0);
+    applySize();
+    solids.solid.computeBoundingSphere();
+    const { center, radius } = solids.solid.boundingSphere;
+    uniforms.uFocus.value.copy(soloCam ? new THREE.Vector3(0, 0, 0) : center);
+    const keys = hall ? CH_KEYS : CPC_KEYS, sc = built.scale, v = new THREE.Vector3();
+    const aim = (a) => {
+      camera.fov = a[6] ?? FOV; camera.aspect = W / H; camera.updateProjectionMatrix();
+      camera.position.set(a[0] * sc, a[1] * sc, a[2] * sc);
+      camera.up.set(0, 1, 0); camera.lookAt(a[3] * sc, a[4] * sc, a[5] * sc);
+      camera.updateMatrixWorld();
+      renderer.render(scene, camera);
+    };
+    if (soloCam) aim(soloCam.split(",").map(Number));
+    else {
+      // The scene's rest view at that end of the trip, framed on the landmark.
+      dirOf(viewDir, w.el, w.az);
+      camera.position.copy(center).addScaledVector(viewDir, (radius / Math.sin(THREE.MathUtils.degToRad(FOV / 2))) * 1.08);
+      camera.lookAt(center);
+      uniforms.uFocus.value.copy(center);
+      renderer.render(scene, camera);
+    }
+    // Orbit the scene camera's own direction (its elevation and azimuth at the rest shot) round a point of the
+    // landmark given in its own metres, at `dist` metres and `fov` degrees: baseline and 4x close-ups.
+    const cyw = Math.cos(-st.yaw), syw = Math.sin(-st.yaw), tw = new THREE.Vector3();
+    const orbit = (x, y, z, dist, fov) => {
+      tw.set(st.x + sc * (x * cyw + z * syw), sc * y, st.z + sc * (-x * syw + z * cyw));
+      dirOf(viewDir, w.el, w.az);
+      camera.fov = fov; camera.aspect = W / H; camera.updateProjectionMatrix();
+      camera.position.copy(tw).addScaledVector(viewDir, dist * sc);
+      camera.up.set(0, 1, 0); camera.lookAt(tw); camera.updateMatrixWorld();
+      uniforms.uFocus.value.copy(tw);
+      renderer.render(scene, camera);
+    };
+    soloApi = {
+      scale: sc, tris: built.tris,
+      cam: aim, orbit,
+      // Named key points in CSS pixels of the strip, for measuring ratios against a photograph.
+      keys() { const o = {}; for (const [n, p] of Object.entries(keys)) { v.set(p[0] * sc, p[1] * sc, p[2] * sc).project(camera); o[n] = [(v.x * 0.5 + 0.5) * W, (-v.y * 0.5 + 0.5) * H]; } return o; },
+    };
+    el.classList.add("road-live");
+  }
+
   async function start() {
     if (started || !alive) return;
+    if (solo) { started = true; return startSolo(); }
     started = true;
     const slice = slicer(8, () => alive);
     loadVan();
@@ -1231,6 +1417,8 @@ export function roadStrip(host) {
     redraw();
     const rocks = await buildRocks(R, T, slice);
     placed = rocks.placed;
+    buildLandmarks(R, T, rocks.S, placed, milestones);
+    await slice();
     const bridge = buildBridge(R, T, rocks.S);
     await slice();
     const solids = rocks.S.build();
@@ -1267,6 +1455,9 @@ export function roadStrip(host) {
 
   return {
     el,
+    // Dev measurement: landmark build times and what the last frame drew.
+    get solo() { return soloApi; },
+    stats() { const i = renderer?.info; return { ...STATS, triangles: i?.render.triangles ?? 0, lines: i?.render.lines ?? 0, calls: i?.render.calls ?? 0 }; },
     set(f) {
       target = clamp(+f || 0, 0, 1);
       label();
