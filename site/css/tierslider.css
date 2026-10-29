@@ -155,7 +155,7 @@
 /* Touch screens: the track lets touches through to the page; only the grip on the needle drags
    (GRIP in tierslider.js), tall enough to take the value pill above it too. */
 .tslider[data-touch] .tslider-input { pointer-events: none; }
-.tslider-grip { position: absolute; left: 0; top: 0; width: 44px; height: 62px; touch-action: pan-y; }
+.tslider-grip { position: absolute; left: 0; top: 0; width: 60px; height: 66px; touch-action: pan-y; }
 .tslider-input::-webkit-slider-runnable-track { height: 40px; background: transparent; border: 0; }
 .tslider-input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 40px; background: transparent; border: 0; }
 .tslider-input::-moz-range-track { height: 40px; background: transparent; border: 0; }

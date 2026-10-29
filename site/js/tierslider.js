@@ -22,7 +22,7 @@ const H = 66;             // control height
 const BLEED_X = 16;       // canvas overhang for glow and sparks
 const BLEED_Y = 48;
 const DPR_CAP = 2;
-const GRIP = 44;           // touch target riding the needle; must match .tslider-grip
+const GRIP = 60;           // touch target riding the needle; must match .tslider-grip
 const BAR_TOP = BAR_Y - BAR_H / 2;
 const BAR_BOT = BAR_Y + BAR_H / 2;
 
@@ -718,8 +718,9 @@ export function tierSlider(host, {
       ctx.fillRect(-r, -r, 2 * r, 2 * r);
       ctx.restore();
     }
-    const w = 3 + 1.2 * hover;
-    const h = BAR_H + 16 + 4 * hover;
+    // On a touch screen the needle is a handle: wider and taller, so it reads as something to grab.
+    const w = touch ? 7 + 2 * hover : 3 + 1.2 * hover;
+    const h = BAR_H + (touch ? 22 : 16) + 4 * hover;
     ctx.beginPath();
     ctx.roundRect(xt - w / 2 - 1.5, BAR_Y - h / 2 - 1.5, w + 3, h + 3, (w + 3) / 2);
     ctx.fillStyle = "#fff";
@@ -761,7 +762,8 @@ export function tierSlider(host, {
   }
 
   function placePill() {
-    if (grip) grip.style.transform = `translateX(${(xOf(target) - GRIP / 2).toFixed(1)}px)`;
+    // At either end the grip stays mostly over the track, so the finger lands inside the screen.
+    if (grip) grip.style.transform = `translateX(${clamp(xOf(target) - GRIP / 2, -10, W - GRIP + 10).toFixed(1)}px)`;
     if (!pill) return;
     const xt = xOf(shown);
     const w = pill.offsetWidth;

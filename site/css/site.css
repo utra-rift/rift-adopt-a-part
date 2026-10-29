@@ -265,6 +265,9 @@ main { padding: 92px var(--gutter) 40px; }
   .tier-label { margin-bottom: 18px; font-size: 12.5px; }
   .tier + .tier, .trip, .trip + .tier { margin-top: 44px; }
   .trip { --part-gap: 28px; }
+  /* The sliders sit in from the screen's edges, so the handle at either end is easy to take
+     (and clear of the browser's edge-swipe back gesture). */
+  .trip-slider { padding: 0 14px; }
   /* The posters are framed for the cell box, so the picture grows inside it rather than the
      box; the shadow moves out with the part's underside. */
   .fig { --zoom: 1.25; }
