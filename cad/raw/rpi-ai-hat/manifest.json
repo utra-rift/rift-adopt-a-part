@@ -1,0 +1,52 @@
+{
+  "id": "rpi-ai-hat",
+  "name": "Raspberry Pi AI HAT+ 13 TOPS (Hailo-8L), product code SC1785",
+  "status": "modelled",
+  "files": [],
+  "source_url": "https://www.raspberrypi.com/products/ai-hat/",
+  "download_url": null,
+  "drawing_url": "https://www.raspberrypi.com/documentation/accessories/images/aihat-plus-mechanical.png",
+  "drawing_files": [
+    {
+      "path": "cad/raw/rpi-ai-hat/aihat-plus-mechanical.png",
+      "what": "official dimensioned top view"
+    },
+    {
+      "path": "cad/raw/rpi-ai-hat/raspberry-pi-ai-hat-plus-product-brief.pdf",
+      "what": "official product brief"
+    }
+  ],
+  "license": "No manufacturer CAD is published (see cad/raw/ai-hat-plus/manifest.json search_log). Modelled in CadQuery (tools/models/rpi_ai_hat.py) from Raspberry Pi's official dimensioned drawing and photos; drawing and brief are Raspberry Pi Ltd documentation.",
+  "dims_mm": {
+    "board": "65 x 56.5 (HAT+ form factor, rounded corners)",
+    "mounting_holes": "4 holes on a 58 x 49 rectangle, centres 3.5 from the left and bottom edges (matches Pi 5 holes); Pi 5 holes are \u00d82.7",
+    "gpio_header": "2x20 header along the top edge; the drawing dimensions its centre 29 from the left mounting-hole centre. Ships with a 16 mm stacking header",
+    "left_edge_notch": "notch 5 deep, 18 tall, for the PCIe FFC connector; it starts 17.5 below the top edge and ends 21 above the bottom edge; the FFC connector sits at the notch's inner edge",
+    "bottom_right_cutout": "10 wide x 16 tall, starting 47.5 from the left edge; a 7.5-wide strip carrying a mounting hole remains at the right",
+    "npu": "Hailo NPU metal-lid package about 17 x 17, placed left of centre (drawing)",
+    "other_holes": "4 more round features (holes) are drawn but their positions are not dimensioned: below the top-right mounting hole, right of the NPU, below-left of the NPU, and above the bottom-left mounting hole",
+    "thickness": "not stated by Raspberry Pi"
+  },
+  "mass_g": null,
+  "colors": {
+    "pcb": "green solder mask (same Raspberry Pi green as the Pi 5), white silkscreen: Raspberry Pi logo, 'AI HAT+', TOPS rating and a Hailo logo",
+    "npu": "silver/brushed-metal lid on the Hailo chip, laser-marked 'HAILO'",
+    "header": "black 2x20 female stacking header with gold pins",
+    "pads": "the mounting holes look like they have gold/ENIG ring pads in photos (mostly hidden under the screws)",
+    "ffc": "orange/amber polyimide PCIe flat cable with a white FFC connector",
+    "hardware": "black spacers/standoffs and black screws"
+  },
+  "photo_urls": [
+    "https://www.raspberrypi.com/documentation/accessories/images/ai-hat-plus-hero.jpg?hash=b8e27f49e3eeab528b146c64e2f3f422",
+    "https://www.sparkfun.com/media/catalog/product/A/I/AIHAT_.jpg"
+  ],
+  "ref_photo": "cad/raw/rpi-ai-hat/ref.jpg",
+  "search_log": [
+    "pip.raspberrypi.com category 1081 (AI HAT+): only the product brief plus approvals and test reports. No STEP. Pi 5 category 892 has STEP files but none for the HAT. The Design Files category 1096 has only CM5 STEPs",
+    "datasheets.raspberrypi.com/ai-hat-plus/: product brief only (no mechanical PDF or STEP at guessed paths)",
+    "raspberrypi.com/documentation/accessories/ai-hat-plus: dimensioned PNG drawing, no CAD link",
+    "GitHub (gh search repos/code), Waveshare wiki, DigiKey/Mouser/Farnell listings: nothing",
+    "Printables model 1549408 'Pi Ai hat+ model' (CC-BY-SA, user NIe3Dprint, description just 'model'): a 2868-triangle STL measuring 65.02 x 56.39 x 6.35 (inch-rounded) with a ~2.8 mm thick board. A crude approximation, so it was downloaded, checked and deleted. Not used"
+  ],
+  "notes": "No official or reputable 3D CAD exists publicly for the AI HAT+, so it has to be modelled by hand from the official drawing. The 13 TOPS (SC1785, Hailo-8L) and 26 TOPS (SC1791, Hailo-8) variants share one product brief and one mechanical drawing. Every official photo found (Raspberry Pi docs hero, SparkFun's 13 TOPS listing) shows the 26 TOPS board: silkscreen '26 TOPS', Hailo-8 marking. The 13 TOPS board should differ only in the TOPS silkscreen and chip marking, but no official 13 TOPS close-up was found to confirm that. Component placement beyond the dimensioned items (NPU, header, FFC connector, holes) must come from the photos. Not in the drawing: Hailo package height, PCB thickness, header height (supplied stacking header is 16 mm)."
+}

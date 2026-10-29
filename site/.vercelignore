@@ -1,0 +1,5 @@
+# Pages for building posters and checking modules on their own; not part of the site.
+dev-*.html
+sheet.html
+shot.html
+.env*

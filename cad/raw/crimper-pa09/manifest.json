@@ -1,0 +1,14 @@
+{
+  "id": "crimper-pa09",
+  "name": "Engineer PA-09 precision crimping pliers",
+  "status": "modelled",
+  "files": [],
+  "model_script": "tools/models/crimper_pa09.py",
+  "output_step": "cad/models/crimper-pa09.step",
+  "dims": {
+    "length_mm": 195,
+    "jaw_die_stages": 3
+  },
+  "notes": "No maker CAD; modelled from the product's general layout.",
+  "source_url": "https://www.amazon.ca/dp/B002AVVO7K"
+}

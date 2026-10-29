@@ -1,0 +1,119 @@
+{
+  "src": "cad/models/matrice-charging-hub.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0012,
+  "angular": 0.24,
+  "lit": "/ledg/",
+  "defaultMaterial": "hub-grey",
+  "notes": "DJI Matrice 4D Series 240 W Charging Hub (CHX230-240), modelled from DJI's user guide drawing and photos (no CAD is published): 305 x 103 x 41 mm bar (retailer envelope) with three battery docks, nine-contact ports, locating pins, latch notches and vents, status LED, mode switch, SDC power port and USB-C assistant port, with its SDC lead plugged in.",
+  "materials": [
+    {
+      "match": "/shell/",
+      "mat": "hub-grey"
+    },
+    {
+      "match": "/port/",
+      "mat": "port-dark"
+    },
+    {
+      "match": "/gold/",
+      "mat": "gold"
+    },
+    {
+      "match": "/steel/",
+      "mat": "steel"
+    },
+    {
+      "match": "/rubber/",
+      "mat": "rubber"
+    },
+    {
+      "match": "/bezel/",
+      "mat": "bezel-black"
+    },
+    {
+      "match": "/ledg/",
+      "mat": "green-led"
+    },
+    {
+      "match": "/sdc/",
+      "mat": "sdc-orange"
+    },
+    {
+      "match": "/terminal/",
+      "mat": "nickel"
+    },
+    {
+      "match": "/sdcplug/",
+      "mat": "plug-black"
+    },
+    {
+      "match": "/cord/",
+      "mat": "cable-black"
+    }
+  ],
+  "customMaterials": {
+    "hub-grey": {
+      "color": "#8a8c90",
+      "mr": [
+        0,
+        0.62
+      ]
+    },
+    "port-dark": {
+      "color": "#2a2b2e",
+      "mr": [
+        0,
+        0.55
+      ]
+    },
+    "bezel-black": {
+      "color": "#0e0e10",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "green-led": {
+      "color": "#46e06a",
+      "mr": [
+        0,
+        0.3
+      ],
+      "glow": 0.6
+    },
+    "sdc-orange": {
+      "color": "#e8731a",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "nickel": {
+      "color": "#c9cacb",
+      "mr": [
+        0.9,
+        0.4
+      ]
+    },
+    "plug-black": {
+      "color": "#18181a",
+      "mr": [
+        0,
+        0.55
+      ]
+    },
+    "cable-black": {
+      "color": "#141416",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
+}

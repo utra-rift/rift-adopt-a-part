@@ -1,0 +1,70 @@
+{
+  "id": "matrice-charging-hub",
+  "name": "DJI Matrice 4D Series 240W Charging Hub (Chinese: Matrice 4D \u7cfb\u5217 240W \u5145\u7535\u7ba1\u5bb6), model CHX230-240",
+  "status": "modelled",
+  "files": [
+    {
+      "path": "cad/raw/matrice-charging-hub/DJI_Matrice_4D_Series_240W_Charging_Hub_UG.pdf",
+      "format": "pdf",
+      "role": "user-guide",
+      "bytes": 2291256,
+      "md5": "fe552f8b806f69c4972201548a6f7e54",
+      "units": null,
+      "products": [],
+      "url": "https://dl.djicdn.com/downloads/DJI_Dock_3/20250227/DJI_Matrice_4D_Series_240W_Charging_Hub_UG1.pdf",
+      "what": "Official user guide v1.0 (multilingual). Page 1 has a labelled line drawing: 1 status LED, 2 mode switch, 3 power port, 4 three battery ports, 5 USB-C assistant port; and the hub wired to the DJI 240W Power Adapter via SDC."
+    },
+    {
+      "path": "cad/raw/matrice-charging-hub/ref.jpg",
+      "format": "jpg",
+      "role": "photo",
+      "bytes": 88496,
+      "md5": "bdcd63b86d6ec7825fce8b396cde9d02",
+      "units": null,
+      "products": [],
+      "url": "https://se-cdn.djiits.com/tpc/uploads/photo/image/3c7952bc51c92fe773749c5901e94c25@large.jpg"
+    },
+    {
+      "path": "cad/raw/matrice-charging-hub/hub0.png",
+      "format": "png",
+      "role": "reference",
+      "what": "user guide p.1 line drawing rendered to PNG"
+    }
+  ],
+  "source_url": "https://store.dji.com/product/dji-matrice-4d-series-240w-charging-hub",
+  "source_urls_more": [
+    "https://enterprise.dji.com/dock-3/specs",
+    "https://enterprise.dji.com/dock-3/downloads",
+    "https://www.robomaster.com/zh-CN/resource/pages/announcement/1785"
+  ],
+  "download_url": null,
+  "drawing_url": "https://dl.djicdn.com/downloads/DJI_Dock_3/20250227/DJI_Matrice_4D_Series_240W_Charging_Hub_UG1.pdf",
+  "search_log": "Checked: enterprise.dji.com/dock-3/downloads (only 3D model there is the aircraft), DJI store product pages (global, CN), RoboMaster CMS/announcements/wiki (no hub page), web search for STEP/STL/GrabCAD. No official or credible public CAD found.",
+  "license": "No CAD or dimensioned drawing is published (see search_log). Modelled in CadQuery from DJI's user guide / product sheet and product photos; documents and photos are DJI material.",
+  "dims_mm": {
+    "official": "DJI publishes no dimensions or weight for this hub (store and spec pages checked).",
+    "retailer_unverified": "305 x 103 x 41 (D x W x H), 200 g, packaged 340 g; Multitronic Oy listing (EAN 6937224106352, DJI part CP.EN.00000627.01). Product and package dimensions are listed as identical, so treat as packaging dimensions.",
+    "layout": "From the UG drawing (p.1) and photos: a long, low light-grey bar with three raised battery-port pads in a row along its top. Each port mates with the battery's 9-contact female connector (9x 02_EA230_BATT_CON-F_CONTACT-18A on 2.5 mm pitch) (geometry: 02_EA230_BATT_CON-F_* in the matrice-4d-battery STEP; the mating male connector 01_EA230_BATT_CON-M_ASM is in the Battery Rack 2 STEP). Each battery lies flat, label up, with its cap end pushed onto a port and its body running across the bar. Right end face: status LED (1), mode switch (2), power/SDC port (3). Left end face: USB-C assistant port (5).",
+    "scaling_hint": "Battery cross-section is known exactly from the battery STEP (95.99 across latches x 59.33 thick), so the store photos can be scaled from the seated batteries."
+  },
+  "mass_g": null,
+  "electrical": {
+    "input": "SDC 16.8-25.5 V, max 12.1 A",
+    "rated_power_W": 240,
+    "charging": "3 batteries in sequence; Standard (100%) / Ready-to-Fly (90%) modes",
+    "compatible_battery": "BPX230-6768-22.14",
+    "in_box": "Charging Hub x1, SDC cable x1"
+  },
+  "colors": {
+    "body": "light grey matte plastic (same family grey as the battery and airframe)",
+    "battery_ports": "dark grey/black contact blocks in each bay",
+    "sdc_cable": "black cable; SDC plugs with orange connector bodies"
+  },
+  "photo_urls": [
+    "https://se-cdn.djiits.com/tpc/uploads/photo/image/3c7952bc51c92fe773749c5901e94c25@large.jpg",
+    "https://se-cdn.djiits.com/tpc/uploads/photo/image/66cdf52d8666964c9ce66feba33444d2@large.jpg",
+    "https://se-cdn.djiits.com/tpc/uploads/photo/image/b3313197ac3750044fa3cde169cebbfe@large.jpg",
+    "https://se-cdn.djiits.com/tpc/uploads/photo/image/fe72fe8777d83f0cdf593cee0f4d3e5d@large.jpg"
+  ],
+  "notes": "Identity: the team budget's \"Matrice 4D Series 240W Charge Manager\" is DJI's Matrice 4D Series 240W Charging Hub; DJI's Chinese docs call it \u5145\u7535\u7ba1\u5bb6 (\"charge manager\"), and RoboMaster sells it as the \u65b0\u5145\u7535\u7ba1\u5bb6 (RMB 170 reference). It needs the DJI 240W Power Adapter (part charger-240w); it cannot be powered over USB-C. ref.jpg shows the hub with three batteries seated (photos 66cdf5... and b33131... show it empty)."
+}

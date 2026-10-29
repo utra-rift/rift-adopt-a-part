@@ -1,0 +1,168 @@
+{
+  "src": "cad/models/wire-22awg-kit.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0012,
+  "angular": 0.6,
+  "lit": "/strand/",
+  "notes": "22 AWG silicone wire kit, modelled: ten colours, 10 ft each, 1.5 mm silicone over tinned stranded copper, on 40 mm spools (winding sized from the wire volume) on one steel axle in a 190 x 46 mm dispensing rack; each wire runs out through its own hole and is stripped 8 mm.",
+  "materials": [
+    {
+      "match": "/black_(wind|jacket)",
+      "mat": "sil-black"
+    },
+    {
+      "match": "/red_(wind|jacket)",
+      "mat": "sil-red"
+    },
+    {
+      "match": "/white_(wind|jacket)",
+      "mat": "sil-white"
+    },
+    {
+      "match": "/yellow_(wind|jacket)",
+      "mat": "sil-yellow"
+    },
+    {
+      "match": "/green_(wind|jacket)",
+      "mat": "sil-green"
+    },
+    {
+      "match": "/blue_(wind|jacket)",
+      "mat": "sil-blue"
+    },
+    {
+      "match": "/grey_(wind|jacket)",
+      "mat": "sil-grey"
+    },
+    {
+      "match": "/brown_(wind|jacket)",
+      "mat": "sil-brown"
+    },
+    {
+      "match": "/purple_(wind|jacket)",
+      "mat": "sil-purple"
+    },
+    {
+      "match": "/orange_(wind|jacket)",
+      "mat": "sil-orange"
+    },
+    {
+      "match": "/(tray|rail|plate|divider)",
+      "mat": "rack-plastic"
+    },
+    {
+      "match": "/foot",
+      "mat": "rubber"
+    },
+    {
+      "match": "/axle",
+      "mat": "steel"
+    },
+    {
+      "match": "strand",
+      "mat": "tinned-copper"
+    },
+    {
+      "match": "/[a-z]+_(flange|hub)",
+      "mat": "spool-clear"
+    }
+  ],
+  "customMaterials": {
+    "rack-plastic": {
+      "color": "#34373c",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "spool-clear": {
+      "color": "#dcdfe2",
+      "mr": [
+        0,
+        0.3
+      ]
+    },
+    "tinned-copper": {
+      "color": "#cfd2d6",
+      "mr": [
+        0.9,
+        0.34
+      ]
+    },
+    "sil-black": {
+      "color": "#222326",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-red": {
+      "color": "#d0242a",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-white": {
+      "color": "#f2f2ee",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-yellow": {
+      "color": "#f0c21e",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-green": {
+      "color": "#25a04a",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-blue": {
+      "color": "#2a6ae0",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-grey": {
+      "color": "#9a9da4",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-brown": {
+      "color": "#7d4a28",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-purple": {
+      "color": "#8c4cb8",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-orange": {
+      "color": "#f0741a",
+      "mr": [
+        0,
+        0.42
+      ]
+    }
+  }
+}

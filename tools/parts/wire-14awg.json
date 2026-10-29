@@ -1,0 +1,62 @@
+{
+  "src": "cad/models/wire-14awg.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0025,
+  "angular": 0.5,
+  "lit": "/strand/",
+  "notes": "BNTECHGO-style 14 AWG silicone wire, modelled: 3.0 mm silicone jacket over tinned stranded copper, 20 ft (6096 mm) red and 20 ft black, each wound 10 turns with two cable ties and the ends stripped 12 mm.",
+  "defaultMaterial": "silicone-black",
+  "materials": [
+    {
+      "match": "/red_jacket",
+      "mat": "silicone-red"
+    },
+    {
+      "match": "/black_jacket",
+      "mat": "silicone-black"
+    },
+    {
+      "match": "strand",
+      "mat": "tinned-copper"
+    },
+    {
+      "match": "tie",
+      "mat": "nylon-tie"
+    }
+  ],
+  "customMaterials": {
+    "silicone-red": {
+      "color": "#c4181e",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "silicone-black": {
+      "color": "#1b1c1f",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "tinned-copper": {
+      "color": "#cfd2d6",
+      "mr": [
+        0.9,
+        0.34
+      ]
+    },
+    "nylon-tie": {
+      "color": "#ecebe6",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
+}

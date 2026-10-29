@@ -1,0 +1,80 @@
+{
+  "src": "cad/models/crimper-pa09.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0005,
+  "angular": 0.25,
+  "lit": "/die/",
+  "notes": "Engineer PA-09 precision crimping pliers, modelled (no maker CAD): forged steel members on a lap pivot, three-stage open-barrel die inserts in the nose, V leaf spring, stop screw, hooked lock latch and red and black ribbed grips. Lying on the grips, handles open, nose to the left.",
+  "defaultMaterial": "forged-steel",
+  "materials": [
+    {
+      "match": "/grip_red",
+      "mat": "grip-red"
+    },
+    {
+      "match": "/grip_black",
+      "mat": "grip-black"
+    },
+    {
+      "match": "/die",
+      "mat": "die-steel"
+    },
+    {
+      "match": "/(pivot_|stop_|latch_|spring_rivet|diescrew)",
+      "mat": "black-oxide"
+    },
+    {
+      "match": "/spring$|/spring[0-9]",
+      "mat": "spring-steel"
+    }
+  ],
+  "customMaterials": {
+    "forged-steel": {
+      "color": "#b4b8be",
+      "mr": [
+        0.92,
+        0.3
+      ]
+    },
+    "die-steel": {
+      "color": "#8d9198",
+      "mr": [
+        0.95,
+        0.22
+      ]
+    },
+    "spring-steel": {
+      "color": "#9a9ea4",
+      "mr": [
+        0.9,
+        0.35
+      ]
+    },
+    "black-oxide": {
+      "color": "#2a2b2f",
+      "mr": [
+        0.5,
+        0.45
+      ]
+    },
+    "grip-red": {
+      "color": "#c0171d",
+      "mr": [
+        0,
+        0.7
+      ]
+    },
+    "grip-black": {
+      "color": "#18191b",
+      "mr": [
+        0,
+        0.8
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "arducam-ov9782",
+  "name": "Arducam B0385: 1MP OV9782 global-shutter colour USB 2.0 UVC camera board with M12 lens (UC-852 Rev.A)",
+  "status": "modelled",
+  "files": [],
+  "source_url": "https://www.arducam.com/100fps-global-shutter-color-usb-camera-board-1mp-ov9782-uvc-webcam-module-with-low-distortion-m12-lens-without-microphones-for-computer-laptop-android-device-and-raspberry-pi-arducam.html",
+  "download_url": null,
+  "license": "No manufacturer CAD is published for this SKU (see cad/raw/arducam-b0385/manifest.json search_log). Modelled in CadQuery (tools/models/arducam_ov9782.py) from the datasheet drawings below and the product photos.",
+  "drawing_files": [
+    {"path": "cad/raw/arducam-ov9782/datasheet_dimension_diagram.jpg", "what": "datasheet sec.4: 38 x 38 board, holes on 34 and 28 pitch, ZR socket footprint"},
+    {"path": "cad/raw/arducam-ov9782/datasheet_lens_M27280M07S.jpg", "what": "datasheet sec.5: lens M27280M07S, 14 x 15.86, thread M12 x 0.5, holder height 7"},
+    {"path": "cad/raw/arducam-ov9782/ref_front_back_dims.jpg", "what": "front/back photos, component placement"}
+  ],
+  "dims_mm": {"board": "38 x 38 x 1.6", "holes": "4 x Ø2.6 on 34 x 34, 4 x Ø2.8 on 28 x 28", "lens": "Ø14 head 4.3 + Ø12 x 0.5 thread 8.9; holder 7 tall", "socket": "JST ZR 4-pin side entry 7.56 x 3.81, 8.24 from left, 3.47 from bottom"},
+  "ref_photo": "cad/raw/arducam-ov9782/ref.jpg",
+  "colors": {"pcb": "matte black, gold rings", "holder": "black plastic", "lens": "black barrel, purple-green AR glass", "connector": "white JST ZR", "lead": "black jacket, USB-A"},
+  "notes": "Board thickness (1.6) and component positions are estimated from photos; the USB lead is shortened to about 230 mm and laid in a loose loop."
+}

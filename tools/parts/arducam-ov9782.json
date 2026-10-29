@@ -1,0 +1,37 @@
+{
+  "src": "cad/models/arducam-ov9782.step",
+  "up": "z",
+  "rotate": [0, 0, 0],
+  "deflection": 0.0011,
+  "angular": 0.2,
+  "lit": "/lensglass/",
+  "defaultMaterial": "black-plastic",
+  "notes": "Arducam OV9782 global-shutter USB camera (B0385), modelled from the datasheet drawing and photos (no CAD is published): 38 x 38 board, M12 holder and lens, back-side USB bridge and JST socket, USB lead shortened and looped.",
+  "materials": [
+    { "match": "/pcb/", "mat": "pcb-black" },
+    { "match": "/(gold)/", "mat": "gold" },
+    { "match": "/silk/", "mat": "silk-white" },
+    { "match": "/(nickel|steel)/", "mat": "steel" },
+    { "match": "/jst/", "mat": "jst-white" },
+    { "match": "/tan/", "mat": "mlcc-tan" },
+    { "match": "/lensglass/", "mat": "lens-glass" },
+    { "match": "/lens/", "mat": "matte-black" },
+    { "match": "/holder/", "mat": "black-plastic" },
+    { "match": "/ic/", "mat": "ic-black" },
+    { "match": "/jacket/", "mat": "cable-black" },
+    { "match": "/boot/", "mat": "rubber" },
+    { "match": "/wire_red/", "mat": "red-wire" },
+    { "match": "/wire_white/", "mat": "white-plastic" },
+    { "match": "/wire_green/", "mat": "wire-green" },
+    { "match": "/wire_black/", "mat": "matte-black" }
+  ],
+  "customMaterials": {
+    "silk-white": { "color": "#e8e8e4", "mr": [0, 0.6] },
+    "jst-white": { "color": "#ece8dc", "mr": [0, 0.5] },
+    "mlcc-tan": { "color": "#a8814f", "mr": [0, 0.5] },
+    "ic-black": { "color": "#222325", "mr": [0, 0.5] },
+    "lens-glass": { "color": "#54428f", "mr": [0.2, 0.1] },
+    "cable-black": { "color": "#17171a", "mr": [0, 0.6] },
+    "wire-green": { "color": "#2f9a4a", "mr": [0, 0.5] }
+  }
+}

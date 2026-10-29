@@ -1,0 +1,155 @@
+{
+  "src": "cad/models/rpi-ai-hat.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0012,
+  "angular": 0.24,
+  "lit": "/lid/",
+  "defaultMaterial": "black-plastic",
+  "notes": "Raspberry Pi AI HAT+ (13 TOPS, Hailo-8L), modelled from Raspberry Pi's official mechanical drawing and photos (no CAD is published): 65 x 56.5 mm board with its notches and holes, 2 x 20 stacking header, Hailo NPU, PCIe FFC connector and flat cable, four 16 mm spacers and screws. Component placement beyond the dimensioned items follows the photos.",
+  "materials": [
+    {
+      "match": "/pcb/",
+      "mat": "rpi-green"
+    },
+    {
+      "match": "/gold/",
+      "mat": "gold"
+    },
+    {
+      "match": "/black/",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "/substrate/",
+      "mat": "ic-black"
+    },
+    {
+      "match": "/lidmark/",
+      "mat": "lid-dark"
+    },
+    {
+      "match": "/lid/",
+      "mat": "nickel"
+    },
+    {
+      "match": "/jst/",
+      "mat": "fpc-cream"
+    },
+    {
+      "match": "/latch/",
+      "mat": "fpc-latch"
+    },
+    {
+      "match": "/flexstiff/",
+      "mat": "flex-amber"
+    },
+    {
+      "match": "/flex/",
+      "mat": "flex-orange"
+    },
+    {
+      "match": "/tan/",
+      "mat": "mlcc-tan"
+    },
+    {
+      "match": "/ic/",
+      "mat": "ic-black"
+    },
+    {
+      "match": "/inductor/",
+      "mat": "inductor-grey"
+    },
+    {
+      "match": "/silk/",
+      "mat": "silk-white"
+    },
+    {
+      "match": "/nickel/",
+      "mat": "nickel"
+    }
+  ],
+  "customMaterials": {
+    "rpi-green": {
+      "color": "#33a07b",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "ic-black": {
+      "color": "#262829",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "nickel": {
+      "color": "#d2d3d2",
+      "mr": [
+        0.9,
+        0.45
+      ]
+    },
+    "lid-dark": {
+      "color": "#9a9c9e",
+      "mr": [
+        0.9,
+        0.5
+      ]
+    },
+    "fpc-cream": {
+      "color": "#ece4d0",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "fpc-latch": {
+      "color": "#9c7656",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "flex-orange": {
+      "color": "#d9822b",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "flex-amber": {
+      "color": "#c26a1c",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "mlcc-tan": {
+      "color": "#a8814f",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "inductor-grey": {
+      "color": "#8c8d90",
+      "mr": [
+        0.3,
+        0.5
+      ]
+    },
+    "silk-white": {
+      "color": "#e8e8e4",
+      "mr": [
+        0,
+        0.6
+      ]
+    }
+  }
+}

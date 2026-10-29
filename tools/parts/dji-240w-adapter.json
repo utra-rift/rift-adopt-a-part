@@ -1,0 +1,103 @@
+{
+  "src": "cad/models/dji-240w-adapter.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0012,
+  "angular": 0.24,
+  "lit": "/sdc/",
+  "defaultMaterial": "adapter-black",
+  "notes": "DJI 240 W Power Adapter (CDX230-240), modelled from DJI's photos and product sheet (no CAD or drawing is published): 132.6 x 72.4 x 36.5 mm black two-piece brick, SDC and USB-C ports on one end, IEC C8 inlet on the other, with the C7 AC cord and wall plug and the SDC output lead looped on the table.",
+  "materials": [
+    {
+      "match": "/shell/",
+      "mat": "adapter-black"
+    },
+    {
+      "match": "/labelrim/",
+      "mat": "label-grey"
+    },
+    {
+      "match": "/bezel/",
+      "mat": "bezel-black"
+    },
+    {
+      "match": "/sdc/",
+      "mat": "sdc-orange"
+    },
+    {
+      "match": "/(terminal|blade)/",
+      "mat": "nickel"
+    },
+    {
+      "match": "/gold/",
+      "mat": "gold"
+    },
+    {
+      "match": "/(c7|sdcplug)/",
+      "mat": "plug-black"
+    },
+    {
+      "match": "/cord/",
+      "mat": "cable-black"
+    },
+    {
+      "match": "/rubber/",
+      "mat": "rubber"
+    }
+  ],
+  "customMaterials": {
+    "adapter-black": {
+      "color": "#202022",
+      "mr": [
+        0,
+        0.62
+      ]
+    },
+    "label-grey": {
+      "color": "#6a6c70",
+      "mr": [
+        0,
+        0.6
+      ]
+    },
+    "bezel-black": {
+      "color": "#0e0e10",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "sdc-orange": {
+      "color": "#e8731a",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "nickel": {
+      "color": "#c9cacb",
+      "mr": [
+        0.9,
+        0.4
+      ]
+    },
+    "plug-black": {
+      "color": "#18181a",
+      "mr": [
+        0,
+        0.55
+      ]
+    },
+    "cable-black": {
+      "color": "#141416",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
+}

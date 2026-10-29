@@ -1,0 +1,62 @@
+{
+  "src": "cad/models/wire-12awg.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0028,
+  "angular": 0.45,
+  "lit": "/tinned/",
+  "notes": "BNTECHGO-style 12 AWG silicone wire, modelled: 4.0 mm silicone jacket over tinned stranded copper, 10 ft (3048 mm) red and 10 ft black, each coiled 7 turns with a cable tie and the ends stripped 12 mm.",
+  "defaultMaterial": "silicone-black",
+  "materials": [
+    {
+      "match": "/red_jacket",
+      "mat": "silicone-red"
+    },
+    {
+      "match": "/black_jacket",
+      "mat": "silicone-black"
+    },
+    {
+      "match": "strand",
+      "mat": "tinned-copper"
+    },
+    {
+      "match": "tie",
+      "mat": "nylon-tie"
+    }
+  ],
+  "customMaterials": {
+    "silicone-red": {
+      "color": "#c4181e",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "silicone-black": {
+      "color": "#1b1c1f",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "tinned-copper": {
+      "color": "#cfd2d6",
+      "mr": [
+        0.9,
+        0.34
+      ]
+    },
+    "nylon-tie": {
+      "color": "#ecebe6",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
+}

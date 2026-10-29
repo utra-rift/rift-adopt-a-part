@@ -1,0 +1,14 @@
+{
+  "id": "pcb-round",
+  "name": "JLCPCB-style PCB batch: three 100 x 100 mm boards, one partly populated",
+  "status": "modelled",
+  "files": [],
+  "source_url": null,
+  "download_url": null,
+  "license": "Generic fabrication batch; no real design or CAD. Modelled in CadQuery (tools/models/pcb_round.py).",
+  "dims_mm": {
+    "board": "100 x 100 x 1.6, R2.5 corners, 4 x \u00d83.2 mounting holes",
+    "parts": "LQFP-64, 2x20 female header, USB-C, pushbutton, 2 electrolytics, SOIC-8, 0402-1206 passives"
+  },
+  "notes": "Silkscreen-free; traces and pours are raised 0.05-0.07 mm so they draw."
+}

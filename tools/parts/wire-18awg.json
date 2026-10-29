@@ -1,0 +1,21 @@
+{
+  "src": "cad/models/wire-18awg.step",
+  "up": "z",
+  "rotate": [0, 0, 0],
+  "deflection": 0.0025,
+  "angular": 0.5,
+  "lit": "/strand/",
+  "notes": "BNTECHGO-style 18 AWG silicone wire, modelled: 2.1 mm silicone jacket over tinned stranded copper, 25 ft (7620 mm) red and 25 ft black on two small spools (62 mm flanges, 30 mm hub), winding sized from the wire volume, ends stripped 10 mm.",
+  "defaultMaterial": "spool-white",
+  "materials": [
+    { "match": "/red_(wind|jacket)", "mat": "silicone-red" },
+    { "match": "/black_(wind|jacket)", "mat": "silicone-black" },
+    { "match": "strand", "mat": "tinned-copper" }
+  ],
+  "customMaterials": {
+    "silicone-red": { "color": "#c4181e", "mr": [0, 0.42] },
+    "silicone-black": { "color": "#1b1c1f", "mr": [0, 0.42] },
+    "tinned-copper": { "color": "#cfd2d6", "mr": [0.9, 0.34] },
+    "spool-white": { "color": "#e7e6e1", "mr": [0, 0.45] }
+  }
+}

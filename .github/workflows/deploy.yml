@@ -1,0 +1,35 @@
+# Deploys site/ to the Vercel project on every push to main that touches it. Vercel's own
+# GitHub connection isn't available for a private organisation repo on the Hobby plan, so
+# this runs the Vercel CLI instead. Needs the VERCEL_TOKEN secret and the VERCEL_ORG_ID and
+# VERCEL_PROJECT_ID variables in the repo settings.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+
+# One deploy at a time, newest last, so production always ends on the latest push.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://rift-adopt-a-part.vercel.app
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check settings
+        run: |
+          [ -n "$VERCEL_TOKEN" ] || { echo "::error::Add a Vercel token as the VERCEL_TOKEN repository secret."; exit 1; }
+          [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ] || { echo "::error::Set the VERCEL_ORG_ID and VERCEL_PROJECT_ID repository variables."; exit 1; }
+      - name: Deploy to production
+        run: npx -y vercel@65.7.0 deploy site --prod --yes --token "$VERCEL_TOKEN"

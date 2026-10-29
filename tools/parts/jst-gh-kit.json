@@ -1,0 +1,146 @@
+{
+  "src": "cad/models/jst-gh-kit.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0011,
+  "angular": 0.4,
+  "lit": "/contact/",
+  "notes": "JST GH (1.25 mm pitch) assortment, modelled: natural-nylon housings of 2 to 10 positions and open-barrel gold-plated crimp contacts in a 172 x 112 x 24 mm clear case with twelve compartments and the lid opened behind, and a 4- and a 6-position housing crimped to short silicone leads.",
+  "defaultMaterial": "gh-natural",
+  "materials": [
+    {
+      "match": "label_paper",
+      "mat": "label-paper"
+    },
+    {
+      "match": "label_ink",
+      "mat": "label-ink"
+    },
+    {
+      "match": "_jacket0",
+      "mat": "sil-0"
+    },
+    {
+      "match": "_jacket1",
+      "mat": "sil-1"
+    },
+    {
+      "match": "_jacket2",
+      "mat": "sil-2"
+    },
+    {
+      "match": "_jacket3",
+      "mat": "sil-3"
+    },
+    {
+      "match": "_jacket4",
+      "mat": "sil-4"
+    },
+    {
+      "match": "_jacket5",
+      "mat": "sil-5"
+    },
+    {
+      "match": "/(case|divider|latch|hinge|lid)",
+      "mat": "case-clear"
+    },
+    {
+      "match": "/contact|_contact",
+      "mat": "gold-plated"
+    },
+    {
+      "match": "_strand",
+      "mat": "tinned-copper"
+    }
+  ],
+  "customMaterials": {
+    "gh-natural": {
+      "color": "#ece6d2",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "case-clear": {
+      "color": "#c7cbcf",
+      "mr": [
+        0,
+        0.28
+      ]
+    },
+    "gold-plated": {
+      "color": "#cfa23a",
+      "mr": [
+        1.0,
+        0.22
+      ]
+    },
+    "tinned-copper": {
+      "color": "#cfd2d6",
+      "mr": [
+        0.9,
+        0.34
+      ]
+    },
+    "sil-0": {
+      "color": "#1b1c1f",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-1": {
+      "color": "#c8282d",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-2": {
+      "color": "#e6b81c",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-3": {
+      "color": "#f0f0ec",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-4": {
+      "color": "#1f8a3b",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "sil-5": {
+      "color": "#1f55c4",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "label-paper": {
+      "color": "#f4f4f0",
+      "mr": [
+        0,
+        0.7
+      ]
+    },
+    "label-ink": {
+      "color": "#26272b",
+      "mr": [
+        0,
+        0.6
+      ]
+    }
+  }
+}

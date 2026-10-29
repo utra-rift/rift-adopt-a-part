@@ -1,0 +1,115 @@
+{
+  "src": "cad/models/pcb-round.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.003,
+  "angular": 0.5,
+  "lit": "/btn/",
+  "defaultMaterial": "black-plastic",
+  "notes": "Generic JLCPCB-style batch, modelled (no real design, no silkscreen text): three 100 x 100 x 1.6 mm boards with green mask fanned about a corner, routed traces, ENIG pads and vias, mounting holes and fiducials; the top board partly populated (LQFP-64, 2 x 20 header, USB-C, pushbutton, electrolytics, SOIC-8, passives, LEDs).",
+  "materials": [
+    {
+      "match": "/pcb/",
+      "mat": "jlc-green"
+    },
+    {
+      "match": "/trace/",
+      "mat": "jlc-trace"
+    },
+    {
+      "match": "/gold/",
+      "mat": "gold"
+    },
+    {
+      "match": "/nickel/",
+      "mat": "nickel"
+    },
+    {
+      "match": "/black/",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "/ic/",
+      "mat": "ic-black"
+    },
+    {
+      "match": "/tan/",
+      "mat": "mlcc-tan"
+    },
+    {
+      "match": "/ledg/",
+      "mat": "green-led"
+    },
+    {
+      "match": "/can/",
+      "mat": "alu-can"
+    },
+    {
+      "match": "/btn/",
+      "mat": "btn-grey"
+    }
+  ],
+  "customMaterials": {
+    "jlc-green": {
+      "color": "#1d6e45",
+      "mr": [
+        0,
+        0.38
+      ]
+    },
+    "jlc-trace": {
+      "color": "#2f9a62",
+      "mr": [
+        0,
+        0.32
+      ]
+    },
+    "ic-black": {
+      "color": "#242628",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "nickel": {
+      "color": "#c9cacb",
+      "mr": [
+        0.9,
+        0.4
+      ]
+    },
+    "mlcc-tan": {
+      "color": "#a8814f",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "green-led": {
+      "color": "#46e06a",
+      "mr": [
+        0,
+        0.3
+      ],
+      "glow": 0.5
+    },
+    "alu-can": {
+      "color": "#b7babf",
+      "mr": [
+        0.9,
+        0.35
+      ]
+    },
+    "btn-grey": {
+      "color": "#8a8c90",
+      "mr": [
+        0.2,
+        0.5
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "id": "wire-14awg",
+  "name": "BNTECHGO-style 14 AWG silicone wire, 20 ft red and 20 ft black",
+  "status": "modelled",
+  "files": [],
+  "model_script": "tools/models/wire_14awg.py",
+  "output_step": "cad/models/wire-14awg.step",
+  "dims": {
+    "od_mm": 3.0,
+    "conductor_mm": 1.9,
+    "length_mm": 6096,
+    "turns": 14
+  },
+  "notes": "Two stacked flat coils, two cable ties each, tails stripped 12 mm."
+}

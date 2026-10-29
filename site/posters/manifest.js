@@ -103,13 +103,13 @@ export default {
   "v": "c77c2be318"
  },
  "item-cam": {
-  "show": "",
+  "show": "arducam-ov9782",
   "hero": true,
   "holo": true,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "d9b3991b8e"
+  "floor": 0.7451,
+  "width": 0.5876,
+  "parts": "73eb2eb0dc",
+  "v": "add7e0241d"
  },
  "item-rpi5": {
   "show": "rpi5",
@@ -121,13 +121,13 @@ export default {
   "v": "c0477f55a0"
  },
  "item-hat": {
-  "show": "",
+  "show": "rpi-ai-hat",
   "hero": true,
   "holo": true,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "d9b3991b8e"
+  "floor": 0.698,
+  "width": 0.5341,
+  "parts": "ba781f4ca4",
+  "v": "9a09302731"
  },
  "item-vt03": {
   "show": "vt03",
@@ -157,31 +157,31 @@ export default {
   "v": "bf04f2baa5"
  },
  "item-supercap": {
-  "show": "",
+  "show": "supercap-bank",
   "hero": true,
   "holo": true,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "d9b3991b8e"
+  "floor": 0.7082,
+  "width": 0.5089,
+  "parts": "108f394569",
+  "v": "18ac761574"
  },
  "item-hub": {
-  "show": "",
+  "show": "matrice-charging-hub",
   "hero": true,
   "holo": true,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "d9b3991b8e"
+  "floor": 0.7073,
+  "width": 0.5737,
+  "parts": "adac0e23b2",
+  "v": "f5bb624600"
  },
  "item-adapter": {
-  "show": "",
+  "show": "dji-240w-adapter",
   "hero": true,
   "holo": true,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "d9b3991b8e"
+  "floor": 0.6865,
+  "width": 0.5254,
+  "parts": "42210bb88c",
+  "v": "c6fbda4700"
  },
  "item-cm01": {
   "show": "cm01",
@@ -481,13 +481,13 @@ export default {
   "v": "ecc39b50e4"
  },
  "item-pcb": {
-  "show": "",
+  "show": "pcb-round,pcb-round,pcb-round",
   "hero": true,
   "holo": false,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "565c0239ed"
+  "floor": 0.7656,
+  "width": 0.66,
+  "parts": "0957d09597",
+  "v": "2dc58ac7a9"
  },
  "kit-bearings": {
   "show": "ka040xp0",
@@ -508,22 +508,22 @@ export default {
   "v": "113096d2bc"
  },
  "kit-wire": {
-  "show": "",
+  "show": "wire-12awg",
   "hero": false,
   "holo": false,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "565c0239ed"
+  "floor": 0.8163,
+  "width": 0.3951,
+  "parts": "7bee05865d",
+  "v": "fdd8398a4b"
  },
  "kit-connectors": {
-  "show": "",
+  "show": "xt60h",
   "hero": false,
   "holo": false,
-  "floor": 0.7903,
-  "width": 0.411,
-  "parts": "da39a3ee5e",
-  "v": "565c0239ed"
+  "floor": 0.6917,
+  "width": 0.5784,
+  "parts": "e2767039d3",
+  "v": "14f11c8f70"
  },
  "kit-aluminium": {
   "show": "al-sheet-quarter",

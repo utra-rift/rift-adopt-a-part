@@ -1,0 +1,21 @@
+{
+  "id": "jst-gh-kit",
+  "name": "JST GH 1.25 mm assortment in a compartment case, two crimped leads",
+  "status": "modelled",
+  "files": [],
+  "model_script": "tools/models/jst_gh_kit.py",
+  "output_step": "cad/models/jst-gh-kit.step",
+  "dims": {
+    "pitch_mm": 1.25,
+    "housing_width_mm": "1.25*(n-1)+3.0",
+    "housing_height_mm": 3.5,
+    "housing_depth_mm": 5.0,
+    "case_mm": [
+      106.8,
+      77.6,
+      9.0
+    ]
+  },
+  "notes": "JST publishes GH housing and contact CAD; not downloaded (a download needs the user's go-ahead), housing and contact modelled to pitch with approximated outer dimensions.",
+  "source_url": "https://www.amazon.ca/dp/B0D49X837M"
+}

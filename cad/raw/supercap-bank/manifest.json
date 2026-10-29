@@ -1,0 +1,16 @@
+{
+  "id": "supercap-bank",
+  "name": "Team-built 24 V supercapacitor bank: 9 x 2.7 V 100 F cells on a balancing/controller board with XT60 leads",
+  "status": "modelled",
+  "files": [],
+  "source_url": null,
+  "download_url": null,
+  "license": "Team-built assembly; no CAD exists. Modelled in CadQuery (tools/models/supercap_bank.py) to the usual dimensions of its parts.",
+  "dims_mm": {
+    "cell": "\u00d822 x 45, radial leads 10 apart, 2.7 V / 100 F",
+    "string": "9 in series = 24.3 V",
+    "board": "248 x 44 x 1.6",
+    "xt60": "15.6 x 8 x 16"
+  },
+  "notes": "Board layout (balance channels, MCU, power stage) is representative, not a specific design."
+}

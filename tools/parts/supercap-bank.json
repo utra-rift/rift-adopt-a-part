@@ -1,0 +1,193 @@
+{
+  "src": "cad/models/supercap-bank.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0012,
+  "angular": 0.24,
+  "lit": "/shunt/",
+  "defaultMaterial": "black-plastic",
+  "notes": "Team-built 24 V supercapacitor bank, modelled (no catalogue part): nine 2.7 V 100 F radial cells (\u00d822 x 45 mm) in series on a 245 x 44 mm balancing/controller board with MCU, nine balance channels, power stage and a board-mount XT60 pair, plus a 12 AWG lead to a female XT60.",
+  "materials": [
+    {
+      "match": "/mark/",
+      "mat": "matte-black"
+    },
+    {
+      "match": "/pcb/",
+      "mat": "pcb-jlc-green"
+    },
+    {
+      "match": "/(gold)/",
+      "mat": "gold"
+    },
+    {
+      "match": "/black/",
+      "mat": "black-plastic"
+    },
+    {
+      "match": "/(nickel|steel)/",
+      "mat": "nickel"
+    },
+    {
+      "match": "/sleeve/",
+      "mat": "cap-sleeve"
+    },
+    {
+      "match": "/stripe/",
+      "mat": "cap-stripe"
+    },
+    {
+      "match": "/can/",
+      "mat": "alu-can"
+    },
+    {
+      "match": "/seal/",
+      "mat": "rubber"
+    },
+    {
+      "match": "/ic/",
+      "mat": "ic-black"
+    },
+    {
+      "match": "/tan/",
+      "mat": "mlcc-tan"
+    },
+    {
+      "match": "/ledg/",
+      "mat": "green-led"
+    },
+    {
+      "match": "/silk/",
+      "mat": "silk-white"
+    },
+    {
+      "match": "/shunt/",
+      "mat": "shunt-metal"
+    },
+    {
+      "match": "/inductor/",
+      "mat": "inductor-grey"
+    },
+    {
+      "match": "/jstbody/",
+      "mat": "jst-white"
+    },
+    {
+      "match": "/xt60/",
+      "mat": "xt60-yellow"
+    },
+    {
+      "match": "/wire_red/",
+      "mat": "red-wire"
+    },
+    {
+      "match": "/wire_black/",
+      "mat": "cable-black"
+    }
+  ],
+  "customMaterials": {
+    "pcb-jlc-green": {
+      "color": "#1f7a4d",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "ic-black": {
+      "color": "#242628",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "nickel": {
+      "color": "#c9cacb",
+      "mr": [
+        0.9,
+        0.4
+      ]
+    },
+    "cap-sleeve": {
+      "color": "#16171b",
+      "mr": [
+        0,
+        0.4
+      ]
+    },
+    "cap-stripe": {
+      "color": "#d7d8d2",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "alu-can": {
+      "color": "#b7babf",
+      "mr": [
+        0.9,
+        0.35
+      ]
+    },
+    "mlcc-tan": {
+      "color": "#a8814f",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "green-led": {
+      "color": "#46e06a",
+      "mr": [
+        0,
+        0.3
+      ],
+      "glow": 0.5
+    },
+    "silk-white": {
+      "color": "#e8e8e4",
+      "mr": [
+        0,
+        0.6
+      ]
+    },
+    "shunt-metal": {
+      "color": "#c58b4a",
+      "mr": [
+        0.8,
+        0.4
+      ]
+    },
+    "inductor-grey": {
+      "color": "#7d7f84",
+      "mr": [
+        0.4,
+        0.5
+      ]
+    },
+    "jst-white": {
+      "color": "#ece4d0",
+      "mr": [
+        0,
+        0.5
+      ]
+    },
+    "xt60-yellow": {
+      "color": "#e5b22a",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "cable-black": {
+      "color": "#17171a",
+      "mr": [
+        0,
+        0.5
+      ]
+    }
+  }
+}

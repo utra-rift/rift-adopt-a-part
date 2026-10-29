@@ -1,0 +1,20 @@
+{
+  "id": "xt30u",
+  "name": "Amass XT30U male and female, mated pair and separate pair",
+  "status": "modelled",
+  "files": [],
+  "model_script": "tools/models/xt30u.py + amass_xt.py",
+  "output_step": "cad/models/xt30u.step",
+  "dims": {
+    "body_mm": [
+      10.0,
+      5.0
+    ],
+    "contact_dia_mm": 2.0,
+    "pitch_mm": 5.0,
+    "male_body_mm": 10.6,
+    "pin_mm": 5.0
+  },
+  "notes": "Amass publishes a STEP for the XT30U; it was not downloaded (a download needs the user's go-ahead), so the outline is rebuilt from the published dimensions.",
+  "source_url": "https://www.amazon.ca/dp/B08H1JP7NW"
+}

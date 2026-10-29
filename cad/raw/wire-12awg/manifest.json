@@ -1,0 +1,15 @@
+{
+  "id": "wire-12awg",
+  "name": "BNTECHGO-style 12 AWG silicone wire, 10 ft red and 10 ft black",
+  "status": "modelled",
+  "files": [],
+  "model_script": "tools/models/wire_12awg.py",
+  "output_step": "cad/models/wire-12awg.step",
+  "dims": {
+    "od_mm": 4.0,
+    "conductor_mm": 2.3,
+    "length_mm": 3048,
+    "turns": 7
+  },
+  "notes": "Two coils standing on edge, cable ties, tails stripped 12 mm."
+}

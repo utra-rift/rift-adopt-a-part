@@ -1,0 +1,20 @@
+{
+  "id": "xt60h",
+  "name": "Amass XT60H male and female with sheath housings, mated, separate, spare sheath",
+  "status": "modelled",
+  "files": [],
+  "model_script": "tools/models/xt60h.py + amass_xt.py",
+  "output_step": "cad/models/xt60h.step",
+  "dims": {
+    "body_mm": [
+      15.6,
+      8.0
+    ],
+    "contact_dia_mm": 3.5,
+    "pitch_mm": 7.2,
+    "body_length_mm": 16.0,
+    "sheath_length_mm": 14.0
+  },
+  "notes": "Amass publishes a STEP for the XT60H; it was not downloaded (a download needs the user's go-ahead), so the outline is rebuilt from the published dimensions.",
+  "source_url": "https://www.amazon.ca/dp/B074PN6N4K"
+}

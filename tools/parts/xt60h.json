@@ -1,0 +1,69 @@
+{
+  "src": "cad/models/xt60h.step",
+  "up": "z",
+  "rotate": [
+    0,
+    0,
+    0
+  ],
+  "deflection": 0.0006,
+  "angular": 0.25,
+  "lit": "/_pin/",
+  "notes": "Amass XT60H male and female with sheath housings, modelled to the published outline: yellow nylon body 15.6 x 8.0 mm with polarity chamfers, 3.5 mm gold-plated contacts at 7.2 mm pitch, solder cups inside a clip-on sheath. One mated pair, one separate pair and a spare sheath; short 14 AWG leads soldered in.",
+  "defaultMaterial": "amass-yellow",
+  "materials": [
+    {
+      "match": "_red_jacket",
+      "mat": "silicone-red"
+    },
+    {
+      "match": "_black_jacket",
+      "mat": "silicone-black"
+    },
+    {
+      "match": "_strand",
+      "mat": "tinned-copper"
+    },
+    {
+      "match": "_(pin|socket|cup)",
+      "mat": "gold-plated"
+    }
+  ],
+  "customMaterials": {
+    "amass-yellow": {
+      "color": "#f1c21a",
+      "mr": [
+        0,
+        0.45
+      ]
+    },
+    "gold-plated": {
+      "color": "#b98a2c",
+      "mr": [
+        1.0,
+        0.2
+      ]
+    },
+    "silicone-red": {
+      "color": "#c4181e",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "silicone-black": {
+      "color": "#1b1c1f",
+      "mr": [
+        0,
+        0.42
+      ]
+    },
+    "tinned-copper": {
+      "color": "#cfd2d6",
+      "mr": [
+        0.9,
+        0.34
+      ]
+    }
+  }
+}

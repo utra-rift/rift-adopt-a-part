@@ -1,0 +1,17 @@
+{
+  "id": "wire-18awg",
+  "name": "BNTECHGO-style 18 AWG silicone wire, 25 ft red and 25 ft black on spools",
+  "status": "modelled",
+  "files": [],
+  "model_script": "tools/models/wire_18awg.py",
+  "output_step": "cad/models/wire-18awg.step",
+  "dims": {
+    "od_mm": 2.1,
+    "conductor_mm": 1.25,
+    "length_mm": 7620,
+    "spool_flange_mm": 62,
+    "spool_hub_mm": 30,
+    "spool_width_mm": 30
+  },
+  "notes": "Winding radius from wire volume (hex packing)."
+}
