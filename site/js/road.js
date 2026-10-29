@@ -1095,6 +1095,9 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   ];
   const ROUGH = [[316, 346], [470, 505]];             // bridge joints and a washboard descent: a touch of shake
   const KEYS = ["el", "az", "dist", "look", "lift"];
+  // How close the shot has to come to its goal to count as there: well under anything visible
+  // (degrees; distance as a fraction; metres), so the strip stops drawing once the camera is still.
+  const SETTLE = { el: 0.03, az: 0.03, dist: 0.0005, look: 0.005, lift: 0.005 };
   const shot = { ...REST }, shotV = { el: 0, az: 0, dist: 0, look: 0, lift: 0 };
   let centreX = 0.2, centreY = 0.2, low = 0, campus = 0, opening = 0, drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
   const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), vanTop = new THREE.Vector3();
@@ -1342,18 +1345,19 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     if (spawned) { moteGeo.attributes.aSize.needsUpdate = true; moteGeo.attributes.aColor.needsUpdate = true; spawned = false; }
     for (let k = 0; k < 2; k++) if (pulses[k].w >= 0) { pulses[k].w += dt; if (pulses[k].w > 2) pulses[k].w = -1; }
 
-    // Camera: how much it is "driving" eases in fast and out slowly, so it settles calmly. The
-    // chase framing is for going forward; reversing keeps the calm rest view.
+    // Camera: how much it is "driving" eases in and out at the same pace, so the shot settles soon
+    // after the van parks and the strip can stop drawing. The chase framing is for going forward;
+    // reversing keeps the calm rest view.
     const mt = reduced ? 0 : smooth(0.5, 12, v);
-    drive += (mt - drive) * Math.min(1, dt * (mt > drive ? 1.6 : 0.8));
-    if (Math.abs(mt - drive) < 1e-3) drive = mt;
+    drive += (mt - drive) * Math.min(1, dt * 1.6);
+    if (Math.abs(mt - drive) < 0.01) drive = mt;   // its last 1% moves the shot by a fraction of a degree
     // The shot follows its goal on a calm spring (~2.3 s to settle); pulling into Arlington, where it
     // swings round to look back down the road, it doubles in stiffness so the arrival lands in ~1.1 s.
     desired(drive); const ws = 2.1 * (1 + smooth(0.86, 0.95, (s - R.s0) / span()));
     let shotBusy = false;
     for (const k of KEYS) {
       shotV[k] += (ws * ws * (want[k] - shot[k]) - 2 * ws * shotV[k]) * dt; shot[k] += shotV[k] * dt;
-      if (Math.abs(want[k] - shot[k]) < 1e-3 && Math.abs(shotV[k]) < 1e-3) { shot[k] = want[k]; shotV[k] = 0; } else shotBusy = true;
+      if (Math.abs(want[k] - shot[k]) < SETTLE[k] && Math.abs(shotV[k]) < SETTLE[k] * 3) { shot[k] = want[k]; shotV[k] = 0; } else shotBusy = true;
     }
     // Bank a little into curves; a touch of shake only over the rough bits.
     const rollGoal = reduced ? 0 : clamp(R.at(s).k * v * 0.05, -0.045, 0.045) * drive;
