@@ -555,7 +555,7 @@ function openView(id) {
 }
 
 // On a touch screen the 3D engine and the part's model load only when a part is opened, so
-// its poster (already on the phone, the same drawing at rest) stands in at once, sized to the
+// its poster (already on the phone, the same picture at rest) stands in at once, sized to the
 // middle of the box. When the live figure has drawn, the stand-in glides onto it and dissolves.
 const stand = Object.assign(document.createElement("img"), { className: "view-stand", alt: "" });
 stand.setAttribute("aria-hidden", "true");
@@ -574,8 +574,10 @@ function alphaBox(src, w, h) {
 }
 function standIn(o) {
   standDown();
-  const poster = cells.find((c) => c.o === o)?.el.querySelector(".poster:not(.poster-c)");
-  if (canHover || !poster?.complete || !poster.naturalWidth) return;
+  // The picture in colour where there is one (the live figure arrives in colour), else the drawing.
+  const el = cells.find((c) => c.o === o)?.el;
+  const poster = [el?.querySelector(".poster-c"), el?.querySelector(".poster:not(.poster-c)")].find((p) => p?.complete && p.naturalWidth);
+  if (canHover || !poster) return;
   const box = alphaBox(poster, poster.naturalWidth, poster.naturalHeight);
   if (!box) return;
   const fig = $("#view-fig"), W = fig.clientWidth, H = fig.clientHeight, r = poster.naturalHeight / poster.naturalWidth;
@@ -622,12 +624,12 @@ function mount(fig, multi, k = 1) {
   if (big) live.delete(big);
   big = liveFigure(viewCanvas, fig, narrow.matches ? (multi ? { frame: 0.78 } : { visual: 0.22 * k }) : { fill: multi ? 0.72 : 0.6 * k });
   big.motionTarget = reduced ? 0 : 1;
+  // By the time a part is opened it is already in colour (hovered on a desktop, passed by the
+  // scroll on a phone), so it arrives in colour at rest, as its picture shows it, then drifts.
+  big.color = big.colorTarget = 1; fig.color = 1;
   big.view.paint();
-  // Arrive as a drawing, then fade the colour in and keep it.
-  if (!reduced) setTimeout(() => { if (big?.figure === fig) { revealOn(big); big.drift = 0; } }, 250);
-  else revealOn(big);
   const settle = () => { if (big?.figure === fig && !reduced) { big.drift = 7; kick(big); } };
-  setTimeout(settle, 1800);
+  setTimeout(settle, 900);
 }
 
 function showOffer(o) {
