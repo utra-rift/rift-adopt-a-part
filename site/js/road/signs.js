@@ -150,8 +150,8 @@ function atlas() {
 // square-on at the start and 30° ahead of the van at the end). Scale: the parked shot is wider,
 // so the Texas sign is drawn larger to read at the same size.
 const PLACES = [
-  { face: 0, at: (R) => R.s0 - 10, side: -1, turn: -0.12, scale: 1.4 },  // the far shoulder in front of Convocation Hall's lawn
-  { face: 1, at: (R) => R.s1 - 17, side: 1, turn: 0.85, scale: 1.35 },   // the near verge just before the parking spot
+  { face: 0, at: (R) => R.s0 - 7, side: -1, turn: -0.12, scale: 1.4 },  // the far shoulder in front of Convocation Hall's lawn
+  { face: 1, at: (R) => R.s1 - 23, side: 1, turn: 0.85, scale: 1.35 },   // the near verge just before the parking spot
 ];
 
 // Posts and panels go into the landmark solids through `k`; returns the faces' mesh data.
@@ -167,7 +167,7 @@ export function buildSigns(k, R, T, half) {
     // face), and the panel's aluminium back.
     for (const x of [-pw * 0.3, pw * 0.3]) add(turn(box(0.15, CLEAR + 0.06, 0.15, x, 0, -0.1)), st, "#9ea4a8", { jitter: 0.02, edge: 40 });
     add(turn(box(pw, ph, DEPTH, 0, CLEAR, -0.02)), st, "#b4b9bd", { jitter: 0.01, edge: 40 });
-    put(st, (pw / 2 + 0.6) * p.scale, (CLEAR + ph) * p.scale);
+    put(st, (pw / 2 + 0.6) * p.scale, (CLEAR + ph) * p.scale, true);   // trees keep clear; the camera may look past it
     // The face, just proud of the panel, set down the same way `add` sets a part.
     const g = turn(new THREE.PlaneGeometry(pw, ph).translate(0, CLEAR + ph / 2, DEPTH / 2 + 0.005)).toNonIndexed();
     g.rotateY(-st.yaw).translate(st.x, T.heightAt(st.x, st.z), st.z);

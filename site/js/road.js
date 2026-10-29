@@ -72,7 +72,7 @@ const band = (x, [a, b], soft = 14) => smooth(a - soft, a + soft, x) * (1 - smoo
 const CONTROL = [
   [-120, 0, 0], [-60, 2, 0], [0, 0, 0], [35, -4, 0.4], [70, 6, 1.4], [105, -6, 3.8], [140, -15, 8.5], [175, -9, 13],
   [205, 2, 15], [235, 9, 12], [265, 5, 7], [295, -3, 4.2], [318, -6, 4], [344, -5, 4.2], [372, 2, 7.5], [405, 9, 13],
-  [438, 4, 17], [470, -7, 15.5], [500, -11, 9.5], [530, -4, 4], [560, 3, 1], [610, 5, 0], [700, 4, 0],
+  [438, 4, 15], [470, -7, 10.5], [500, -11, 3.2], [530, -4, 1.1], [560, 3, 1], [610, 5, 0], [700, 4, 0],
 ];
 function buildRoute() {
   const curve = new THREE.CatmullRomCurve3(CONTROL.map(([x, z, y]) => new THREE.Vector3(x, y, z)), false, "centripetal");
@@ -419,15 +419,18 @@ function slicer(budget, isAlive) {
   };
 }
 
-// The ground College Park Center stands on: level, at the road's height beside its middle,
-// over its footprint and plaza (the cover in road/landmarks.js, in its own frame: x along the
-// glass front, z out of it toward the road) and 8 m of feather. Arlington's plain otherwise
-// still falls with the road as it comes down off the mesas.
+// The ground College Park Center stands on: level, at the road's highest point along its
+// frontage (so no verge rises between the road and the building), over its footprint and
+// plaza (the cover in road/landmarks.js, in its own frame: x along the glass front, z out of
+// it toward the road) and 8 m of feather.
 function cpcPad(R) {
   const site = (s, u) => { const p = R.at(s); return { x: p.x - p.tz * u, z: p.z + p.tx * u, yaw: Math.atan2(p.tz, p.tx) }; };
   const st = cpcSite(site, R), k = SIZE.cpcFront / CPC.front;
   const lx0 = -76 * k, lx1 = 78 * k, lz0 = -165 * k, lz1 = 38 * k;
-  const c = Math.cos(st.yaw), sn = Math.sin(st.yaw), y = R.near(st.x, st.z).y - 0.1;
+  const c = Math.cos(st.yaw), sn = Math.sin(st.yaw), mid = R.near(st.x, st.z).s;
+  let y = -Infinity;
+  for (let q = mid - 28; q <= mid + 28; q += 2) y = Math.max(y, R.at(q).y);
+  y -= 0.1;
   return {
     y,
     weight(x, z) {
@@ -711,7 +714,8 @@ function landmarkKit(R, T, S, placed) {
   const box = (w, h, d, x = 0, y = 0, z = 0) => new THREE.BoxGeometry(w, h, d).translate(x, y + h / 2, z);
   const cyl = (rt, rb, h, seg, x = 0, y = 0, z = 0) => new THREE.CylinderGeometry(rt, rb, h, seg).translate(x, y + h / 2, z);
   const cap = (r, seg, x = 0, y = 0, z = 0) => new THREE.SphereGeometry(r, seg, Math.max(4, seg / 4), 0, Math.PI * 2, 0, Math.PI / 2).translate(x, y, z);
-  const put = (st, r, top) => placed.push({ x: st.x, z: st.z, r, top: T.heightAt(st.x, st.z) + top });
+  // `see`: ground kept clear (of trees and rocks) that the camera may look past, not a solid in its way.
+  const put = (st, r, top, see = false) => placed.push({ x: st.x, z: st.z, r, top: T.heightAt(st.x, st.z) + top, ground: see });
   return { site, add, box, cyl, cap, put };
 }
 
@@ -719,7 +723,8 @@ function landmarkKit(R, T, S, placed) {
 // Both put a real metre at 0.42 scene metres, so the two buildings keep their true sizes to each other.
 // (Real sizes, sources and parts are in road/landmarks.js.)
 const SIZE = { hallDome: 13.8, cpcFront: 14.9 };
-const HALL_BACK = 33;   // metres of road between Convocation Hall's centre and the start
+const HALL_BACK = 27;   // metres of road between Convocation Hall's centre and the start
+const HALL_OUT = 20;    // metres from the road's edge to its centre, across the road from the camera
 const CPC_BACK = 24;    // metres between College Park Center's centre and where the van parks
 const CPC_OUT = 17;     // metres from the road's edge to the middle of its glass front
 // The arena's glass entrance is a 45-degree chamfer of the real building; it is turned this far from the road
@@ -736,13 +741,13 @@ function buildLandmarks(R, T, S, placed, milestones) {
   // The ground a landmark keeps clear of trees and rocks: its circles, given in its own frame.
   const keepClear = (st, built) => {
     const c = Math.cos(st.yaw), s = Math.sin(st.yaw);
-    for (const [x, z, r] of built.clear) put({ x: st.x + x * c - z * s, z: st.z + x * s + z * c }, r, built.H);
+    for (const [x, z, r] of built.clear) put({ x: st.x + x * c - z * s, z: st.z + x * s + z * c }, r, built.H, true);
   };
   // Toronto, the University of Toronto's St. George campus: Convocation Hall, its colonnade
   // toward the road, far enough behind the start that all of it is in colour as the van sets
   // off. (No skyline: the CN Tower cannot be shown whole within the strip's frame.)
   {
-    const hall = site(R.s0 - HALL_BACK, -(HALF + 26));
+    const hall = site(R.s0 - HALL_BACK, -(HALF + HALL_OUT));
     const t0 = performance.now();
     const built = convocationHall(k, hall, SIZE.hallDome);
     STATS.hallMs = performance.now() - t0; STATS.hallTris = built.tris;
@@ -1062,8 +1067,8 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   // against the sky: Convocation Hall behind the van in Toronto; at Arlington it stands past
   // the end of the road and looks back down it (az relative to the heading), the van in front
   // and the arena behind it, with nothing of the unfunded land ahead in shot.
-  const START_REST = { el: 9, az: -6, dist: 1, look: -9, lift: 4.6 };
-  const END_REST = { el: 3, az: 50, dist: 1, look: -6, lift: 2.8 };
+  const START_REST = { el: 4, az: -6, dist: 1, look: -15, lift: 9.6 };
+  const END_REST = { el: 8, az: 50, dist: 1, look: -11, lift: 1.6 };
   const DRIVE = { el: 22, az: -38, dist: 1, look: 1.6, lift: 1.2 };
   const BEATS = [
     [105, 190, { el: 15, az: -62, dist: 1, look: 1.4, lift: 1.3 }],   // the climb: low from behind, the road rising past it
@@ -1075,7 +1080,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   const ROUGH = [[316, 346], [470, 505]];             // bridge joints and a washboard descent: a touch of shake
   const KEYS = ["el", "az", "dist", "look", "lift"];
   const shot = { ...REST }, shotV = { el: 0, az: 0, dist: 0, look: 0, lift: 0 };
-  let centreX = 0.2, centreY = 0.2, campus = 0, drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
+  let centreX = 0.2, centreY = 0.2, low = 0, campus = 0, drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
   const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), vanTop = new THREE.Vector3();
   const nearRocks = [];
   const blocked = (a, b) => {
@@ -1098,9 +1103,16 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     // How much the shot opens up at the campuses (1: the van at 60% of its usual size); a
     // narrow phone strip opens further at the start to take in all of Convocation Hall.
     // Arriving, it stays open even while the van is still driving, so the arena is never cropped.
-    campus = Math.max(atStart * (W < 600 ? 0.62 : 0.4) * (1 - m), atEnd * 0.14) / 0.4;
-    centreY = 0.2 + 0.35 * Math.min(campus, 1.4) * (1 - m * (1 - atEnd));   // arriving, the van rides low so the arena's roof stays in
-    centreX = 0.2 + 0.32 * Math.max(atStart, atEnd) * (1 - m);   // at rest there, the van may sit right of centre
+    // (past ~1600 px the strip stops growing taller, so a wider strip opens the start shot a little more)
+    const wide = clamp(0.15 * (W / Math.max(H, 1) - 4.3), 0, 0.45);
+    campus = Math.max(atStart * (W < 600 ? 0.5 : 0.06 + wide) * (1 - m), atEnd * 0.14) / 0.4;
+    // Arriving, the van rides low so the arena's roof stays in; parked at either campus it may sit
+    // lower still, leaving the top of the strip to the landmark.
+    centreY = 0.2 + 0.35 * Math.min(campus, 1.4) * (1 - m * (1 - atEnd)) + 0.27 * Math.max(atStart, atEnd) * (1 - m);
+    low = 0.22 * Math.max(atStart, atEnd) * (1 - m);   // how much further toward the bottom edge the van may go there
+    // At rest there the van may sit right of centre; at the start further right still, so the shot is
+    // Convocation Hall and the van, with little of the unfunded land ahead.
+    centreX = 0.2 + Math.max(0.5 * atStart, 0.32 * atEnd) * (1 - m);
     for (const k of KEYS) {
       const d = beat ? lerp(DRIVE[k], beat[k], wBeat) : DRIVE[k];
       const end = k === "az" ? END_REST.az - hy : END_REST[k];
@@ -1115,7 +1127,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     if (losTick++ % 3 === 0) {
       vanTop.set(p.x - p.tz * 1.8, p.y + 1.6, p.z + p.tx * 1.8);
       nearRocks.length = 0;
-      for (const q of placed) if (Math.abs(q.x - p.x) < 45 && Math.abs(q.z - p.z) < 45) nearRocks.push(q);
+      for (const q of placed) if (!q.ground && Math.abs(q.x - p.x) < 45 && Math.abs(q.z - p.z) < 45) nearRocks.push(q);
       losLift = 0;
       for (let k = 0; k < 8; k++) {
         dirOf(tmp2, out.el + losLift, out.az);
@@ -1176,7 +1188,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
       pts.forEach((q, i) => {
         const n = proj.copy(q).project(camera);
         if (!(n.z > -1 && n.z < 1)) return;                // behind the camera or past the far plane
-        const [mx, my] = i < NC ? inner : i === NC ? outer : [centreX, centreY];
+        const [mx, my] = i < NC ? [inner[0], inner[1] + low] : i === NC ? outer : [centreX, centreY];
         if (n.x > mx) dx = Math.max(dx, n.x - mx); else if (n.x < -mx) dx = Math.min(dx, n.x + mx);
         if (n.y > my) dy = Math.max(dy, n.y - my); else if (n.y < -my) dy = Math.min(dy, n.y + my);
       });
@@ -1295,7 +1307,9 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     const mt = reduced ? 0 : smooth(0.5, 12, v);
     drive += (mt - drive) * Math.min(1, dt * (mt > drive ? 1.6 : 0.8));
     if (Math.abs(mt - drive) < 1e-3) drive = mt;
-    desired(drive); const ws = 2.1;
+    // The shot follows its goal on a calm spring (~2.3 s to settle); pulling into Arlington, where it
+    // swings round to look back down the road, it doubles in stiffness so the arrival lands in ~1.1 s.
+    desired(drive); const ws = 2.1 * (1 + smooth(0.86, 0.95, (s - R.s0) / span()));
     let shotBusy = false;
     for (const k of KEYS) {
       shotV[k] += (ws * ws * (want[k] - shot[k]) - 2 * ws * shotV[k]) * dt; shot[k] += shotV[k] * dt;
@@ -1382,7 +1396,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     const S = new Solids(R), k = landmarkKit(R, T, S, []);
     const hall = solo === "convocation";
     // On a free camera the landmark stands at the origin facing +z; otherwise at its place on the route.
-    const st = soloCam ? { x: 0, z: 0, yaw: 0 } : hall ? k.site(R.s0 - HALL_BACK, -(HALF + 26)) : cpcSite(k.site, R);
+    const st = soloCam ? { x: 0, z: 0, yaw: 0 } : hall ? k.site(R.s0 - HALL_BACK, -(HALF + HALL_OUT)) : cpcSite(k.site, R);
     const built = hall ? convocationHall(k, st, SIZE.hallDome) : collegeParkCenter(k, st, SIZE.cpcFront);
     if (soloCam) S.add(new THREE.BoxGeometry(400, 0.2, 400).translate(0, -0.11, 0), hall ? "#7fa656" : "#8fa65e", 0.06, 181);
     const solids = S.build();
