@@ -141,7 +141,7 @@ export const LINE_FS = /* glsl */ `
     vec3 c = vTone < .5 ? toneAt(vP.x, .15, h) : vTone < 1.5 ? toneAt(vP.x, 1., h) : toneAt(vP.x, 1.9, h);
     // panel seams and creases are one pixel wide; keep their contrast with the paper low enough
     // that a line hopping a pixel row as the aeroplane banks doesn't read as a flicker
-    if (vTone > .5) c = mix(c, vec3(.97), vTone < 1.5 ? .25 : .45);
+    c = mix(c, vec3(.97), vTone < .5 ? .15 : vTone < 1.5 ? .55 : .75);
     c = mix(c, mix(toneAt(vP.x, 2., h), vec3(.8), .3), uNight * (vTone < .5 ? .9 : .5));
     vec4 p = pulseAt(vP.x, h);
     gl_FragColor = vec4(mix(c, p.rgb, p.a * .85), 1.);

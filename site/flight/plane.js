@@ -170,13 +170,13 @@ export function buildPlane() {
 
   // ================================================================ fuselage
   const ds = [];
-  for (let k = 0; k <= 26; k++) ds.push(0.004 + (NOSE - 0.004) * Math.pow(k / 26, 1.7));
+  for (let k = 0; k <= 40; k++) ds.push(0.004 + (NOSE - 0.004) * Math.pow(k / 40, 1.7));
   for (let d = NOSE + 0.8; d < 23.5; d += 0.8) ds.push(d);
   for (let d = 23.5; d < LEN - 0.01; d += 0.35) ds.push(d);
   ds.push(LEN);
-  const NT = 64;
+  const NT = 96;
   grid(ds.length - 1, NT, (i, j) => fus(ds[i], (j / NT) * TAU), {
-    wrapV: true, aura: true, crease: 50,
+    wrapV: true, aura: true, crease: 0,
     edgeFn: (i) => 1 - sstep(0.4, 2.4, ds[i]),
   });
   // tail cone end: the APU exhaust, a short pipe with a dark bore
@@ -185,15 +185,6 @@ export function buildPlane() {
     lathe([[X0 - LEN + 0.02, s.rz * 0.92], [X0 - LEN - 0.32, s.rz * 0.8], [X0 - LEN - 0.34, s.rz * 0.68]], s.yc, 0, { seg: 28, sz: 1 });
     annulus(X0 - LEN - 0.33, s.yc, 0, 0.0, s.rz * 0.68, MAT.duct, 28);
   }
-  // radome joint, frames at the major splices, tail-cone joint, lap joints
-  const ring = (d, tone = TONE.seam) => { const pts = []; for (let j = 0; j <= 72; j++) pts.push(fus(d, (j / 72) * TAU, 0.01)); poly(pts, tone); };
-  ring(1.3, TONE.crease);
-  for (const d of [4.35, 8.2, 12.1, 16.0, 20.4, 24.6, 28.6]) ring(d);
-  ring(32.6, TONE.crease);
-  for (const th of [0.62, Math.PI - 0.62, -0.5, Math.PI + 0.5]) {
-    const pts = []; for (let d = 6.4; d <= 29.6; d += 0.4) pts.push(fus(d, th, 0.01)); poly(pts);
-  }
-
   // cockpit windscreen and side panes, both sides
   const panes = [[2.62, 1.28, 0.3, 0.2], [3.32, 0.88, 0.31, 0.24], [3.92, 0.66, 0.21, 0.2]];
   for (const [dc, thc, hw, hh] of panes) {
