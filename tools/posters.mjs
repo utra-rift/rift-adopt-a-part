@@ -17,9 +17,9 @@ import sharp from "sharp";
 import { OFFERS, ITEMS, isAdopted } from "../site/js/catalog.js";
 
 // Device-pixel widths. The page picks the smallest that covers the cell (srcset), so a
-// poster is never scaled down by more than ~1.4×, which keeps its 1 px lines close to the
-// live figure's when the two cross-fade.
-const WIDTHS = [400, 560, 720, 880, 1040];
+// poster is never scaled down by more than ~1.33×, which keeps its 1 px lines close to the
+// live figure's when the two cross-fade. 800 covers the widest cell at 2× (47vw at 719 px).
+const WIDTHS = [360, 480, 640, 800];
 const SITE = join(dirname(fileURLToPath(import.meta.url)), "../site"), OUT = join(SITE, "posters");
 
 const args = process.argv.slice(2);

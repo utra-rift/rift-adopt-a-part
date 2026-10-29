@@ -10,7 +10,7 @@ import { OFFERS, ITEMS, isAdopted } from "./js/catalog.js";
 import { figureFor, cellFraming } from "./js/figure.js";
 import { View } from "./js/stage.js";
 const Q = new URLSearchParams(location.search);
-const widths = (Q.get("widths") ?? "400,560,720,880,1040").split(",").map(Number);
+const widths = (Q.get("widths") ?? "360,480,640,800").split(",").map(Number);
 const all = [...new Map([...ITEMS, ...OFFERS].map((o) => [o.id, o])).values()];
 const offers = Q.has("ids") ? all.filter((o) => Q.get("ids").split(",").includes(o.id)) : all;
 const canvas = document.getElementById("c");

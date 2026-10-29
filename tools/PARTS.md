@@ -23,7 +23,7 @@ The dev server (http://localhost:4173) is already running; `shot.sh` uses it. Re
 
 The grid first shows each cell as a poster, `site/posters/<cell id>-<width>.webp`: the cell's
 figure at rest, drawn by the site's own renderer (`site/dev-posters.html`, framing from
-`site/js/figure.js`) at five widths. The live figure loads afterwards and fades in over it, so
+`site/js/figure.js`) at four widths. The live figure loads afterwards and fades in over it, so
 a poster has to be the same picture. `node tools/posters.mjs` (dev server running) renders
 the posters whose cell is new, shows different parts, or uses a part file that changed, and
 rewrites `site/posters/manifest.js`. `--all` renders every one; `--ids a,b` just those.

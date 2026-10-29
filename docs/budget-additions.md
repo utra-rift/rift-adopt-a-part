@@ -1,22 +1,37 @@
-# Budget additions (items 33–42)
+# Budget additions (items 33–57)
 
 Items the captain added after the 2026–27 budget, as listed on the site. Prices seen on
 2026-10-28 with delivery to Toronto (M5G). CAD listings are before tax and are × 1.13 for
 HST; USD prices are × 1.3864 CAD/USD × 1.13, the same method as the budget. Shipping is
 excluded except for the PCBs. **Quantities are estimates from the robot's design.**
 
-| # | Listing | What's in it | CAD incl. HST |
+| # | Listing on the site | Qty | CAD incl. HST |
 |---|---|---|---|
-| 33 | PCBs | 3 rounds × (3 boards at JLCPCB, about US$30 of components, US$26.77 DDP shipping) | 342.00 |
-| 34 | Bearings | 1 × KA040XP0 four-point-contact, 101.6 × 114.3 × 6.35 mm (yaw); 2 × KA020XP0, 50.8 × 63.5 × 6.35 mm (pitch); 70-piece miniature bearing assortment; 6800-2RS 10-pack | 206.60 |
-| 35 | Metal | 2 × 6061 sheet 1/4 in 12 × 12 in; 2 × 6061 sheet 1/8 in 12 × 12 in; 2 × 6061 round bar 1 in × 12 in; M3 standoffs (48) and spacers (65) | 194.42 |
-| 36 | Filament | 2 kg Polymaker PA6-CF20 for gimbal and launcher prints | 169.48 |
-| 37 | Slip ring | Flanged capsule, 22 mm OD: 1 × gigabit Ethernet, 2 × 20 A, 2 × 2 A | 159.32 |
-| 38 | Wire | BNTECHGO silicone wire: 12 AWG 10 ft, 14 AWG 20 ft, 18 AWG 25 ft, 22 AWG 10-colour kit | 99.69 |
-| 39 | Hardware | M2–M5 socket head assortment (1,760), M3–M8 nylock nuts (150), blind rivets with riveter (226), zip ties (1,000) | 97.81 |
-| 40 | Crimper | Engineer PA-09 (may be borrowed) | 73.17 |
-| 41 | Connectors | Amass XT30U (20 pairs), XT60H (10 pairs), JST-GH housings and contacts kit | 66.72 |
-| 42 | Friction wheels | 1 kg TPU 95A for printed treads on nylon-CF hubs | 29.37 |
+| 33 | JLCPCB PCB round: three boards × 5, components and shipping | 3 rounds | 342.00 |
+| 34 | Four-point-contact thin-section bearing KA040XP0, 101.6 × 114.3 × 6.35 mm (yaw) | 1 | 76.48 |
+| 35 | Four-point-contact thin-section bearing KA020XP0, 50.8 × 63.5 × 6.35 mm (pitch) | 2 | 80.42 |
+| 36 | Yuahar miniature bearing assortment, 10 sizes, 70 pieces | 1 | 30.50 |
+| 37 | 6800-2RS bearing, 10 × 19 × 5 mm, 10-pack | 1 | 19.20 |
+| 38 | 6061 aluminium sheet, 1/4 in, 12 × 12 in | 2 | 61.23 |
+| 39 | 6061 aluminium sheet, 1/8 in, 12 × 12 in | 2 | 45.19 |
+| 40 | 6061 aluminium round bar, 1 in × 12 in | 2 | 33.78 |
+| 41 | M3 aluminium hex standoff kit, 48 pieces | 1 | 25.98 |
+| 42 | M3 aluminium round spacer kit, 65 pieces | 1 | 28.24 |
+| 43 | Polymaker PA6-CF20 nylon-CF filament (gimbal and launcher) | 2 kg | 169.48 |
+| 44 | Capsule slip ring: gigabit Ethernet, 2 × 20 A and 2 × 2 A rings, flanged | 1 | 159.32 |
+| 45 | BNTECHGO 12 AWG silicone wire, red and black | 10 ft | 24.00 |
+| 46 | BNTECHGO 14 AWG silicone wire, red and black | 20 ft | 32.01 |
+| 47 | BNTECHGO 18 AWG silicone wire | 25 ft | 22.40 |
+| 48 | BNTECHGO 22 AWG silicone wire kit, 10 colours | 1 | 21.28 |
+| 49 | M2–M5 socket head screw assortment, grade 12.9, 1,760 pieces | 1 | 32.76 |
+| 50 | M3–M8 nylock nut assortment, 150 pieces | 1 | 12.41 |
+| 51 | Blind rivet assortment with hand riveter, 226 pieces (riveter may be borrowed) | 1 | 23.27 |
+| 52 | Zip ties, 4 to 14 in, 1,000 pieces | 1 | 29.37 |
+| 53 | Engineer PA-09 crimping tool (may be borrowed) | 1 | 73.17 |
+| 54 | Amass XT30U connectors, 20 pairs | 1 | 18.07 |
+| 55 | Amass XT60H connectors, 10 pairs | 1 | 19.98 |
+| 56 | JST-GH housings (80) and contacts (500) kit | 1 | 28.67 |
+| 57 | OVERTURE TPU 95A filament for the friction wheel treads | 1 kg | 29.37 |
 | | **Total** | | **1,438.58** |
 
 ## Sources

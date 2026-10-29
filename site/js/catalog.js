@@ -1,5 +1,5 @@
 // Everything RIFT's first season needs, from the 2026–27 budget (CAD, tax included), plus
-// items 33–42 the captain added after it, priced from the suppliers in
+// items 33–57 the captain added after it, priced from the suppliers in
 // docs/budget-additions.md (quantities estimated).
 //
 // LINES are the budget lines. Items 1–25, less the omni wheels (item 4), were funded by
@@ -71,27 +71,33 @@ export const LINES = {
   ammo: L(29, "17 mm fluorescent projectiles", 1, 142.56, "projectile-17mm", { note: "one package, for testing" }),
   entry: L(30, "ARC 1v1 event registration", 1, 207.96, "entry-ticket"),
   van: L(31, "Return drive with the robot", 4534, 2267.0, "cargo-van", { unit: "km", note: "estimated, Toronto to UT Arlington" }),
-  // Added after the budget. No models yet, so they stand in as cubes.
-  pcb: L(33, "PCB round: three boards, components and shipping", 3, 342.0, null, { note: "supercap controller, power distribution, gimbal adapter" }),
-  bearings: L(34, "Turret X-contact bearings and small bearings", 1, 206.6, null, { parts: [
-    { name: "Four-point-contact thin-section bearing KA040, yaw", qty: 1 },
-    { name: "Four-point-contact thin-section bearing KA020, pitch", qty: 2 },
-    { name: "Miniature bearing assortment, 70 pieces", qty: 1 },
-    { name: "6800-2RS bearings, 10-pack", qty: 1 },
-  ] }),
-  metal: L(35, "Aluminium sheet, bar and standoffs", 1, 194.42, null, { parts: [
-    { name: "6061 aluminium sheet, 1/4 in, 12 × 12 in", qty: 2 },
-    { name: "6061 aluminium sheet, 1/8 in, 12 × 12 in", qty: 2 },
-    { name: "6061 round bar, 1 in × 12 in", qty: 2 },
-    { name: "M3 aluminium standoffs and spacers", qty: 1 },
-  ] }),
-  print: L(36, "Nylon-CF filament for the gimbal and launcher", 2, 169.48, null, { unit: "kg" }),
-  slipring: L(37, "Slip ring with gigabit Ethernet", 1, 159.32, null, { note: "power, CAN and data through the turning yaw axis" }),
-  wire: L(38, "Silicone copper wire, 12 to 22 AWG", 1, 99.69, null),
-  hardware: L(39, "Screws, nylock nuts, rivets and zip ties", 1, 97.81, null),
-  crimper: L(40, "Crimping tool", 1, 73.17, null, { note: "may be borrowed" }),
-  connectors: L(41, "XT30, XT60 and JST-GH connectors and contacts", 1, 66.72, null),
-  tpu: L(42, "TPU filament for the launcher's friction wheels", 1, 29.37, null, { unit: "kg" }),
+  // Added after the budget, one exact product per line like the rest. No models yet, so
+  // they stand in as cubes.
+  pcb: L(33, "JLCPCB PCB round: three boards × 5, components and shipping", 3, 342.0, null, { note: "supercap controller, power distribution, gimbal adapter" }),
+  yawbearing: L(34, "Four-point-contact thin-section bearing KA040XP0, 101.6 × 114.3 × 6.35 mm", 1, 76.48, null, { note: "yaw; the slip ring passes through its bore" }),
+  pitchbearing: L(35, "Four-point-contact thin-section bearing KA020XP0, 50.8 × 63.5 × 6.35 mm", 2, 80.42, null, { note: "pitch, one each side" }),
+  bearingkit: L(36, "Yuahar miniature bearing assortment, 10 sizes, 70 pieces", 1, 30.5, null, { note: "idlers, feeder and power transmission" }),
+  b6800: L(37, "6800-2RS bearing, 10 × 19 × 5 mm, 10-pack", 1, 19.2, null, { note: "flywheel supports" }),
+  al14: L(38, "6061 aluminium sheet, 1/4 in, 12 × 12 in", 2, 61.23, null, { note: "motor mounts, turret base" }),
+  al18: L(39, "6061 aluminium sheet, 1/8 in, 12 × 12 in", 2, 45.19, null, { note: "brackets and covers" }),
+  bar: L(40, "6061 aluminium round bar, 1 in × 12 in", 2, 33.78, null, { note: "pitch stubs and flywheel hubs" }),
+  standoffs: L(41, "M3 aluminium hex standoff kit, 48 pieces", 1, 25.98, null),
+  spacers: L(42, "M3 aluminium round spacer kit, 65 pieces", 1, 28.24, null),
+  pa6: L(43, "Polymaker PA6-CF20 nylon-CF filament", 2, 169.48, "filament-spool", { unit: "kg", note: "gimbal and launcher prints" }),
+  slipring: L(44, "Capsule slip ring: gigabit Ethernet, 2 × 20 A and 2 × 2 A rings, flanged", 1, 159.32, null, { note: "power, CAN and data through the yaw axis" }),
+  w12: L(45, "BNTECHGO 12 AWG silicone wire, red and black", 10, 24.0, null, { unit: "ft" }),
+  w14: L(46, "BNTECHGO 14 AWG silicone wire, red and black", 20, 32.01, null, { unit: "ft" }),
+  w18: L(47, "BNTECHGO 18 AWG silicone wire", 25, 22.4, null, { unit: "ft" }),
+  w22: L(48, "BNTECHGO 22 AWG silicone wire kit, 10 colours", 1, 21.28, null),
+  screws: L(49, "M2–M5 socket head screw assortment, grade 12.9, 1,760 pieces", 1, 32.76, null),
+  nylock: L(50, "M3–M8 nylock nut assortment, 150 pieces", 1, 12.41, null),
+  rivets: L(51, "Blind rivet assortment with hand riveter, 226 pieces", 1, 23.27, null, { note: "the riveter may be borrowed" }),
+  zipties: L(52, "Zip ties, 4 to 14 in, 1,000 pieces", 1, 29.37, null),
+  crimper: L(53, "Engineer PA-09 crimping tool", 1, 73.17, null, { note: "may be borrowed" }),
+  xt30: L(54, "Amass XT30U connectors, 20 pairs", 1, 18.07, null),
+  xt60: L(55, "Amass XT60H connectors, 10 pairs", 1, 19.98, null),
+  jstgh: L(56, "JST-GH housings (80) and contacts (500) kit", 1, 28.67, null),
+  tpu: L(57, "OVERTURE TPU 95A filament for the friction wheel treads", 1, 29.37, "filament-spool", { unit: "kg" }),
 };
 // Eight return flights, one line per seat so seats can be taken one at a time.
 for (let i = 1; i <= 8; i++) LINES[`seat${i}`] = L(32, "Return flight to the competition", 1, 916.74, "airline-seat");
@@ -150,33 +156,53 @@ const ITEM_LABELS = {
   rack: "BATTERY RACK", batt: "BATTERIES", supercap: "SUPERCAPS", hub: "CHARGING HUB", adapter: "POWER ADAPTER", cm01: "CAP MONITOR",
   mc02: "REFEREE", am03: "ARMOR", sm01: "SPEED MONITOR", fi02: "RFID", pm02: "POWER MODULE", li01: "LIGHT BAR",
   mat: "CHASSIS", ammo: "AMMO", entry: "ENTRY", van: "VAN",
-  pcb: "PCBS", bearings: "BEARINGS", metal: "METAL", print: "FILAMENT", slipring: "SLIP RING",
-  wire: "WIRE", hardware: "HARDWARE", crimper: "CRIMPER", connectors: "CONNECTORS", tpu: "FRICTION WHEELS",
+  pcb: "PCBS", slipring: "SLIP RING",
 };
 const BUDGET_GROUPS = [
   ["Drivetrain", ["m3508", "c620d", "kit", "wheels"]],
-  ["Turret and launcher", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l", "bearings", "slipring", "print", "tpu"]],
+  ["Turret and launcher", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l", "bearings", "slipring", "filament"]],
   ["Control, vision and video", ["devc", "cam", "rpi5", "hat", "vt03"]],
   ["Power and charging", ["rack", "batt", "supercap", "hub", "adapter", "cm01"]],
   ["Scoring system", ["mc02", "am03", "sm01", "fi02", "pm02", "li01"]],
-  ["Wiring and electronics", ["pcb", "wire", "connectors", "crimper"]],
-  ["Materials and projectiles", ["mat", "metal", "hardware", "ammo"]],
+  ["Wiring and electronics", ["pcb", "wire", "connectors"]],
+  ["Materials and projectiles", ["mat", "aluminium", "hardware", "ammo"]],
   ["Getting there", ["entry", "van", "seat"]],
 ];
 // A line shows each of its parts as many times as it buys them; a measure (4 kg, 4,534 km)
 // shows once. The first one shown is the big one, so a one-off part leads its multiples.
 const copiesOf = (l) => (l.parts ?? [l]).filter((p) => p.cad).map((p) => Array(p.unit ? 1 : p.qty).fill(p.cad))
   .sort((a, b) => a.length - b.length).flat();
+// The small things added after the budget, listed as kits of one kind each (every product
+// and its quantity is still named inside). A kit is drawn as one product: its first part.
+const KITS = {
+  bearings: ["BEARINGS", "Bearings", ["yawbearing", "pitchbearing", "bearingkit", "b6800"],
+    "The yaw and pitch bearings the turret turns on, and small bearings for the flywheels, feeder and drive stages."],
+  filament: ["FILAMENT", "Filament for the gimbal and launcher", ["pa6", "tpu"],
+    "Nylon-CF for the gimbal and launcher's printed parts, and TPU for the friction wheel treads."],
+  aluminium: ["ALUMINIUM", "Aluminium stock", ["al14", "al18", "bar"],
+    "Quarter- and eighth-inch 6061 sheet for mounts and brackets, and round bar for shafts and hubs."],
+  hardware: ["HARDWARE", "Fasteners and hardware", ["screws", "nylock", "rivets", "standoffs", "spacers", "zipties"],
+    "Screws, nylock nuts, rivets, standoffs, spacers and zip ties: what holds the robot together."],
+  wire: ["WIRE", "Silicone wire", ["w12", "w14", "w18", "w22"],
+    "12 to 22 AWG silicone wire for the battery, motors and signals."],
+  connectors: ["CONNECTORS", "Connectors and crimper", ["xt60", "xt30", "jstgh", "crimper"],
+    "XT30 and XT60 power connectors, JST-GH signal connectors, and the crimper for their contacts."],
+};
+const modelOf = (l) => (l.parts ?? [l]).find((p) => p.cad)?.cad;
 const itemOf = (k) => {
   if (k === "seat") return OFFERS.find((o) => o.seat);
+  if (KITS[k]) {
+    const [code, name, lines, line] = KITS[k];
+    const model = modelOf(LINES[lines[0]]);
+    return O(`kit-${k}`, code, name, lines, model ? [model] : [], line);
+  }
   const l = LINES[k];
   return O(`item-${k}`, ITEM_LABELS[k], l.name, [k], copiesOf(l), l.note ?? "", { hero: true });
 };
-export const ITEM_SECTIONS = BUDGET_GROUPS.map(([name, keys]) => ({
-  name,
-  total: keys.flatMap((k) => (k === "seat" ? SEATS(8) : [k])).reduce((s, k) => s + LINES[k].price, 0),
-  items: keys.map(itemOf),
-}));
+export const ITEM_SECTIONS = BUDGET_GROUPS.map(([name, keys]) => {
+  const items = keys.map(itemOf);
+  return { name, items, total: items.flatMap((o) => (o.seat ? SEATS(8) : o.lines)).reduce((s, k) => s + LINES[k].price, 0) };
+});
 // The robot parts (and the entry ticket) still up for adoption, dearest first. The drive
 // and the flights have their own section, where a sponsor picks how many km or seats.
 const TRAVEL = new Set(["van", ...SEATS(8)]);

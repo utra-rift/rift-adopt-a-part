@@ -143,16 +143,16 @@ const tapeAt = (k) => `--tilt:${5 + ((k * 37) % 6)}deg;--top:${5 + ((k * 53) % 5
 
 // A cell's poster, if there is one and it still shows what the cell shows. `sizes` follows
 // the cell widths in site.css, so the browser fetches the smallest poster that covers it.
-const SIZES = {
-  featured: "(min-width: 1700px) 400px, (min-width: 1100px) 24vw, 47vw",
-  cell: "(min-width: 1700px) 267px, (min-width: 1280px) 16vw, (min-width: 1100px) 19vw, (min-width: 720px) 32vw, 47vw",
-};
-function posterFor(o, featured, eager) {
+// The first FIRST cells (the first screen on a desktop or a phone) load first; the rest
+// load lazily as they come near.
+const FIRST = 12;
+const SIZES = "(min-width: 1700px) 267px, (min-width: 1280px) 16vw, (min-width: 1100px) 19vw, (min-width: 720px) 32vw, 47vw";
+function posterFor(o, eager) {
   const p = POSTERS[o.id];
   if (!p || p.show !== o.show.join(",") || p.hero !== !!o.hero || p.holo !== isAdopted(o)) return "";
   const src = (w) => `posters/${o.id}-${w}.webp?v=${p.v}`;
   return `<img class="poster" alt="" draggable="false" decoding="async" ${eager ? `fetchpriority="high"` : `loading="lazy"`}
-    src="${src(WIDTHS[1])}" srcset="${WIDTHS.map((w) => `${src(w)} ${w}w`).join(", ")}" sizes="${featured ? SIZES.featured : SIZES.cell}">`;
+    src="${src(WIDTHS[1])}" srcset="${WIDTHS.map((w) => `${src(w)} ${w}w`).join(", ")}" sizes="${SIZES}">`;
 }
 
 SHELVES.forEach((sec, si) => {
@@ -172,7 +172,7 @@ SHELVES.forEach((sec, si) => {
     li.style.setProperty("--bob-at", `${-(((si * 5 + i) * 53) % 29) / 10}s`);
     li.innerHTML = `
       <button class="hit" type="button" aria-label="${o.name}, ${adopted ? `adopted by ${adopterOf(o)}` : money(priceOf(o))}">
-        <div class="fig"><div class="halo"></div><div class="float">${posterFor(o, sec.featured, si === 0)}<canvas aria-hidden="true"></canvas></div>${adopted ? `<span class="tape" aria-hidden="true" style="${tapeAt(si * 7 + i)}"><span>Adopted</span></span>` : ""}</div>
+        <div class="fig"><div class="halo"></div><div class="float">${posterFor(o, si === 0 && i < FIRST)}<canvas aria-hidden="true"></canvas></div>${adopted ? `<span class="tape" aria-hidden="true" style="${tapeAt(si * 7 + i)}"><span>Adopted</span></span>` : ""}</div>
         <div class="cap"><span class="code">${o.code}</span>${adopted ? "" : `<span class="price">${money(priceOf(o))}</span>`}</div>
       </button>`;
     ul.append(li);
@@ -284,9 +284,9 @@ function overPart(cell, e) {
 // first, one at a time, yielding between steps so scrolling stays smooth. The pointer or
 // the keyboard reaching a cell starts it at once. Without hover nothing turns, so a phone
 // keeps its posters. A cell with no poster (tools/posters.mjs not rerun) has nothing else
-// to show, so it loads its figure as soon as it's near, on any device.
+// to show, so it loads its figure as soon as it's near, ahead of the rest, on any device.
 const firstScreen = Promise.race([
-  Promise.all([...shelves.querySelectorAll(".tier:first-child .poster")].map((img) => img.decode().catch(() => {}))),
+  Promise.all([...shelves.querySelectorAll(".poster[fetchpriority]")].map((img) => img.decode().catch(() => {}))),
   new Promise((r) => setTimeout(r, 3000)),
 ]).then(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
 const nextTask = () => (globalThis.scheduler?.yield ? scheduler.yield() : new Promise((r) => setTimeout(r, 0)));
@@ -303,11 +303,12 @@ function want(cell, now = false) {
 async function pump() {
   if (pumping) return;
   pumping = true;
-  await firstScreen;
   await stage();
-  const away = (c) => { const r = c.el.getBoundingClientRect(); return Math.max(0, -r.bottom, r.top - innerHeight); };
+  // Cells with nothing to show go first; the rest wait for the first screen.
+  const away = (c) => { if (!c.poster) return -1; const r = c.el.getBoundingClientRect(); return Math.max(0, -r.bottom, r.top - innerHeight); };
   while (queue.size) {
     const [cell, ...next] = [...queue].map((c) => [away(c), c]).sort((a, b) => a[0] - b[0]).map(([, c]) => c);
+    if (cell.poster) await firstScreen;
     queue.delete(cell);
     // The next two cells' parts download while this one is built.
     for (const c of next.slice(0, 2)) for (const id of c.o.show) S.loadPart(S.partUrl(id)).catch(() => {});
@@ -337,7 +338,7 @@ function boot(cell) {
 
 {
   const near = new IntersectionObserver((es) => {
-    for (const e of es) if (e.isIntersecting) { near.unobserve(e.target); const c = cells.find((x) => x.el === e.target); want(c, !c.poster); }
+    for (const e of es) if (e.isIntersecting) { near.unobserve(e.target); want(cells.find((c) => c.el === e.target)); }
   }, { rootMargin: "50% 0px" });
   for (const c of cells) if (canHover || !c.poster) near.observe(c.el);
 }

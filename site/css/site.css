@@ -62,9 +62,6 @@ main { padding: 92px var(--gutter) 40px; }
 @media (min-width: 720px) { .cell { width: 33.333%; } }
 @media (min-width: 1100px) { .cell { width: 20%; } }
 @media (min-width: 1280px) { .cell { width: 16.666%; } }
-/* Everything still up for adoption: fewer, larger cells. */
-.featured .cell { width: 50%; }
-@media (min-width: 1100px) { .featured .cell { width: 25%; } }
 .cell[data-in] { opacity: 1; }
 
 /* The trip: each picture runs the full width of the page, its slider and readout under it. */
