@@ -520,10 +520,10 @@ export default {
   "show": "xt60h",
   "hero": false,
   "holo": false,
-  "floor": 0.6917,
-  "width": 0.5784,
-  "parts": "e2767039d3",
-  "v": "14f11c8f70"
+  "floor": 0.6801,
+  "width": 0.544,
+  "parts": "9cee9d34db",
+  "v": "17b1c30d16"
  },
  "kit-aluminium": {
   "show": "al-sheet-quarter",

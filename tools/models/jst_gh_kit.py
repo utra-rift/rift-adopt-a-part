@@ -1,11 +1,16 @@
 """JST GH (1.25 mm pitch) housing and crimp-contact assortment in a compartment case.
 
-Modelled, not taken from JST's CAD: GHR-style wire-to-board housings of 2 to 10 positions (natural nylon; width
-1.25 x (n - 1) + 3.0 mm, 3.5 mm high, 5.0 mm deep, with a moulded latch ramp, front shoulder, top retention
-windows and side ribs) and open-barrel crimp contacts (gold-plated, 0.8 x 1.5 mm box, wire barrel and insulation
-barrel, broken carrier tab). A 172 x 112 x 24 mm clear-grey case with twelve compartments: the nine housing sizes
-and three contact bins, a hinged lid opened behind it, and two housings crimped to short silicone leads (4 and 6
-position) lying in front. Front faces -y.
+Housings and contacts are rebuilt from JST's own GH datasheet (https://www.jst-mfg.com/product/pdf/eng/eGH.pdf, viewed
+online, not saved; JST sends its GH CAD on request only):
+  p. 3  - housing GHR-xxV-S: pitch 1.25 mm, width B = 1.25 x (n - 1) + 2.5 mm (table), 4.15 mm thick, 5.7 mm long
+          (drawing), PBT natural (white); outer latch on one broad face, rear cap, contact cavities at pitch.
+  p. 2  - contact SSHL-002T-P0.2: 4.8 mm long, 0.8 mm wide, 0.55 mm high front box, open-barrel crimp, tin-plated
+          copper alloy; wire range AWG 30-26, insulation O.D. 0.76-1.0 mm.
+Numbers marked "measured" were scaled off the drawings from the printed dimension next to them (about +-0.1 mm).
+The case, lid and bins are not JST parts: a 172-class organiser case drawn to hold them (assumed sizes).
+
+Layout: nine bins of housings (2 to 10 positions), three bins of loose contacts, a hinged lid opened behind with a
+printed chart, and a 4- and a 6-position housing crimped to short silicone leads in front. Front faces -y.
 """
 import math
 import random
@@ -13,17 +18,31 @@ import random
 import cadquery as cq
 import numpy as np
 
-from amass_xt import prism
+from amass_xt import box as xbox
 from wiring_common import Kit, cyl, sweep_tube, unit, smooth, rgb
 
 rng = random.Random(1250)
 kit = Kit("jst_gh_kit")
-NATURAL, GOLD, CASE, STEEL = "#ece6d2", "#d7a93b", "#c9cdd1", "#aeb2b8"
-PITCH, H, L = 1.25, 3.5, 5.0
+NATURAL, TIN, CASE = "#f1eee6", "#c8ccd2", "#c9cdd1"
+
+# ---- JST GH datasheet constants
+PITCH = 1.25  # printed, p.3 housing drawing
+HOUSE_T = 4.15  # printed, p.3 side view
+HOUSE_L = 5.7  # printed, p.3 side view
+CAP_L = 1.07  # measured: rear cap thickness along the mating axis (65 px at 60.5 px/mm)
+BODY_T = 2.65  # measured: body thickness under the latch (163 px)
+LATCH_T = 1.4  # measured: latch plate thickness
+SLIT = 0.1  # measured: gap between latch and body
+CAP_OVER = 0.17  # measured: the cap is wider than the body by this much each side
+CONTACT_LEN, CONTACT_W, CONTACT_H = 4.8, 0.8, 0.55  # printed, p.2 contact drawing
+WIRE_OD = 0.9  # between the 0.76 and 1.0 mm insulation O.D. on p.2
+H, L = HOUSE_T, HOUSE_L
+ZC = -H / 2 + BODY_T / 2  # axis of the contact cavities: the middle of the body under the latch
 
 
 def width(n):
-    return PITCH * (n - 1) + 3.0
+    """B in the housing table, p.3: 3.75 for n = 2 up to 13.75 for n = 10."""
+    return PITCH * (n - 1) + 2.5
 
 
 def ypos(n, i):
@@ -31,51 +50,62 @@ def ypos(n, i):
 
 
 def housing(n):
-    W = width(n)
-    body = prism(W, H, 0.45, -L, -1.4).union(prism(W - 0.7, H - 0.3, 0.35, -1.4, 0.0))
-    # latch ramp on top and a retaining groove behind it
-    ramp = (cq.Workplane("XZ").polyline([(-3.9, H / 2 - 0.02), (-2.3, H / 2 - 0.02), (-2.3, H / 2 + 0.38), (-3.1, H / 2 + 0.38)]).close()
-            .extrude(1.7, both=True))
-    body = body.union(ramp)
-    body = body.cut(cq.Workplane("XY").box(0.45, W - 1.4, 0.35).translate((-4.5, 0, H / 2 - 0.1)))
-    # side ribs
+    """GHR-nnV-S. Mating face at x = 0 (front), rear cap at x = -5.7; width along y, the latch on +z."""
+    B = width(n)
+    A = PITCH * (n - 1)
+    z0 = -H / 2
+    body = xbox(-L, -L + CAP_L, -B / 2, B / 2, z0, z0 + H)  # rear cap, full width and thickness
+    body = body.union(xbox(-L + CAP_L - 0.01, 0.0, -B / 2 + CAP_OVER, B / 2 - CAP_OVER, z0, z0 + H))
+    try:
+        body = body.edges("|Z").fillet(0.25)
+    except Exception:
+        pass
+    # the latch: a channel round a plate that is separate from the body but for its root in the cap
+    wl = max(1.0, A - 1.7)
+    zc = z0 + BODY_T
+    body = body.cut(xbox(-(L - CAP_L), 0.01, -wl / 2 - SLIT, wl / 2 + SLIT, zc, z0 + H + 0.1))
+    latch = xbox(-L + 0.2, -0.9, -wl / 2, wl / 2, zc + SLIT, z0 + H)
+    latch = latch.union(xbox(-L + 0.2, -L + CAP_L + 0.4, -wl / 2, wl / 2, zc - 0.05, z0 + H))  # the latch's root, inside the cap
+    try:
+        latch = latch.faces(">X").edges("|Y").chamfer(0.3)
+    except Exception:
+        pass
+    body = body.union(latch)
+    # the outer lock slots at the first and last circuit, down the cap and body (the pale channels in the drawing's front view)
     for sy in (-1, 1):
-        body = body.union(cq.Workplane("XY").box(1.6, 0.3, 1.2).translate((-2.6, sy * (W / 2 + 0.1), 0.0)))
+        body = body.cut(xbox(-L + 0.5, -2.2, sy * A / 2 - 0.35, sy * A / 2 + 0.35, z0 + H - 0.7, z0 + H + 0.1))
+    # contact cavities, open at the front and through the cap
     for i in range(n):
         y = ypos(n, i)
-        body = body.cut(cq.Workplane("XY").box(L + 0.2, 0.85, 1.7).translate((-L / 2 + 0.1, y, -0.1)))
-        body = body.cut(cq.Workplane("XY").box(1.2, 1.05, 2.0).translate((-0.6, y, -0.1)))
-        body = body.cut(cq.Workplane("XY").box(1.2, 0.7, 1.3).translate((-2.6, y, 0.9)))
+        body = body.cut(xbox(-L - 0.1, 0.1, y - 0.4, y + 0.4, ZC - 0.4, ZC + 0.4))
+        body = body.cut(xbox(-1.0, 0.1, y - 0.5, y + 0.5, ZC - 0.5, ZC + 0.5))  # lead-in at the face
+        body = body.cut(xbox(-3.1, -2.3, y - 0.3, y + 0.3, ZC, zc + 0.01))  # contact retention window, top of the body
     return body
 
 
 def contact():
-    """Open-barrel crimp contact, front at x = 0, body toward -x, barrels open upward; centre of the box at z = -0.1."""
-    z0 = -0.95  # floor of the contact
-    box = cq.Workplane("XY").box(2.9, 0.78, 1.55, centered=(False, True, False)).translate((-2.9, 0, z0))
-    box = box.cut(cq.Workplane("XY").box(2.3, 0.5, 1.2, centered=(False, True, False)).translate((-2.3, 0, z0 + 0.14)))
-    box = box.cut(cq.Workplane("XY").box(0.5, 0.3, 0.5, centered=(False, True, False)).translate((-1.4, 0, z0 + 1.2)))
-    neck = cq.Workplane("XY").box(1.2, 0.5, 0.14, centered=(False, True, False)).translate((-4.0, 0, z0))
+    """SSHL-002T-P0.2: 4.8 mm long, front box 0.8 x 0.55, open barrels behind it. Front at x = 0, body toward -x, centred on z = 0."""
+    zb = -CONTACT_H / 2
+    t = 0.1
+    front = xbox(-1.9, 0.0, -CONTACT_W / 2, CONTACT_W / 2, zb, zb + CONTACT_H)
+    front = front.cut(xbox(-1.8, 0.01, -CONTACT_W / 2 + t, CONTACT_W / 2 - t, zb + t, zb + CONTACT_H - t))
+    neck = xbox(-2.4, -1.9, -0.25, 0.25, zb, zb + t)
 
-    def barrel(x1, x0, w, hgt, t=0.14):
-        base = cq.Workplane("XY").box(x1 - x0, w, t, centered=(False, True, False)).translate((x0, 0, z0))
-        out = base
+    def barrel(x1, x0, w, h):
+        out = xbox(x0, x1, -w / 2, w / 2, zb, zb + t)
         for sy in (-1, 1):
-            out = out.union(cq.Workplane("XY").box(x1 - x0, t, hgt, centered=(False, True, False)).translate((x0, sy * (w / 2 - t / 2), z0)))
+            out = out.union(xbox(x0, x1, sy * (w / 2 - t) if sy > 0 else -w / 2, w / 2 if sy > 0 else -w / 2 + t, zb, zb + h))
         return out
 
-    wire_b = barrel(-4.0, -5.4, 1.1, 0.85)
-    ins_b = barrel(-5.8, -7.3, 1.7, 1.2)
-    link = cq.Workplane("XY").box(0.4, 0.5, 0.14, centered=(False, True, False)).translate((-5.8, 0, z0))
-    carrier = cq.Workplane("XY").box(1.1, 0.55, 0.14, centered=(False, True, False)).translate((-8.4, 0, z0))
-    tie = cq.Workplane("XY").box(0.5, 0.5, 0.14, centered=(False, True, False)).translate((-7.5, 0, z0))
-    return box.union(neck).union(wire_b).union(link).union(ins_b).union(tie).union(carrier)
+    wire_b = barrel(-2.4, -3.3, 0.7, 0.6)
+    link = xbox(-3.6, -3.3, -0.25, 0.25, zb, zb + t)
+    ins_b = barrel(-3.6, -4.6, CONTACT_W, 0.8)
+    tab = xbox(-4.8, -4.6, -0.25, 0.25, zb, zb + t)
+    return front.union(neck).union(wire_b).union(link).union(ins_b).union(tab)
 
 
 HOUSE = {n: housing(n) for n in range(2, 11)}
 CONTACT = contact()
-cb = CONTACT.val().BoundingBox()
-c_len, c_w, c_h = cb.xlen, cb.ylen, cb.zlen
 
 
 def put(shape, name, col, origin, yaw=0.0, roll=0.0, pitch=0.0):
@@ -174,32 +204,32 @@ for (c, r), (kind, k) in layout.items():
             kit.add(sh, f"house{n}", NATURAL)
     else:
         spots, tries = [], 0
-        while len(spots) < 10 and tries < 4000:
+        while len(spots) < 14 and tries < 4000:
             tries += 1
-            x = rng.uniform(-cell_x / 2 + 5.5, cell_x / 2 - 5.5)
-            y = rng.uniform(-cell_y / 2 + 5.5, cell_y / 2 - 5.5)
-            if all(math.hypot(x - a, y - b) > 5.2 for a, b in spots):
+            x = rng.uniform(-cell_x / 2 + 3.5, cell_x / 2 - 3.5)
+            y = rng.uniform(-cell_y / 2 + 3.5, cell_y / 2 - 3.5)
+            if all(math.hypot(x - a, y - b) > 4.4 for a, b in spots):
                 spots.append((x, y))
         for (x, y) in spots:
             roll = rng.choice([0, 0, 90, 180, 270])
             s = CONTACT.val().rotate((0, 0, 0), (1, 0, 0), roll).rotate((0, 0, 0), (0, 0, 1), rng.uniform(0, 360))
             bb = s.BoundingBox()
-            kit.add(s.translate((cx + x - (bb.xmin + bb.xmax) / 2, cy + y - (bb.ymin + bb.ymax) / 2, FLOOR - bb.zmin)), "contact", GOLD)
+            kit.add(s.translate((cx + x - (bb.xmin + bb.xmax) / 2, cy + y - (bb.ymin + bb.ymax) / 2, FLOOR - bb.zmin)), "contact", TIN)
 
 # ---------------------------------------------------------------- housings crimped to leads, lying in front of the case
 WIRE_COL = ["#17181a", "#c4181e", "#e6b81c", "#f0f0ec", "#1f8a3b", "#1f55c4"]
-WR = 0.5  # wire radius
+WR = WIRE_OD / 2  # wire radius
 
 
 def lead(n, origin, yaw, swing, n_colors, s_len=56.0):
     """A housing with n contacts crimped to n parallel silicone leads that curve away along the table."""
     put(HOUSE[n], f"lead{n}_house", NATURAL, origin, yaw)
     for i in range(n):
-        put(CONTACT.val().translate((0, ypos(n, i), 0)), f"lead{n}_contact", GOLD, origin, yaw)
+        put(CONTACT.val().translate((-0.9, ypos(n, i), ZC)), f"lead{n}_contact", TIN, origin, yaw)
     # leads: ribbon along a gentle curve; local x runs toward the rear (-x), local y is the ribbon's width
     step = 4.0
     pts_c, th = [], 0.0
-    x, yv = -6.0, 0.0
+    x, yv = -4.6, 0.0
     for k in range(int(s_len / step) + 1):
         s = k * step
         pts_c.append((x, yv, s))
@@ -212,14 +242,14 @@ def lead(n, origin, yaw, swing, n_colors, s_len=56.0):
         for k, (px, py, s) in enumerate(pts_c):
             heading = math.pi + swing * smooth(s / s_len)
             nx, ny = -math.sin(heading), math.cos(heading)  # left normal of travel
-            z = max(-H / 2 + WR, -0.35 - 1.1 * smooth(s / 24.0))  # wire axis, housing-centred; the table is at z = -H/2
+            z = ZC - (ZC - (-H / 2 + WR)) * smooth(s / 20.0)  # wire axis, housing-centred; the table is at z = -H/2
             path.append((px + nx * off, py + ny * off, z))
         # strip the last 3 mm into a bare tinned conductor
         w = sweep_tube(path, WR)
         put(w, f"lead{n}_jacket{i % n_colors}", WIRE_COL[i % n_colors], origin, yaw)
         a, b = np.array(path[-2]), np.array(path[-1])
         d = unit(b - a)
-        put(cyl(tuple(b - d * 0.3), tuple(d), 0.27, 3.5), f"lead{n}_strand", "#cfd2d6", origin, yaw)
+        put(cyl(tuple(b - d * 0.3), tuple(d), 0.17, 3.0), f"lead{n}_strand", "#cfd2d6", origin, yaw)
 
 
 Z0 = H / 2

@@ -9,7 +9,7 @@
   "deflection": 0.0011,
   "angular": 0.4,
   "lit": "/contact/",
-  "notes": "JST GH (1.25 mm pitch) assortment, modelled: natural-nylon housings of 2 to 10 positions and open-barrel gold-plated crimp contacts in a 172 x 112 x 24 mm clear case with twelve compartments and the lid opened behind, and a 4- and a 6-position housing crimped to short silicone leads.",
+  "notes": "JST GH (1.25 mm pitch) assortment rebuilt from JST's GH datasheet: natural-white PBT housings GHR-02V to 10V-S (width 1.25 x (n-1) + 2.5, 4.15 thick, 5.7 long), tin-plated SSHL-002T-P0.2 crimp contacts (4.8 mm), in a 12-bin case (assumed sizes) with the lid opened behind, and a 4- and a 6-position housing crimped to short silicone leads.",
   "defaultMaterial": "gh-natural",
   "materials": [
     {
@@ -50,7 +50,7 @@
     },
     {
       "match": "/contact|_contact",
-      "mat": "gold-plated"
+      "mat": "tin-plated"
     },
     {
       "match": "_strand",
@@ -59,7 +59,7 @@
   ],
   "customMaterials": {
     "gh-natural": {
-      "color": "#ece6d2",
+      "color": "#f1eee6",
       "mr": [
         0,
         0.5
@@ -70,13 +70,6 @@
       "mr": [
         0,
         0.28
-      ]
-    },
-    "gold-plated": {
-      "color": "#cfa23a",
-      "mr": [
-        1.0,
-        0.22
       ]
     },
     "tinned-copper": {
@@ -140,6 +133,13 @@
       "mr": [
         0,
         0.6
+      ]
+    },
+    "tin-plated": {
+      "color": "#c8ccd2",
+      "mr": [
+        0.9,
+        0.3
       ]
     }
   }

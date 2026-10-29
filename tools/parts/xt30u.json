@@ -9,9 +9,13 @@
   "deflection": 0.0006,
   "angular": 0.25,
   "lit": "/_pin/",
-  "notes": "Amass XT30U male and female, modelled to Amass' published outline: yellow nylon body 10.0 x 5.0 mm with polarity chamfers, 2.0 mm gold-plated contacts at 5.0 mm pitch, short solder cups. One mated pair and one separate pair, as in the 20-pair pack.",
+  "notes": "Amass XT30U male and female rebuilt from Amass' official outline drawings (catalogue p. 9): 10.20 x 5.60 mm face with the polarity chamfers at one short end, male 13.70 mm and female 12.40 mm overall, yellow nylon, gold-plated contacts. One mated pair and one separate pair.",
   "defaultMaterial": "amass-yellow",
   "materials": [
+    {
+      "match": "_cover",
+      "mat": "cover-grey"
+    },
     {
       "match": "_(pin|socket|cup)",
       "mat": "gold-plated"
@@ -19,7 +23,7 @@
   ],
   "customMaterials": {
     "amass-yellow": {
-      "color": "#f1c21a",
+      "color": "#eab313",
       "mr": [
         0,
         0.45
@@ -30,6 +34,13 @@
       "mr": [
         1.0,
         0.2
+      ]
+    },
+    "cover-grey": {
+      "color": "#4b4e53",
+      "mr": [
+        0,
+        0.55
       ]
     }
   }

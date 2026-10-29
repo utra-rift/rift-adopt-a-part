@@ -1,20 +1,20 @@
 {
   "id": "xt60h",
-  "name": "Amass XT60H male and female with sheath housings, mated, separate, spare sheath",
-  "status": "modelled",
+  "status": "modelled from the maker's dimensioned drawings",
   "files": [],
+  "drawings_viewed_online": true,
   "model_script": "tools/models/xt60h.py + amass_xt.py",
   "output_step": "cad/models/xt60h.step",
-  "dims": {
-    "body_mm": [
-      15.6,
-      8.0
-    ],
-    "contact_dia_mm": 3.5,
-    "pitch_mm": 7.2,
-    "body_length_mm": 16.0,
-    "sheath_length_mm": 14.0
+  "name": "Amass XT60H male and female with back covers, mated pair, separate pair and a spare cover",
+  "source_url": "https://www.china-amass.com/public/upload/20260207/7fa24f5a6f35ec66c7a115c07a34ab06.pdf",
+  "pages": {
+    "outline drawings XT60H-M / XT60H-F": 15
   },
-  "notes": "Amass publishes a STEP for the XT60H; it was not downloaded (a download needs the user's go-ahead), so the outline is rebuilt from the published dimensions.",
-  "source_url": "https://www.amazon.ca/dp/B074PN6N4K"
+  "printed": {
+    "face_short_mm": 9.2,
+    "face_long_mm": 16.4,
+    "male_length_mm": 23.85,
+    "female_length_mm": 24.95
+  },
+  "notes": "Rebuilt by hand from Amass' official outline drawings, viewed online (not saved). Yellow nylon housing; the optional back cover is dark grey in Amass' photos and is modelled grey. Contact diameter (3.5 mm), cup size and the cover's wire aperture are not on the drawing (assumed). Amass offers no STEP download."
 }

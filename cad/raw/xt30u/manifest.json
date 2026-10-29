@@ -1,20 +1,20 @@
 {
   "id": "xt30u",
-  "name": "Amass XT30U male and female, mated pair and separate pair",
-  "status": "modelled",
+  "status": "modelled from the maker's dimensioned drawings",
   "files": [],
+  "drawings_viewed_online": true,
   "model_script": "tools/models/xt30u.py + amass_xt.py",
   "output_step": "cad/models/xt30u.step",
-  "dims": {
-    "body_mm": [
-      10.0,
-      5.0
-    ],
-    "contact_dia_mm": 2.0,
-    "pitch_mm": 5.0,
-    "male_body_mm": 10.6,
-    "pin_mm": 5.0
+  "name": "Amass XT30U male and female, mated pair and separate pair",
+  "source_url": "https://www.china-amass.com/public/upload/20260207/7fa24f5a6f35ec66c7a115c07a34ab06.pdf",
+  "pages": {
+    "outline drawings XT30U-M / XT30U-F": 9
   },
-  "notes": "Amass publishes a STEP for the XT30U; it was not downloaded (a download needs the user's go-ahead), so the outline is rebuilt from the published dimensions.",
-  "source_url": "https://www.amazon.ca/dp/B08H1JP7NW"
+  "printed": {
+    "face_short_mm": 5.6,
+    "face_long_mm": 10.2,
+    "male_length_mm": 13.7,
+    "female_length_mm": 12.4
+  },
+  "notes": "Rebuilt by hand from Amass' official dimensioned outline drawings, viewed online (not saved): printed dimensions are exact in the model; contact diameter, pitch, chamfer, shell/head split and barrel size are scaled from the drawing and marked 'measured' in tools/models/amass_xt.py. Amass offers no STEP download (china-amass.com download page has PDF catalogues only; amass.com.cn has an untrusted certificate)."
 }

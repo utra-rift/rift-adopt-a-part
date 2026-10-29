@@ -9,9 +9,13 @@
   "deflection": 0.0006,
   "angular": 0.25,
   "lit": "/_pin/",
-  "notes": "Amass XT60H male and female with sheath housings, modelled to the published outline: yellow nylon body 15.6 x 8.0 mm with polarity chamfers, 3.5 mm gold-plated contacts at 7.2 mm pitch, solder cups inside a clip-on sheath. One mated pair, one separate pair and a spare sheath; short 14 AWG leads soldered in.",
+  "notes": "Amass XT60H male and female rebuilt from Amass' official outline drawings (catalogue p. 15): 16.40 x 9.20 mm face with the polarity chamfers at one short end, male 23.85 mm and female 24.95 mm overall, yellow nylon with the grey back cover, gold-plated contacts, short 14 AWG leads. One mated pair, one separate pair and a spare cover.",
   "defaultMaterial": "amass-yellow",
   "materials": [
+    {
+      "match": "_cover",
+      "mat": "cover-grey"
+    },
     {
       "match": "_red_jacket",
       "mat": "silicone-red"
@@ -31,7 +35,7 @@
   ],
   "customMaterials": {
     "amass-yellow": {
-      "color": "#f1c21a",
+      "color": "#eab313",
       "mr": [
         0,
         0.45
@@ -63,6 +67,13 @@
       "mr": [
         0.9,
         0.34
+      ]
+    },
+    "cover-grey": {
+      "color": "#4b4e53",
+      "mr": [
+        0,
+        0.55
       ]
     }
   }
