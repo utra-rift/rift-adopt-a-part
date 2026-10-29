@@ -157,8 +157,8 @@ function posterFor(o, eager) {
   const img = (cls, look, load) => `<img class="${cls}" alt="" draggable="false" decoding="async" ${load}
     src="${src(WIDTHS[1], look)}" srcset="${WIDTHS.map((w) => `${src(w, look)} ${w}w`).join(", ")}" sizes="${SIZES}">`;
   // Without hover the colour comes from scrolling (see focusRows): the same picture in real
-  // colour waits on top, fetched only as the cell comes near.
-  return img("poster", "", eager ? `fetchpriority="high"` : `loading="lazy"`) + (canHover ? "" : img("poster poster-c", "c-", `loading="lazy"`));
+  // colour waits on top, fetched only as the cell comes near. Adopted parts stay as they are.
+  return img("poster", "", eager ? `fetchpriority="high"` : `loading="lazy"`) + (canHover || isAdopted(o) ? "" : img("poster poster-c", "c-", `loading="lazy"`));
 }
 
 SHELVES.forEach((sec, si) => {
@@ -355,17 +355,20 @@ function boot(cell) {
 
 // Touch screens have no hover to bring a part to life, so scrolling does: the two neighbouring
 // rows of parts whose middle is nearest the middle of the screen (below the header) show their
-// real colours, and pass them on a row at a time as the page goes by. A new pair takes over
-// only once it is clearly nearer, so a slow scroll near the hand-off doesn't flicker.
-// Positions are measured once and again when the layout changes, so a scroll frame only
-// compares numbers.
+// real colours, and pass them on a row at a time as the page goes by. Adopted parts keep their
+// look but still count as rows, so the hand-off keeps the same rhythm. Near the top and bottom
+// of the page the line they gather on rides up or down, so the first and last rows get their
+// turn. A new pair takes over only once it is clearly nearer, so a slow scroll near the
+// hand-off doesn't flicker. Positions are measured once and again when the layout changes, so
+// a scroll frame only compares numbers.
 if (!canHover) {
-  const HEADER = 52, SLACK = 24;
-  let rows = [], at = -1, lit = new Set(), queued = false;
+  const HEADER = 52, SLACK = 24, ENDS = 400;
+  let rows = [], at = -1, lit = new Set(), queued = false, end = 0;
   const measure = () => {
     rows = [];
+    end = document.documentElement.scrollHeight;
     for (const c of cells) {
-      if (!c.el.querySelector(".poster-c")) continue;
+      if (!c.poster) continue;
       const r = c.el.querySelector(".fig").getBoundingClientRect(), y = r.top + scrollY + r.height / 2;
       const row = rows.find((w) => Math.abs(w.y - y) < r.height * 0.3);
       if (row) row.cells.push(c); else rows.push({ y, cells: [c] });
@@ -375,7 +378,9 @@ if (!canHover) {
   };
   const focusRows = () => {
     queued = false;
-    const top = scrollY + HEADER, bottom = scrollY + innerHeight, mid = (top + bottom) / 2;
+    const ramp = (d) => Math.max(0, 1 - d / ENDS);
+    const top = scrollY + HEADER, bottom = scrollY + innerHeight;
+    const mid = top + (bottom - top) * (0.5 - 0.22 * ramp(scrollY) + 0.22 * ramp(end - bottom));
     const seen = (i) => !!rows[i] && rows[i].y > top && rows[i].y < bottom;
     // A pair's middle; a row whose neighbour is off screen (across the trip) stands alone.
     const off = (i) => Math.abs((seen(i + 1) ? (rows[i].y + rows[i + 1].y) / 2 : rows[i].y) - mid);
@@ -384,7 +389,7 @@ if (!canHover) {
     if (best >= 0 && seen(at) && off(at) - off(best) < SLACK) best = at;
     at = best;
     const next = new Set();
-    for (const i of best < 0 ? [] : [best, best + 1]) if (seen(i)) for (const c of rows[i].cells) next.add(c);
+    for (const i of best < 0 ? [] : [best, best + 1]) if (seen(i)) for (const c of rows[i].cells) if (c.el.querySelector(".poster-c")) next.add(c);
     for (const c of lit) if (!next.has(c)) c.el.removeAttribute("data-focus");
     for (const c of next) c.el.setAttribute("data-focus", "");
     lit = next;

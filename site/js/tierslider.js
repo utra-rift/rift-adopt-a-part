@@ -5,7 +5,9 @@
 // from the threshold. Everything gets brighter and busier tier by tier.
 //
 // A transparent native <input type="range"> sits on top so pointer, touch, keyboard and screen
-// readers all work. A canvas underneath draws the gauge and effects; labels are HTML.
+// readers all work. A canvas underneath draws the gauge and effects; labels are HTML. On a touch
+// screen the track lets touches through (a thumb landing on it mid-scroll would jump the value)
+// and only a grip riding the needle drags it.
 
 import { TIERS, tierFor, money } from "./catalog.js";
 import { TextMorph } from "../vendor/torph.mjs";
@@ -20,6 +22,7 @@ const H = 66;             // control height
 const BLEED_X = 16;       // canvas overhang for glow and sparks
 const BLEED_Y = 48;
 const DPR_CAP = 2;
+const GRIP = 44;           // touch target riding the needle; must match .tslider-grip
 const BAR_TOP = BAR_Y - BAR_H / 2;
 const BAR_BOT = BAR_Y + BAR_H / 2;
 
@@ -140,8 +143,12 @@ export function tierSlider(host, {
     morph = new TextMorph({ element: txt, numbers: true, locale: "en-CA", duration: 480, ease: "cubic-bezier(.23, 1, .32, 1)" });
     morph.update(thumbLabel(+input.value));
   }
+  const touch = typeof matchMedia === "function" && !matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const grip = touch ? document.createElement("div") : null;
+  if (grip) { el.dataset.touch = ""; grip.className = "tslider-grip"; grip.setAttribute("aria-hidden", "true"); }
   el.append(tierRow, canvas, input, msRow);
   if (pill) el.append(pill);
+  if (grip) el.append(grip);
   host.append(el);
   const ctx = canvas.getContext("2d");
 
@@ -754,6 +761,7 @@ export function tierSlider(host, {
   }
 
   function placePill() {
+    if (grip) grip.style.transform = `translateX(${(xOf(target) - GRIP / 2).toFixed(1)}px)`;
     if (!pill) return;
     const xt = xOf(shown);
     const w = pill.offsetWidth;
@@ -833,6 +841,17 @@ export function tierSlider(host, {
     kickLoop();
   };
 
+  // The grip drags like the native thumb: sideways moves pick the nearest stop, and a vertical
+  // swipe that starts on it still scrolls the page (touch-action: pan-y cancels the drag).
+  const onGripDown = (e) => { grip.setPointerCapture(e.pointerId); onDown(); };
+  const onGripMove = (e) => {
+    if (!grip.hasPointerCapture(e.pointerId)) return;
+    const f = clamp((e.clientX - el.getBoundingClientRect().left - PAD) / (W - 2 * PAD), 0, 1);
+    const v = clamp(Math.round((f * max) / step) * step, 0, max);
+    if (v !== +input.value) { input.value = String(v); onInputEvt(); }
+  };
+  grip?.addEventListener("pointerdown", onGripDown);
+  grip?.addEventListener("pointermove", onGripMove);
   input.addEventListener("input", onInputEvt);
   input.addEventListener("pointerdown", onDown);
   window.addEventListener("pointerup", onUp);
