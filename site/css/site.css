@@ -13,12 +13,13 @@
   --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
   --ease-out: cubic-bezier(.23, 1, .32, 1);
   --ease-drawer: cubic-bezier(.32, .72, 0, 1);
-  --gutter: clamp(16px, 2.6vw, 36px);
+  /* never less than the notch's inset in landscape (viewport-fit=cover lets the page run under it) */
+  --gutter: max(clamp(16px, 2.6vw, 36px), env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   color-scheme: light;
 }
 
 * { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 body {
   margin: 0; background: #fff; color: var(--ink);
   font: 400 14px/1.55 var(--sans);
@@ -27,6 +28,8 @@ body {
 }
 img, svg { display: block; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+button, a { touch-action: manipulation; }
+button, .brand, a.adopt { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 a { color: inherit; }
 .mono, .gist, .foot, .crate-btn, .cap { font-family: var(--mono); font-size: 11px; line-height: 16px; letter-spacing: .04em; text-transform: uppercase; }
 .muted { color: var(--muted); }
@@ -51,7 +54,7 @@ a { color: inherit; }
 /* ---------------------------------------------------------------- grid */
 main { padding: 92px var(--gutter) 40px; }
 /* Until app.js fills the shelves, keep the footer below the fold so it doesn't jump. */
-#shelves:empty { min-height: 100vh; }
+#shelves:empty { min-height: 100svh; }
 .gist { margin: 0 0 28px; text-align: center; color: var(--muted); }
 .tier { margin: 0 auto; max-width: 1600px; }
 .tier + .tier { margin-top: clamp(56px, 9vw, 128px); }
@@ -80,7 +83,7 @@ main { padding: 92px var(--gutter) 40px; }
 .trip-read .adopt { width: auto; min-width: 260px; margin: 0; }
 @media (max-width: 719px) { .trip-read .adopt { width: 100%; } }
 .hit { display: block; width: 100%; text-align: center; }
-@media (hover: hover) { .hit { cursor: default; } .cell[data-hot] .hit { cursor: pointer; } }
+@media (hover: hover) and (pointer: fine) { .hit { cursor: default; } .cell[data-hot] .hit { cursor: pointer; } }
 .fig { position: relative; aspect-ratio: 1 / .86; }
 /* Every part lives in the same box; a cable that runs past it feathers out instead of
    shrinking the part to fit. */
@@ -131,7 +134,7 @@ main { padding: 92px var(--gutter) 40px; }
 /* ---------------------------------------------------------------- footer */
 .foot { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px 28px; padding: 24px var(--gutter) calc(32px + env(safe-area-inset-bottom)); color: var(--muted); }
 .foot a { text-decoration: none; transition: color .2s; }
-.foot a:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .foot a:hover { color: var(--ink); } }
 
 /* ---------------------------------------------------------------- panels */
 .scrim { position: fixed; inset: 52px 0 0; z-index: 34; background: rgb(255 255 255 / .72); opacity: 0; transition: opacity .4s var(--ease-out); }
@@ -167,7 +170,7 @@ main { padding: 92px var(--gutter) 40px; }
 .view[hidden] { display: none; }
 @media (min-width: 960px) { .view { grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr); } }
 .close { position: fixed; z-index: 2; top: 10px; right: calc(var(--gutter) - 8px); width: 32px; height: 32px; display: grid; place-items: center; }
-.view-fig { position: relative; min-height: 62vh; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
+.view-fig { position: relative; min-height: 62svh; touch-action: pan-y; cursor: grab; user-select: none; -webkit-user-select: none; }
 .view-fig:active { cursor: grabbing; }
 @media (min-width: 960px) { .view-fig { position: sticky; top: 0; height: 100dvh; } }
 .view-fig canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -179,7 +182,8 @@ main { padding: 92px var(--gutter) 40px; }
 .view-line { color: #555; text-wrap: pretty; }
 .inside { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 4px; }
 .inside button { display: grid; justify-items: center; gap: 2px; padding: 4px 0 6px; border-radius: 4px; transition: background-color .2s; }
-.inside button:hover { background: #f6f6f5; }
+@media (hover: hover) and (pointer: fine) { .inside button:hover { background: #f6f6f5; } }
+.inside button:active { background: #f6f6f5; }
 .inside button[aria-current="true"] { background: #f1f1ef; }
 .inside canvas { width: 76px; height: 64px; }
 .inside .ph { width: 76px; height: 64px; display: grid; place-items: center; color: var(--faint); font-family: var(--mono); font-size: 18px; }
@@ -204,7 +208,7 @@ main { padding: 92px var(--gutter) 40px; }
 .crate { top: 52px; }
 .crate-head { display: flex; justify-content: space-between; align-items: center; height: 48px; padding: 0 var(--gutter); }
 .crate-head button { color: var(--muted); padding: 8px 0; transition: color .2s; }
-.crate-head button:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .crate-head button:hover { color: var(--ink); } }
 .crate-list { list-style: none; margin: 0; padding: 0 var(--gutter); overflow: auto; }
 .crate-list li { display: grid; grid-template-columns: 1fr auto auto; gap: 14px; align-items: baseline; padding: 12px 0; border-bottom: 1px solid var(--rule); animation: rowIn .35s var(--ease-out); }
 @keyframes rowIn { from { opacity: 0; transform: translateY(-4px); } }
@@ -212,7 +216,7 @@ main { padding: 92px var(--gutter) 40px; }
 .crate-list .n small { display: block; font-family: var(--mono); font-size: 10.5px; letter-spacing: .04em; color: var(--muted); }
 .crate-list .p { font-family: var(--mono); font-size: 11px; }
 .crate-list .x { color: var(--muted); font-size: 15px; line-height: 1; padding: 2px 4px; }
-.crate-list .x:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .crate-list .x:hover { color: var(--ink); } }
 .crate-empty { color: var(--muted); font-size: 13px; padding: 14px 0; }
 .crate-foot { padding: 18px var(--gutter) calc(20px + env(safe-area-inset-bottom)); display: grid; gap: 10px; }
 .crate-foot .row { display: flex; justify-content: space-between; }
@@ -220,7 +224,9 @@ main { padding: 92px var(--gutter) 40px; }
 .tierbar i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .6s var(--ease-out); }
 .crate-foot p { margin: 0; }
 .crate-copy { justify-self: center; padding: 6px; transition: color .2s; }
-.crate-copy:hover { color: var(--ink); }
+@media (hover: hover) and (pointer: fine) { .crate-copy:hover { color: var(--ink); } }
+/* Press feedback for the small text and icon controls (the browser's tap flash is off). */
+.plus:active, .close:active, .crate-btn:active, .crate-head button:active, .crate-list .x:active, .crate-copy:active, .foot a:active { opacity: .5; }
 .crate a.adopt[aria-disabled="true"] { pointer-events: none; background: #f2f2f2; color: var(--muted); }
 
 /* A figure flying into the crate. */

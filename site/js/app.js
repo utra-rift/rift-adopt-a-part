@@ -3,7 +3,9 @@ import POSTERS, { WIDTHS } from "../posters/manifest.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const canHover = matchMedia("(hover: hover)").matches;
+const canHover = matchMedia("(hover: hover) and (pointer: fine)").matches;
+// iOS Safari only applies :active (the press feedback) once the page listens for touches.
+document.addEventListener("touchstart", () => {}, { passive: true });
 const byId = new Map([...OFFERS, ...ITEMS].map((o) => [o.id, o]));
 
 // The renderer (three.js) and the parts load after the first screen has painted: until a
