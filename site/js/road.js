@@ -12,6 +12,7 @@
 import * as THREE from "../vendor/three.module.min.js";
 import { loadPart, Figure } from "./stage.js";
 import { convocationHall, collegeParkCenter, CH_KEYS, CPC_KEYS } from "./road/landmarks.js";
+import { buildSigns, SIGN_VS, signFS } from "./road/signs.js";
 
 const VAN_URL = "parts/cargo-van.bin";
 const TRIP_KM = 4534, MILESTONE_KM = 500;
@@ -730,6 +731,8 @@ function buildLandmarks(R, T, S, placed, milestones) {
   }
   // A plain post at each 500 km mark on the near shoulder.
   for (const m of milestones) add(box(0.26, 1.15, 0.26), site(m, HALF + 1.3), "#f2f1ec", { jitter: 0, edge: 40 });
+  // The welcome signs at either end; their faces come back as their own mesh.
+  return buildSigns(k, R, T, HALF);
 }
 
 function buildBridge(R, T, S) {
@@ -1417,7 +1420,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     redraw();
     const rocks = await buildRocks(R, T, slice);
     placed = rocks.placed;
-    buildLandmarks(R, T, rocks.S, placed, milestones);
+    const signs = buildLandmarks(R, T, rocks.S, placed, milestones);
     await slice();
     const bridge = buildBridge(R, T, rocks.S);
     await slice();
@@ -1425,6 +1428,8 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     await slice();
     await addMesh(new THREE.Mesh(solids.solid, mat(SOLID_VS, ROCK_FS, { side: THREE.DoubleSide })));
     await addMesh(new THREE.LineSegments(solids.lines, mat(LINE_VS, LINE_FS)));
+    owned.push(signs.map);
+    await addMesh(new THREE.Mesh(signs.geo, mat(SIGN_VS, signFS(FRAG), { uniforms: { ...uniforms, uSign: { value: signs.map } } })));
     redraw();
     const growMat = mat(GROW_VS, GROW_FS, { vertexColors: true });
     for (const m of await buildGrowth(R, T, placed, bridge, slice)) { m.material = growMat; m.frustumCulled = false; await addMesh(m); }
