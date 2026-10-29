@@ -148,13 +148,17 @@ const tapeAt = (k) => `--tilt:${5 + ((k * 37) % 6)}deg;--top:${5 + ((k * 53) % 5
 // The first FIRST cells (the first screen on a desktop or a phone) load first; the rest
 // load lazily as they come near.
 const FIRST = 12;
-const SIZES = "(min-width: 1700px) 267px, (min-width: 1280px) 16vw, (min-width: 1100px) 19vw, (min-width: 720px) 32vw, 47vw";
+// (a phone draws the poster at 1.25× its 47vw cell: see .fig in site.css)
+const SIZES = "(min-width: 1700px) 267px, (min-width: 1280px) 16vw, (min-width: 1100px) 19vw, (min-width: 720px) 32vw, 59vw";
 function posterFor(o, eager) {
   const p = POSTERS[o.id];
   if (!p || p.show !== o.show.join(",") || p.hero !== !!o.hero || p.holo !== isAdopted(o)) return "";
-  const src = (w) => `posters/${o.id}-${w}.webp?v=${p.v}`;
-  return `<img class="poster" alt="" draggable="false" decoding="async" ${eager ? `fetchpriority="high"` : `loading="lazy"`}
-    src="${src(WIDTHS[1])}" srcset="${WIDTHS.map((w) => `${src(w)} ${w}w`).join(", ")}" sizes="${SIZES}">`;
+  const src = (w, look = "") => `posters/${o.id}-${look}${w}.webp?v=${p.v}`;
+  const img = (cls, look, load) => `<img class="${cls}" alt="" draggable="false" decoding="async" ${load}
+    src="${src(WIDTHS[1], look)}" srcset="${WIDTHS.map((w) => `${src(w, look)} ${w}w`).join(", ")}" sizes="${SIZES}">`;
+  // Without hover the colour comes from scrolling (see focusRows): the same picture in real
+  // colour waits on top, fetched only as the cell comes near.
+  return img("poster", "", eager ? `fetchpriority="high"` : `loading="lazy"`) + (canHover ? "" : img("poster poster-c", "c-", `loading="lazy"`));
 }
 
 SHELVES.forEach((sec, si) => {
@@ -185,7 +189,7 @@ SHELVES.forEach((sec, si) => {
       placeHalo(cell, POSTERS[o.id]);
       const shown = () => li.setAttribute("data-in", "");
       if (poster.complete && poster.naturalWidth) shown();
-      else { poster.addEventListener("load", shown, { once: true }); poster.addEventListener("error", () => { cell.poster = false; poster.remove(); want(cell, true); }, { once: true }); }
+      else { poster.addEventListener("load", shown, { once: true }); poster.addEventListener("error", () => { cell.poster = false; poster.remove(); li.querySelector(".poster-c")?.remove(); want(cell, true); }, { once: true }); }
     }
     const hit = li.querySelector(".hit");
     cell.update = () => {
@@ -266,7 +270,11 @@ function overPart(cell, e) {
   if (cell.s && !cell.mask) measureMask(cell);
   const m = cell.mask, r = cell.el.querySelector(".fig").getBoundingClientRect();
   if (!m) return false;
-  const x = e.clientX - r.left, y = e.clientY - r.top;
+  // A narrow screen draws the part larger than its box (site.css scales .float about a point
+  // toward the screen's edge), so undo that scale about the same point.
+  const fs = getComputedStyle(cell.el.querySelector(".float")), k = parseFloat(fs.scale) || 1;
+  const [ox, oy] = fs.transformOrigin.split(" ").map(parseFloat);
+  const x = ox + (e.clientX - r.left - ox) / k, y = oy + (e.clientY - r.top - oy) / k;
   const gx0 = Math.max(0, Math.floor((x - reach) / GRID)), gx1 = Math.min(m.cols - 1, Math.floor((x + reach) / GRID));
   const gy0 = Math.max(0, Math.floor((y - reach) / GRID)), gy1 = Math.min(m.rows - 1, Math.floor((y + reach) / GRID));
   for (let gy = gy0; gy <= gy1; gy++) {
@@ -343,6 +351,36 @@ function boot(cell) {
     for (const e of es) if (e.isIntersecting) { near.unobserve(e.target); want(cells.find((c) => c.el === e.target)); }
   }, { rootMargin: "50% 0px" });
   for (const c of cells) if (canHover || !c.poster) near.observe(c.el);
+}
+
+// Touch screens have no hover to bring a part to life, so scrolling does: the row of parts
+// nearest the middle of the screen (below the header) shows its real colours, and hands them
+// on to the next row as it goes by. Positions are measured once and again when the layout
+// changes, so a scroll frame only compares numbers.
+if (!canHover) {
+  let rows = [], lit = new Set(), queued = false;
+  const measure = () => {
+    rows = cells.filter((c) => c.el.querySelector(".poster-c")).map((c) => {
+      const r = c.el.querySelector(".fig").getBoundingClientRect();
+      return { c, y: r.top + scrollY + r.height / 2, h: r.height };
+    });
+  };
+  const focusRows = () => {
+    queued = false;
+    const mid = scrollY + 52 + (innerHeight - 52) * 0.46;
+    let best = null;
+    for (const e of rows) if (!best || Math.abs(e.y - mid) < Math.abs(best.y - mid)) best = e;
+    const next = new Set(best && Math.abs(best.y - mid) < innerHeight * 0.32 ? rows.filter((e) => Math.abs(e.y - best.y) < best.h * 0.3).map((e) => e.c) : []);
+    for (const c of lit) if (!next.has(c)) c.el.removeAttribute("data-focus");
+    for (const c of next) c.el.setAttribute("data-focus", "");
+    lit = next;
+  };
+  const request = () => { if (!queued) { queued = true; requestAnimationFrame(focusRows); } };
+  const relayout = () => { measure(); request(); };
+  addEventListener("scroll", request, { passive: true });
+  addEventListener("resize", relayout);
+  new ResizeObserver(relayout).observe(shelves);
+  relayout();
 }
 
 // The shadow under a figure, from its live view or its poster's record of it.

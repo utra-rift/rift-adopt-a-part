@@ -10,7 +10,7 @@ export default {
   "floor": 0.7937,
   "width": 0.66,
   "parts": "cf8a0b9b81",
-  "v": "fd3d11d7b9"
+  "v": "fe0f181cbe"
  },
  "item-c620d": {
   "show": "c620,c620,c620,c620,c620",
@@ -19,7 +19,7 @@ export default {
   "floor": 0.7382,
   "width": 0.66,
   "parts": "e3416fcb3c",
-  "v": "8ff59185a4"
+  "v": "886cdd4f9e"
  },
  "item-kit": {
   "show": "m3508-kit",
@@ -28,7 +28,7 @@ export default {
   "floor": 0.715,
   "width": 0.6017,
   "parts": "ef4bffb3a8",
-  "v": "1d55d5198f"
+  "v": "59ba42d4ca"
  },
  "item-wheels": {
   "show": "omni-wheel,omni-wheel,omni-wheel,omni-wheel",
@@ -37,7 +37,7 @@ export default {
   "floor": 0.769,
   "width": 0.66,
   "parts": "ce411ddeb2",
-  "v": "bf12a9d8f7"
+  "v": "440ed43d87"
  },
  "item-gm6020": {
   "show": "gm6020,gm6020,gm6020",
@@ -46,7 +46,7 @@ export default {
   "floor": 0.83,
   "width": 0.6284,
   "parts": "50b1594c85",
-  "v": "eefd47424d"
+  "v": "ad9b0d2916"
  },
  "item-m2006": {
   "show": "m2006-p36,m2006-p36",
@@ -55,7 +55,7 @@ export default {
   "floor": 0.6983,
   "width": 0.66,
   "parts": "50f6285492",
-  "v": "f6032b3d0d"
+  "v": "e3ea4edfec"
  },
  "item-c610": {
   "show": "c610,c610",
@@ -64,7 +64,7 @@ export default {
   "floor": 0.779,
   "width": 0.66,
   "parts": "24ede6df59",
-  "v": "af52b5656f"
+  "v": "2319f3b94b"
  },
  "item-uv": {
   "show": "projectile-charger",
@@ -73,7 +73,7 @@ export default {
   "floor": 0.7143,
   "width": 0.5979,
   "parts": "5f1cd1681f",
-  "v": "a5e21ee9ab"
+  "v": "56ea533d08"
  },
  "item-m3508bare": {
   "show": "m3508-bare,m3508-bare,m3508-bare",
@@ -82,7 +82,7 @@ export default {
   "floor": 0.83,
   "width": 0.5548,
   "parts": "a424d71038",
-  "v": "58b9fd5e86"
+  "v": "61d46570a1"
  },
  "item-c620l": {
   "show": "c620,c620",
@@ -91,7 +91,7 @@ export default {
   "floor": 0.7475,
   "width": 0.66,
   "parts": "9e72d94ed7",
-  "v": "58a01e19ed"
+  "v": "6a4c12f0dd"
  },
  "item-devc": {
   "show": "devboard-c,devboard-c",
@@ -100,7 +100,7 @@ export default {
   "floor": 0.6706,
   "width": 0.66,
   "parts": "1169621abf",
-  "v": "c77c2be318"
+  "v": "cea1510cab"
  },
  "item-cam": {
   "show": "arducam-ov9782",
@@ -109,7 +109,7 @@ export default {
   "floor": 0.7451,
   "width": 0.5876,
   "parts": "73eb2eb0dc",
-  "v": "add7e0241d"
+  "v": "24f7045139"
  },
  "item-rpi5": {
   "show": "rpi5",
@@ -118,7 +118,7 @@ export default {
   "floor": 0.7102,
   "width": 0.5678,
   "parts": "66afd398b8",
-  "v": "c0477f55a0"
+  "v": "9e181be846"
  },
  "item-hat": {
   "show": "rpi-ai-hat",
@@ -127,7 +127,7 @@ export default {
   "floor": 0.698,
   "width": 0.5341,
   "parts": "ba781f4ca4",
-  "v": "9a09302731"
+  "v": "6590dbf59c"
  },
  "item-vt03": {
   "show": "vt03",
@@ -136,7 +136,7 @@ export default {
   "floor": 0.6795,
   "width": 0.4645,
   "parts": "6832bd41e6",
-  "v": "b9023856bf"
+  "v": "2c17b5c015"
  },
  "item-rack": {
   "show": "battery-rack-2",
@@ -145,7 +145,7 @@ export default {
   "floor": 0.7582,
   "width": 0.5089,
   "parts": "8a64a62548",
-  "v": "18e7e5634d"
+  "v": "c9e01d4b38"
  },
  "item-batt": {
   "show": "matrice-4d-battery,matrice-4d-battery,matrice-4d-battery,matrice-4d-battery",
@@ -154,7 +154,7 @@ export default {
   "floor": 0.8021,
   "width": 0.66,
   "parts": "e500e5a1ad",
-  "v": "bf04f2baa5"
+  "v": "d033e47580"
  },
  "item-supercap": {
   "show": "supercap-bank",
@@ -163,7 +163,7 @@ export default {
   "floor": 0.7082,
   "width": 0.5089,
   "parts": "108f394569",
-  "v": "18ac761574"
+  "v": "66ef89c594"
  },
  "item-hub": {
   "show": "matrice-charging-hub",
@@ -172,7 +172,7 @@ export default {
   "floor": 0.7073,
   "width": 0.5737,
   "parts": "adac0e23b2",
-  "v": "f5bb624600"
+  "v": "429244b891"
  },
  "item-adapter": {
   "show": "dji-240w-adapter",
@@ -181,7 +181,7 @@ export default {
   "floor": 0.6865,
   "width": 0.5254,
   "parts": "42210bb88c",
-  "v": "c6fbda4700"
+  "v": "19969462c5"
  },
  "item-cm01": {
   "show": "cm01",
@@ -190,7 +190,7 @@ export default {
   "floor": 0.674,
   "width": 0.535,
   "parts": "7e3bd967e2",
-  "v": "688749e957"
+  "v": "53171f1490"
  },
  "item-mc02": {
   "show": "mc02",
@@ -199,7 +199,7 @@ export default {
   "floor": 0.6604,
   "width": 0.4748,
   "parts": "a7c6e38be2",
-  "v": "924440c739"
+  "v": "a4d41f3725"
  },
  "item-am03": {
   "show": "am03,am03,am03,am03",
@@ -208,7 +208,7 @@ export default {
   "floor": 0.7968,
   "width": 0.66,
   "parts": "41072d713d",
-  "v": "992a062e7d"
+  "v": "d71357210c"
  },
  "item-sm01": {
   "show": "sm01",
@@ -217,7 +217,7 @@ export default {
   "floor": 0.7311,
   "width": 0.5378,
   "parts": "ec6e5d4277",
-  "v": "7a893c27ed"
+  "v": "1261948927"
  },
  "item-fi02": {
   "show": "fi02",
@@ -226,7 +226,7 @@ export default {
   "floor": 0.6922,
   "width": 0.536,
   "parts": "f8756a4790",
-  "v": "5c5d46de02"
+  "v": "f8c950c56c"
  },
  "item-pm02": {
   "show": "pm02",
@@ -235,7 +235,7 @@ export default {
   "floor": 0.6826,
   "width": 0.5306,
   "parts": "2ad7a4a186",
-  "v": "c2f8430c67"
+  "v": "8a7b397a59"
  },
  "item-li01": {
   "show": "li01",
@@ -244,7 +244,7 @@ export default {
   "floor": 0.7088,
   "width": 0.526,
   "parts": "e658b66f9d",
-  "v": "52cc919ad0"
+  "v": "ab18111f61"
  },
  "item-mat": {
   "show": "filament-spool,cf-sheet,cf-sheet,cf-sheet,cf-sheet",
@@ -253,7 +253,7 @@ export default {
   "floor": 0.5983,
   "width": 0.66,
   "parts": "65f7325887",
-  "v": "29665513e8"
+  "v": "b7be68ae87"
  },
  "item-ammo": {
   "show": "projectile-17mm",
@@ -262,7 +262,7 @@ export default {
   "floor": 0.8031,
   "width": 0.429,
   "parts": "12f457e6e8",
-  "v": "4032c1b3e1"
+  "v": "425665c282"
  },
  "item-entry": {
   "show": "entry-ticket",
@@ -271,7 +271,7 @@ export default {
   "floor": 0.7497,
   "width": 0.5032,
   "parts": "ab13bf5664",
-  "v": "c174d13174"
+  "v": "dc1b9c2702"
  },
  "item-van": {
   "show": "cargo-van",
@@ -280,7 +280,7 @@ export default {
   "floor": 0.7435,
   "width": 0.4919,
   "parts": "f6c5d66e7a",
-  "v": "668dd73b8c"
+  "v": "518f569fab"
  },
  "seat": {
   "show": "airline-seat",
@@ -289,7 +289,7 @@ export default {
   "floor": 0.7968,
   "width": 0.3002,
   "parts": "ee7b989984",
-  "v": "89d668035b"
+  "v": "5ce44b9d39"
  },
  "trip": {
   "show": "cargo-van,airline-seat,airline-seat",
@@ -298,7 +298,7 @@ export default {
   "floor": 0.83,
   "width": 0.321,
   "parts": "cd375fedf5",
-  "v": "af4026413e"
+  "v": "3764e8c133"
  },
  "fly8": {
   "show": "airline-seat,airline-seat,airline-seat,airline-seat",
@@ -307,7 +307,7 @@ export default {
   "floor": 0.83,
   "width": 0.4268,
   "parts": "8bf60e91ab",
-  "v": "fc52edf99a"
+  "v": "8e5d1b4579"
  },
  "finish": {
   "show": "filament-spool,cargo-van,vt03",
@@ -316,7 +316,7 @@ export default {
   "floor": 0.7909,
   "width": 0.6119,
   "parts": "90dde36e40",
-  "v": "d34fd22c90"
+  "v": "53865467ac"
  },
  "fly4": {
   "show": "airline-seat,airline-seat,airline-seat",
@@ -325,7 +325,7 @@ export default {
   "floor": 0.6771,
   "width": 0.66,
   "parts": "ece421de4c",
-  "v": "cfec5e792e"
+  "v": "9969be8e65"
  },
  "chassis": {
   "show": "filament-spool,cf-sheet",
@@ -334,7 +334,7 @@ export default {
   "floor": 0.7067,
   "width": 0.66,
   "parts": "e8d4182541",
-  "v": "0c55cfe3be"
+  "v": "36c9b71efc"
  },
  "fly2": {
   "show": "airline-seat,airline-seat",
@@ -343,7 +343,7 @@ export default {
   "floor": 0.7756,
   "width": 0.66,
   "parts": "ec57503b70",
-  "v": "9b95aa98bf"
+  "v": "7c40233ce9"
  },
  "road": {
   "show": "cargo-van",
@@ -352,7 +352,7 @@ export default {
   "floor": 0.7435,
   "width": 0.4919,
   "parts": "f6c5d66e7a",
-  "v": "668dd73b8c"
+  "v": "518f569fab"
  },
  "van": {
   "show": "cargo-van",
@@ -361,7 +361,7 @@ export default {
   "floor": 0.7435,
   "width": 0.4919,
   "parts": "f6c5d66e7a",
-  "v": "668dd73b8c"
+  "v": "518f569fab"
  },
  "match": {
   "show": "vt03,projectile-17mm,cm01",
@@ -370,7 +370,7 @@ export default {
   "floor": 0.7698,
   "width": 0.5721,
   "parts": "f1cdbf473d",
-  "v": "bf4b05861c"
+  "v": "65f7fd1c24"
  },
  "turret": {
   "show": "gm6020,m2006-p36,rpi5",
@@ -379,7 +379,7 @@ export default {
   "floor": 0.8255,
   "width": 0.66,
   "parts": "b7e889b59c",
-  "v": "201d7ef39d"
+  "v": "c465c63e72"
  },
  "referee": {
   "show": "am03,mc02",
@@ -388,7 +388,7 @@ export default {
   "floor": 0.6541,
   "width": 0.66,
   "parts": "a50de4bed9",
-  "v": "ec7c467e83"
+  "v": "6fa3b511d6"
  },
  "power": {
   "show": "matrice-4d-battery,battery-rack-2",
@@ -397,7 +397,7 @@ export default {
   "floor": 0.8152,
   "width": 0.66,
   "parts": "02ec4ef7b2",
-  "v": "34d704b075"
+  "v": "040d93d803"
  },
  "drive": {
   "show": "m3508-p19,c620",
@@ -406,7 +406,7 @@ export default {
   "floor": 0.8056,
   "width": 0.66,
   "parts": "02006be15e",
-  "v": "6144139a32"
+  "v": "3519537c4d"
  },
  "armor": {
   "show": "am03",
@@ -415,7 +415,7 @@ export default {
   "floor": 0.8199,
   "width": 0.387,
   "parts": "49cc3dd1cb",
-  "v": "4cc21c7035"
+  "v": "a629ed22f9"
  },
  "refkit": {
   "show": "mc02,li01",
@@ -424,7 +424,7 @@ export default {
   "floor": 0.6173,
   "width": 0.66,
   "parts": "5af611e3cd",
-  "v": "f6844b417d"
+  "v": "ec9135977c"
  },
  "brain": {
   "show": "rpi5,devboard-c",
@@ -433,7 +433,7 @@ export default {
   "floor": 0.6064,
   "width": 0.66,
   "parts": "674e24868b",
-  "v": "ae50cd6865"
+  "v": "9c0dac7aac"
  },
  "batteries": {
   "show": "matrice-4d-battery",
@@ -442,7 +442,7 @@ export default {
   "floor": 0.8462,
   "width": 0.2826,
   "parts": "b0dfa02035",
-  "v": "55bcf51662"
+  "v": "ce23cbb836"
  },
  "gimbal": {
   "show": "gm6020",
@@ -451,7 +451,7 @@ export default {
   "floor": 0.779,
   "width": 0.4651,
   "parts": "308d563daf",
-  "v": "47ee0c39b9"
+  "v": "60b36cc523"
  },
  "motors": {
   "show": "m3508-p19",
@@ -460,7 +460,7 @@ export default {
   "floor": 0.8109,
   "width": 0.3668,
   "parts": "98a1a980cf",
-  "v": "771c0f0670"
+  "v": "48f92ebbcd"
  },
  "wheels": {
   "show": "omni-wheel",
@@ -469,7 +469,7 @@ export default {
   "floor": 0.8235,
   "width": 0.3722,
   "parts": "e1ac53e0db",
-  "v": "28644225a2"
+  "v": "48632539f1"
  },
  "item-slipring": {
   "show": "slip-ring",
@@ -478,7 +478,7 @@ export default {
   "floor": 0.6783,
   "width": 0.5092,
   "parts": "ecc0d99d33",
-  "v": "ecc39b50e4"
+  "v": "7fce622148"
  },
  "item-pcb": {
   "show": "pcb-round,pcb-round,pcb-round",
@@ -487,7 +487,7 @@ export default {
   "floor": 0.7656,
   "width": 0.66,
   "parts": "0957d09597",
-  "v": "2dc58ac7a9"
+  "v": "02e376d5e7"
  },
  "kit-bearings": {
   "show": "ka040xp0",
@@ -496,7 +496,7 @@ export default {
   "floor": 0.7922,
   "width": 0.3293,
   "parts": "0440e253b5",
-  "v": "2b4a677478"
+  "v": "bb949ce268"
  },
  "kit-filament": {
   "show": "filament-spool",
@@ -505,7 +505,7 @@ export default {
   "floor": 0.8188,
   "width": 0.3878,
   "parts": "ab9c753cb2",
-  "v": "113096d2bc"
+  "v": "fb8661ea46"
  },
  "kit-wire": {
   "show": "wire-12awg",
@@ -514,7 +514,7 @@ export default {
   "floor": 0.8163,
   "width": 0.3951,
   "parts": "7bee05865d",
-  "v": "fdd8398a4b"
+  "v": "95647ef112"
  },
  "kit-connectors": {
   "show": "xt60h",
@@ -523,7 +523,7 @@ export default {
   "floor": 0.6801,
   "width": 0.544,
   "parts": "9cee9d34db",
-  "v": "17b1c30d16"
+  "v": "eb5b871684"
  },
  "kit-aluminium": {
   "show": "al-sheet-quarter",
@@ -532,7 +532,7 @@ export default {
   "floor": 0.7818,
   "width": 0.3397,
   "parts": "9165c34bf0",
-  "v": "f80b0256d7"
+  "v": "39203c37aa"
  },
  "kit-hardware": {
   "show": "screw-kit",
@@ -541,6 +541,6 @@ export default {
   "floor": 0.7462,
   "width": 0.4374,
   "parts": "8dc7543e9b",
-  "v": "fe643134ac"
+  "v": "4ccd5a5806"
  }
 };

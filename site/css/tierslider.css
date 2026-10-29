@@ -119,6 +119,14 @@
   transform-origin: 50% 0;
   transition: color .4s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
 }
+/* Below desktop width the labels are read at arm's length: a size up and real contrast (the
+   slider shows fewer of them if they no longer fit). Tier names track tighter on a phone. */
+@media (max-width: 1099px) {
+  .tslider-mlabel { font-size: 11px; color: var(--muted, #737378); }
+}
+@media (max-width: 719px) {
+  .tslider-tier { letter-spacing: .04em; }
+}
 .tslider-mlabel.is-passed { color: var(--tier-ink); }
 .tslider-mlabel.is-thin { visibility: hidden; }
 .tslider-mlabel.is-pop { animation: tslider-pop .55s cubic-bezier(.2, .9, .3, 1); }

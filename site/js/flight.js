@@ -17,8 +17,10 @@ const burst = (age, rise, fall) => (age < 0 ? 0 : age < rise ? sm(0, rise, age) 
 const ramp = (table, L) => { const i = Math.floor(clamp(L, 0, 8)), f = clamp(L, 0, 8) - i; return table[i] + (table[Math.min(8, i + 1)] - table[i]) * f; };
 
 // Camera by strip shape: [narrow, wide]. Degrees off the tail and above; it looks ahead of the
-// aeroplane so the lines' vanishing point sits in the frame, just ahead of the nose.
-const CAM = { fov: [42, 32], behind: [26, 30], up: [6.5, 7], ahead: [7, 6], lift: [2, 2.5], fitX: [0.92, 0.7], fitY: [0.74, 0.74] };
+// aeroplane so the lines' vanishing point sits in the frame, just ahead of the nose. A narrow
+// (phone) strip looks less far ahead and keeps the aeroplane off its edges, so the far wing
+// and tailplane stay whole as it banks.
+const CAM = { fov: [42, 32], behind: [26, 30], up: [6.5, 7], ahead: [2, 6], lift: [2, 2.5], fitX: [0.82, 0.7], fitY: [0.74, 0.74] };
 
 // Per seat level (0..8): every seat a visible step. The wind (streak count, length in metres,
 // width in px), the air speed (m/s), the trails, the airframe's material and the engines' glow.

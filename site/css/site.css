@@ -72,9 +72,10 @@ main { padding: 92px var(--gutter) 40px; }
 /* Until its modules load, the trip holds its final height: label, the road strip (its
    height from road.js) and labels, the gap, the flight strip (from flight.js), and two
    slider-and-readout blocks, which wrap taller on a phone. */
-.trip-pending { --ctl: 140px; height: calc(30px + clamp(200px, 23.6vw, 380px) + 26px + clamp(48px, 7vw, 96px) + clamp(240px, 30vw, 440px) + 2 * var(--ctl)); }
+.trip { --part-gap: clamp(48px, 7vw, 96px); }
+.trip-pending { --ctl: 140px; height: calc(30px + clamp(200px, 23.6vw, 380px) + 26px + var(--part-gap) + clamp(240px, 30vw, 440px) + 2 * var(--ctl)); }
 @media (max-width: 719px) { .trip-pending { --ctl: 186px; } }
-.trip-part + .trip-part { margin-top: clamp(48px, 7vw, 96px); }
+.trip-part + .trip-part { margin-top: var(--part-gap); }
 .trip-art { margin: 14px calc(-1 * var(--gutter)) 0; }
 .trip-ctl { max-width: 1600px; margin: 0 auto; padding-top: 16px; }
 .trip-read { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin-top: 12px; }
@@ -100,6 +101,16 @@ main { padding: 92px var(--gutter) 40px; }
 .fig canvas { opacity: 0; transition: opacity .3s; }
 .cell[data-live] .fig canvas { opacity: 1; }
 .cell[data-live] .poster { visibility: hidden; transition: visibility 0s .3s; }
+/* Touch screens: the row crossing the middle of the screen shows its real colours (the same
+   picture, in colour, cross-fading over the drawing) and lifts a little, the way hovering
+   brings a part to life with a pointer. */
+.fig .poster { transition: opacity .55s var(--ease-out); }
+.fig .poster-c { opacity: 0; }
+.cell[data-focus] .poster-c { opacity: 1; }
+.cell[data-focus] .poster:not(.poster-c) { opacity: 0; }
+.cell .fig { transition: transform .55s var(--ease-out); }
+.cell[data-focus] .fig { transform: scale(1.045); }
+@media (prefers-reduced-motion: reduce) { .fig .poster, .cell .fig { transition: none; } .cell[data-focus] .fig { transform: none; } }
 .halo {
   position: absolute; left: 50%; top: var(--floor, 80%); width: var(--w, 40%); height: 7%;
   translate: -50% 0; margin-top: 4%;
@@ -111,7 +122,7 @@ main { padding: 92px var(--gutter) 40px; }
 @keyframes halo { 0%, 100% { scale: .9; opacity: .8; } 50% { scale: 1; opacity: 1; } }
 .cap { display: flex; justify-content: center; gap: 10px; padding: 0 0 34px; }
 .cap .price { color: var(--muted); transition: color .2s; }
-.cell[data-hot] .cap .price, .cell[data-state] .cap .price { color: var(--ink); }
+.cell[data-hot] .cap .price, .cell[data-focus] .cap .price, .cell[data-state] .cap .price { color: var(--ink); }
 .cell[data-state="crate"] .cap .code::before { content: "● "; font-size: 8px; vertical-align: 1px; }
 .cell[data-state="adopted"] .cap { color: #66717f; }
 .cell[data-state="adopted"] .cap .price { color: #66717f; }
@@ -234,6 +245,38 @@ main { padding: 92px var(--gutter) 40px; }
 
 .toast { position: fixed; z-index: 90; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); translate: -50% 12px; opacity: 0; padding: 9px 14px; background: var(--ink); color: #fff; pointer-events: none; transition: translate .4s var(--ease-out), opacity .3s; }
 .toast[data-show] { translate: -50% 0; opacity: 1; }
+
+/* ---------------------------------------------------------------- phones */
+/* Two parts to a row: each drawn larger in its cell, rows and sections closer together, and
+   the small mono text a step up. */
+@media (max-width: 719px) {
+  /* A drawing (and its feathered edge) may now run past the page's sides. */
+  main { padding-top: 76px; overflow-x: clip; }
+  .mono, .gist, .foot, .crate-btn, .cap, .tiers dt, .crate-list .p { font-size: 12px; }
+  .tiny, .inside span, .crate-list .n small { font-size: 11px; }
+  /* One line down to a 360 px screen. */
+  .gist { margin-bottom: 20px; font-size: clamp(11px, 3.1vw, 12px); text-wrap: balance; }
+  .tier-label { margin-bottom: 18px; font-size: 12.5px; }
+  .tier + .tier, .trip, .trip + .tier { margin-top: 44px; }
+  .trip { --part-gap: 28px; }
+  /* The posters are framed for the cell box, so the picture grows inside it rather than the
+     box; the shadow moves out with the part's underside. */
+  .fig { --zoom: 1.25; }
+  /* Adopted parts, already funded, a step smaller: room for their tape on the corner. */
+  .cell[data-state="adopted"] .fig { --zoom: 1.12; }
+  /* Each column grows from a point toward the screen's edge, so a long cable stays on screen
+     and the pair draws a little toward each other; a part alone in its row stays centred. */
+  .cell:nth-child(odd) .fig { --ox: 30%; }
+  .cell:nth-child(even) .fig { --ox: 70%; }
+  .cell:nth-child(odd):last-child .fig { --ox: 50%; }
+  .fig .float { scale: var(--zoom); transform-origin: var(--ox, 50%) 50%; }
+  .halo { left: calc(var(--ox, 50%) + (50% - var(--ox, 50%)) * var(--zoom)); top: calc(50% + (var(--floor, 80%) - 50%) * var(--zoom)); width: calc(var(--w, 40%) * var(--zoom)); }
+  .cap { padding: 5px 0 17px; }
+  .cap .price { color: #5c5c61; }
+  /* Tape higher and a little narrower: on the frame's corner, above the larger part. */
+  .tape { top: calc(var(--top, 7%) - 9%); right: calc(var(--right, -4%) - 4%); width: 40%; min-width: 80px; }
+  .view-fig { min-height: 46svh; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition-duration: 1ms !important; }

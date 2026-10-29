@@ -1,5 +1,6 @@
 // Renders grid cells' posters: the figure at rest, drawn by site/dev-posters.html in
-// headless Chrome, encoded as WebP at each width, with site/posters/manifest.js listing
+// headless Chrome, encoded as WebP at each width in the drawing look (<id>-<w>.webp) and in
+// real colour (<id>-c-<w>.webp), with site/posters/manifest.js listing
 // what each one shows and where its shadow sits. Only cells whose poster is missing or
 // stale (the offer shows other parts, or a part file changed) are rendered, unless --all.
 // Needs the dev server (tools/serve.py).
@@ -31,7 +32,9 @@ const partHash = (id) => (existsSync(join(SITE, `parts/${id}.bin`)) ? createHash
 const keyOf = (o) => ({ show: o.show.join(","), hero: !!o.hero, holo: isAdopted(o), parts: createHash("sha1").update(o.show.map(partHash).join()).digest("hex").slice(0, 10) });
 const manifestPath = join(OUT, "manifest.js");
 const old = existsSync(manifestPath) ? JSON.parse(readFileSync(manifestPath, "utf8").match(/export default (\{[\s\S]*\});/)[1]) : {};
-const stale = (o) => { const p = old[o.id], k = keyOf(o); return !p || Object.keys(k).some((f) => p[f] !== k[f]) || WIDTHS.some((w) => !existsSync(join(OUT, `${o.id}-${w}.webp`))); };
+const LOOKS = ["", "c-"];
+const fileOf = (id, look, w) => `${id}-${look}${w}.webp`;
+const stale = (o) => { const p = old[o.id], k = keyOf(o); return !p || Object.keys(k).some((f) => p[f] !== k[f]) || LOOKS.some((l) => WIDTHS.some((w) => !existsSync(join(OUT, fileOf(o.id, l, w))))); };
 const ids = args.includes("--ids") ? args[args.indexOf("--ids") + 1].split(",") : offers.filter((o) => args.includes("--all") || stale(o)).map((o) => o.id);
 const manifest = Object.fromEntries(Object.entries(old).filter(([id]) => offers.some((o) => o.id === id)));
 if (!ids.length) { console.log("Posters are up to date."); write(); process.exit(0); }
@@ -83,10 +86,10 @@ mkdirSync(OUT, { recursive: true });
 const hashes = new Map();
 let bytes = 0;
 for (let i = 0; i < count; i++) {
-  const { id, w, png } = await evaluate(`window.__posters.images[${i}]`);
+  const { id, w, look, png } = await evaluate(`window.__posters.images[${i}]`);
   // Lossless alpha keeps the silhouette's edge exactly where the live figure draws it.
   const webp = await sharp(Buffer.from(png.split(",")[1], "base64")).webp({ quality: 90, alphaQuality: 100, effort: 6, smartSubsample: true }).toBuffer();
-  writeFileSync(join(OUT, `${id}-${w}.webp`), webp);
+  writeFileSync(join(OUT, fileOf(id, look ? `${look}-` : "", w)), webp);
   bytes += webp.length;
   hashes.set(id, createHash("sha1").update(hashes.get(id) ?? "").update(webp).digest("hex"));
 }
@@ -104,6 +107,6 @@ export const WIDTHS = ${JSON.stringify(WIDTHS)};
 export default ${JSON.stringify(manifest, null, 1)};
 `);
   // Posters for cells that no longer exist.
-  const keep = new Set(Object.keys(manifest).flatMap((id) => WIDTHS.map((w) => `${id}-${w}.webp`)));
+  const keep = new Set(Object.keys(manifest).flatMap((id) => LOOKS.flatMap((l) => WIDTHS.map((w) => fileOf(id, l, w)))));
   for (const f of readdirSync(OUT)) if (f.endsWith(".webp") && !keep.has(f)) unlinkSync(join(OUT, f));
 }
