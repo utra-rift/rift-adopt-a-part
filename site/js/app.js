@@ -352,6 +352,9 @@ function boot(cell) {
   }, { rootMargin: "50% 0px" });
   for (const c of cells) if (canHover || !c.poster) near.observe(c.el);
 }
+// A touch screen keeps its posters, so nothing else loads the 3D engine before a part is
+// opened; fetch it once the first screen is up and the page is idle.
+if (!canHover) firstScreen.then(() => idle(() => stage().catch(() => {})));
 
 // Touch screens have no hover to bring a part to life, so scrolling does: the two neighbouring
 // rows of parts whose middle is nearest the middle of the screen (below the header) show their
@@ -557,14 +560,78 @@ function openView(id) {
   viewEl.hidden = false;
   document.documentElement.style.overflow = "hidden";
   requestAnimationFrame(() => viewEl.setAttribute("data-open", ""));
+  standIn(o);
   showOffer(o);
   $(".close").focus({ preventScroll: true });
   history.replaceState(null, "", `#part-${o.id}`);
 }
 
+// On a touch screen the 3D engine and the part's model load only when a part is opened, so
+// its poster (already on the phone, the same drawing at rest) stands in at once, sized to the
+// middle of the box. When the live figure has drawn, the stand-in glides onto it and dissolves.
+const stand = Object.assign(document.createElement("img"), { className: "view-stand", alt: "" });
+stand.setAttribute("aria-hidden", "true");
+$("#view-fig").prepend(stand);
+let standFor = null, standPart = null;
+// The drawn part's box in a picture or canvas, as fractions of its size (alpha above a hair).
+function alphaBox(src, w, h) {
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(src, 0, 0, w, h);
+  const d = g.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y += 2) for (let x = 0; x < w; x += 2) if (d[(y * w + x) * 4 + 3] > 24) {
+    if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+  }
+  return x1 < 0 ? null : { x0: x0 / w, y0: y0 / h, x1: (x1 + 1) / w, y1: (y1 + 1) / h };
+}
+function standIn(o) {
+  standDown();
+  const poster = cells.find((c) => c.o === o)?.el.querySelector(".poster:not(.poster-c)");
+  if (canHover || !poster?.complete || !poster.naturalWidth) return;
+  const box = alphaBox(poster, poster.naturalWidth, poster.naturalHeight);
+  if (!box) return;
+  const fig = $("#view-fig"), W = fig.clientWidth, H = fig.clientHeight, r = poster.naturalHeight / poster.naturalWidth;
+  const bw = box.x1 - box.x0, bh = (box.y1 - box.y0) * r;
+  const D = Math.min((W * 0.8) / bw, (H * 0.7) / bh);           // displayed width of the whole poster
+  const left = W / 2 - ((box.x0 + box.x1) / 2) * D, top = H / 2 - ((box.y0 + box.y1) / 2) * r * D;
+  Object.assign(stand.style, { width: `${D}px`, left: `${left}px`, top: `${top}px`, transform: "" });
+  stand.src = poster.currentSrc || poster.src;
+  standFor = o;
+  standPart = { left, top, x: left + box.x0 * D, y: top + box.y0 * r * D, w: bw * D, h: bh * D };
+  stand.classList.remove("going");
+  stand.setAttribute("data-on", "");
+  viewCanvas.classList.add("out");
+}
+function handOff(o) {
+  if (standFor !== o || !standPart) return;
+  const live = alphaBox(viewCanvas, viewCanvas.width, viewCanvas.height);
+  const cw = viewCanvas.clientWidth, ch = viewCanvas.clientHeight, p = standPart;
+  stand.classList.add("going");
+  if (live) {
+    const lw = (live.x1 - live.x0) * cw, lh = (live.y1 - live.y0) * ch;
+    const k = (lw / p.w + lh / p.h) / 2;
+    const tx = (live.x0 * cw + lw / 2) - p.left - k * (p.x + p.w / 2 - p.left);
+    const ty = (live.y0 * ch + lh / 2) - p.top - k * (p.y + p.h / 2 - p.top);
+    stand.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px) scale(${k.toFixed(4)})`;
+  }
+  stand.removeAttribute("data-on");
+  viewCanvas.classList.remove("out");
+  standFor = null;
+}
+function standDown() {
+  standFor = standPart = null;
+  stand.classList.remove("going");
+  stand.removeAttribute("data-on");
+  viewCanvas.classList.remove("out");
+}
+
+// A phone's model area is small, so there a part is framed the way the grid frames it, by its
+// optical size (a long cable no longer shrinks its body; what runs past the edge fades), and
+// a bundle's bodies fill most of the box. Wider screens fit the part's whole turn.
+const narrow = matchMedia("(max-width: 719px)");
 function mount(fig, multi) {
   if (big) live.delete(big);
-  big = liveFigure(viewCanvas, fig, { fill: multi ? 0.72 : 0.6 });
+  big = liveFigure(viewCanvas, fig, narrow.matches ? (multi ? { frame: 0.78 } : { visual: 0.22 }) : { fill: multi ? 0.72 : 0.6 });
   big.motionTarget = reduced ? 0 : 1;
   big.view.paint();
   // Arrive as a drawing, then fade the colour in and keep it.
@@ -577,11 +644,12 @@ function mount(fig, multi) {
 function showOffer(o) {
   showing = null;
   document.querySelectorAll("#view-inside button[data-k]").forEach((b) => b.removeAttribute("aria-current"));
-  stage().then(() => S.figureFor(o)).then(({ fig, multi }) => { if (current === o && !showing) mount(fig, multi); }).catch(() => {});
+  stage().then(() => S.figureFor(o)).then(({ fig, multi }) => { if (current === o && !showing) { mount(fig, multi); handOff(o); } }).catch(() => {});
 }
 
 function showPart(t) {
   showing = t;
+  standDown();
   $("#inside-name").textContent = t.name;
   document.querySelectorAll("#view-inside button[data-k]").forEach((btn) => btn.setAttribute("aria-current", btn.getAttribute("aria-label") === t.name));
   stage().then(() => S.loadPart(S.partUrl(t.cad))).then((data) => {
@@ -636,7 +704,7 @@ function closeView() {
   viewEl.removeAttribute("data-open");
   document.documentElement.style.overflow = "";
   history.replaceState(null, "", location.pathname + location.search);
-  setTimeout(() => { if (!viewEl.hasAttribute("data-open")) { viewEl.hidden = true; if (big) live.delete(big); big = null; } }, 360);
+  setTimeout(() => { if (!viewEl.hasAttribute("data-open")) { viewEl.hidden = true; if (big) live.delete(big); big = null; standDown(); } }, 360);
   returnFocus?.focus?.({ preventScroll: true });
 }
 viewEl.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeView(); });
