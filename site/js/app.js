@@ -1,17 +1,15 @@
 import { LINES, OFFERS, SECTIONS, ITEMS, ITEM_SECTIONS, OPEN_ITEMS, TRIP, TIERS, BUDGET, ADOPTED_TOTAL, tierFor, priceOf, isAdopted, adopterOf, money } from "./catalog.js";
-import { loadPart, placeholderPart, Figure, Group, View } from "./stage.js";
+import POSTERS, { WIDTHS } from "../posters/manifest.js";
 
 const $ = (s, el = document) => el.querySelector(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canHover = matchMedia("(hover: hover)").matches;
-const partUrl = (id) => `parts/${id}.bin`;
 const byId = new Map([...OFFERS, ...ITEMS].map((o) => [o.id, o]));
 
-// Every part is drawn at the same optical size: its visual mass (area-weighted spread,
-// as the camera sees it) takes this fraction of the cell width, like a row of products
-// photographed to read the same size. A bundle's parts are evened out among themselves
-// (see Group in stage.js), and together they fill this much of the box.
-const VISUAL = 0.165, GROUP_FRAME = 0.66;
+// The renderer (three.js) and the parts load after the first screen has painted: until a
+// cell's figure is live it shows its poster, the same picture rendered ahead of time.
+let lib = null, S = null;
+const stage = () => (lib ??= Promise.all([import("./stage.js"), import("./figure.js")]).then(([a, b]) => (S = { ...a, ...b })));
 
 // ------------------------------------------------------------------ crate state
 // The crate holds offer ids, "seat:N" for single seats, and at most one "km:N" for part of
@@ -101,7 +99,7 @@ function step(s, dt) {
 }
 
 function liveFigure(canvas, figure, opts) {
-  const view = new View(canvas, figure, opts);
+  const view = new S.View(canvas, figure, opts);
   return { view, figure, azBase: view.azimuth, spinTarget: view.spin, spinVel: 0, azTarget: view.azimuth,
     motion: 0, motionTarget: 0, drift: 0, color: 0, colorTarget: 0, rest: view.spin };
 }
@@ -125,19 +123,10 @@ function revealOff(s) {
   kick(s);
 }
 
-// Load the parts an offer shows; one part is a Figure, several stand together as a Group.
-// An offer with nothing modelled yet stands in as a cube.
-async function figureFor(o) {
-  const datas = o.show.length ? (await Promise.all(o.show.map((id) => loadPart(partUrl(id)).catch(() => null)))).filter(Boolean) : [placeholderPart()];
-  if (!datas.length) throw new Error(`no figures for ${o.id}`);
-  const fig = datas.length > 1 ? new Group(datas, { hero: o.hero }) : new Figure(datas[0]);
-  fig.holo = isAdopted(o) ? 1 : 0;
-  return { fig, multi: datas.length > 1 };
-}
-
 // ------------------------------------------------------------------ grid
 const shelves = $("#shelves");
 const cells = [];
+let tripEl = null;
 
 // The shelves list every budget line on its own: first, larger, the robot parts still up
 // for adoption, then the trip (added below), then every line in its budget group. The
@@ -148,6 +137,23 @@ const SHELVES = ITEM_VIEW
   ? [{ name: "Up for adoption", note: money(openTotal), aria: `Up for adoption, ${money(openTotal)}`, items: OPEN_ITEMS, featured: true },
     ...ITEM_SECTIONS.map((g) => ({ name: g.name, note: money(g.total), aria: `${g.name}, ${money(g.total)}`, items: g.items }))]
   : SECTIONS.map((s) => ({ name: s.tier.name, note: `${money(s.tier.min, false)}+`, aria: `${s.tier.name}, ${money(s.tier.min, false)} and up`, items: s.items }));
+
+// Each strip of tape goes on by hand: a slightly different tilt and spot on every cell.
+const tapeAt = (k) => `--tilt:${5 + ((k * 37) % 6)}deg;--top:${5 + ((k * 53) % 5)}%;--right:${-5 + ((k * 29) % 4)}%`;
+
+// A cell's poster, if there is one and it still shows what the cell shows. `sizes` follows
+// the cell widths in site.css, so the browser fetches the smallest poster that covers it.
+const SIZES = {
+  featured: "(min-width: 1700px) 400px, (min-width: 1100px) 24vw, 47vw",
+  cell: "(min-width: 1700px) 267px, (min-width: 1280px) 16vw, (min-width: 1100px) 19vw, (min-width: 720px) 32vw, 47vw",
+};
+function posterFor(o, featured, eager) {
+  const p = POSTERS[o.id];
+  if (!p || p.show !== o.show.join(",") || p.hero !== !!o.hero || p.holo !== isAdopted(o)) return "";
+  const src = (w) => `posters/${o.id}-${w}.webp?v=${p.v}`;
+  return `<img class="poster" alt="" draggable="false" decoding="async" ${eager ? `fetchpriority="high"` : `loading="lazy"`}
+    src="${src(WIDTHS[1])}" srcset="${WIDTHS.map((w) => `${src(w)} ${w}w`).join(", ")}" sizes="${featured ? SIZES.featured : SIZES.cell}">`;
+}
 
 SHELVES.forEach((sec, si) => {
   const el = document.createElement("section");
@@ -166,14 +172,21 @@ SHELVES.forEach((sec, si) => {
     li.style.setProperty("--bob-at", `${-(((si * 5 + i) * 53) % 29) / 10}s`);
     li.innerHTML = `
       <button class="hit" type="button" aria-label="${o.name}, ${adopted ? `adopted by ${adopterOf(o)}` : money(priceOf(o))}">
-        <div class="fig"><div class="halo"></div><div class="float"><canvas aria-hidden="true"></canvas></div></div>
-        <div class="cap"><span class="code">${o.code}</span><span class="price">${adopted ? "Adopted" : money(priceOf(o))}</span></div>
+        <div class="fig"><div class="halo"></div><div class="float">${posterFor(o, sec.featured, si === 0)}<canvas aria-hidden="true"></canvas></div>${adopted ? `<span class="tape" aria-hidden="true" style="${tapeAt(si * 7 + i)}"><span>Adopted</span></span>` : ""}</div>
+        <div class="cap"><span class="code">${o.code}</span>${adopted ? "" : `<span class="price">${money(priceOf(o))}</span>`}</div>
       </button>`;
     ul.append(li);
-    const cell = { el: li, o, s: null, mask: null, hot: false, focused: false, on: false };
+    const poster = li.querySelector(".poster");
+    const cell = { el: li, o, s: null, mask: null, hot: false, focused: false, on: false, poster: !!poster, boot: null };
     cells.push(cell);
+    if (poster) {
+      placeHalo(cell, POSTERS[o.id]);
+      const shown = () => li.setAttribute("data-in", "");
+      if (poster.complete && poster.naturalWidth) shown();
+      else { poster.addEventListener("load", shown, { once: true }); poster.addEventListener("error", () => { cell.poster = false; poster.remove(); want(cell, true); }, { once: true }); }
+    }
     const hit = li.querySelector(".hit");
-    const update = () => {
+    cell.update = () => {
       const on = cell.hot || cell.focused, s = cell.s;
       if (on === cell.on || !s) return;
       cell.on = on;
@@ -181,24 +194,34 @@ SHELVES.forEach((sec, si) => {
       if (on) revealOn(s); else { revealOff(s); s.azTarget = s.azBase; }
       kick(s);
     };
-    // A mouse click only counts on the part; a tap or a key press anywhere on the cell.
+    // A mouse click only counts on the part; a tap or a key press anywhere on the cell, and
+    // anywhere while the cell still shows its poster (there's no silhouette to test yet).
     let via = "mouse";
     hit.addEventListener("pointerdown", (e) => { via = e.pointerType; });
-    hit.addEventListener("click", (e) => { if (!canHover || !e.detail || via !== "mouse" || overPart(cell, e)) openView(o.id); });
+    hit.addEventListener("click", (e) => { if (!canHover || !e.detail || via !== "mouse" || !cell.s || overPart(cell, e)) openView(o.id); });
     if (canHover) {
+      // The pointer coming near a cell that isn't live yet puts it first in line.
+      hit.addEventListener("pointerenter", () => want(cell, true));
       hit.addEventListener("pointermove", (e) => {
         const hot = overPart(cell, e);
-        if (hot !== cell.hot) { cell.hot = hot; li.toggleAttribute("data-hot", hot); update(); }
+        if (hot !== cell.hot) { cell.hot = hot; li.toggleAttribute("data-hot", hot); cell.update(); }
         if (!hot || !cell.s || reduced) return;
         const r = hit.getBoundingClientRect();
         cell.s.azTarget = cell.s.azBase + ((e.clientX - r.left) / r.width - 0.5) * 20;
         kick(cell.s);
       });
-      hit.addEventListener("pointerleave", () => { cell.hot = false; li.removeAttribute("data-hot"); update(); });
+      hit.addEventListener("pointerleave", () => { cell.hot = false; li.removeAttribute("data-hot"); cell.update(); });
     }
-    hit.addEventListener("focus", () => { cell.focused = hit.matches(":focus-visible"); update(); });
-    hit.addEventListener("blur", () => { cell.focused = false; update(); });
+    hit.addEventListener("focus", () => { cell.focused = hit.matches(":focus-visible"); if (cell.focused) want(cell, true); cell.update(); });
+    hit.addEventListener("blur", () => { cell.focused = false; cell.update(); });
   });
+  // The trip goes in after the robot parts. Its modules load once it's near; until then
+  // this holds its place at its final height.
+  if (sec.featured && ITEM_VIEW) {
+    tripEl = document.createElement("section");
+    tripEl.className = "trip trip-pending";
+    shelves.append(tripEl);
+  }
 });
 
 // ------------------------------------------------------------------ hover target
@@ -217,18 +240,19 @@ function measureMask(cell) {
   const fade = (u, edge) => Math.min(1, u / edge, (1 - u) / edge); // the .float mask in site.css
   const { spin, zoom } = view;
   for (const [turn, grow] of [[0, 0], [HOVER_TURN, HOVER_GROW]]) {
-    view.spin = s.rest + turn; view.zoom = 1 + grow; view.paint();
-    const px = view.ctx.getImageData(0, 0, c.width, c.height).data;
+    view.spin = s.rest + turn; view.zoom = 1 + grow;
+    const px = view.coverage(); // alpha, bottom row first
     for (let y = 0; y < c.height; y += step) {
       const fy = fade((y + 0.5) / c.height, 0.14);
       if (fy <= 0) continue;
+      const row = (c.height - 1 - y) * c.width;
       for (let x = 0; x < c.width; x += step) {
-        if (px[(y * c.width + x) * 4 + 3] * fy * fade((x + 0.5) / c.width, 0.16) < 128) continue;
+        if (px[(row + x) * 4 + 3] * fy * fade((x + 0.5) / c.width, 0.16) < 128) continue;
         bits[Math.floor((y * ky) / GRID) * cols + Math.floor((x * kx) / GRID)] = 1;
       }
     }
   }
-  view.spin = spin; view.zoom = zoom; view.paint();
+  view.spin = spin; view.zoom = zoom;
   cell.mask = { bits, cols, rows };
 }
 
@@ -237,6 +261,7 @@ function overPart(cell, e) {
   const cap = cell.el.querySelector(".cap");
   const a = cap.firstElementChild.getBoundingClientRect(), b = cap.lastElementChild.getBoundingClientRect();
   if (e.clientX >= a.left - 6 && e.clientX <= b.right + 6 && e.clientY >= a.top - 6 && e.clientY <= a.bottom + 6) return true;
+  if (cell.s && !cell.mask) measureMask(cell);
   const m = cell.mask, r = cell.el.querySelector(".fig").getBoundingClientRect();
   if (!m) return false;
   const x = e.clientX - r.left, y = e.clientY - r.top;
@@ -253,25 +278,75 @@ function overPart(cell, e) {
   return false;
 }
 
-// The grid is the whole page, so every figure loads straight away and paints a still
-// frame before it animates (no frame loop needed to see it).
-for (const cell of cells) {
-  figureFor(cell.o).then(({ fig, multi }) => {
-    cell.s = liveFigure(cell.el.querySelector("canvas"), fig, multi ? { frame: GROUP_FRAME } : { visual: VISUAL });
-    cell.s.sync = true;
-    placeHalo(cell);
-    measureMask(cell);
-    cell.el.setAttribute("data-in", "");
-    if (!reduced) cell.s.view.spin = -30;
-    cell.s.view.paint();
-    if (!reduced) kick(cell.s);
-  }).catch((err) => { console.warn(err.message); cell.el.setAttribute("data-in", ""); cell.el.dataset.empty = ""; });
+// ------------------------------------------------------------------ live figures
+// A cell's figure goes live (its parts loaded, ready to turn on hover) once the first
+// screen's posters are up and the cell is within half a screen of the viewport: nearest
+// first, one at a time, yielding between steps so scrolling stays smooth. The pointer or
+// the keyboard reaching a cell starts it at once. Without hover nothing turns, so a phone
+// keeps its posters. A cell with no poster (tools/posters.mjs not rerun) has nothing else
+// to show, so it loads its figure as soon as it's near, on any device.
+const firstScreen = Promise.race([
+  Promise.all([...shelves.querySelectorAll(".tier:first-child .poster")].map((img) => img.decode().catch(() => {}))),
+  new Promise((r) => setTimeout(r, 3000)),
+]).then(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
+const nextTask = () => (globalThis.scheduler?.yield ? scheduler.yield() : new Promise((r) => setTimeout(r, 0)));
+const idle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 100));
+const queue = new Set();
+let pumping = false;
+
+function want(cell, now = false) {
+  if (cell.boot) return;
+  if (now) boot(cell);
+  else { queue.add(cell); pump(); }
 }
 
-function placeHalo(cell) {
-  const v = cell.s.view, halo = cell.el.querySelector(".halo");
-  halo.style.setProperty("--floor", `${(v.floor * 100).toFixed(1)}%`);
-  halo.style.setProperty("--w", `${Math.min(90, v.width * 90).toFixed(1)}%`);
+async function pump() {
+  if (pumping) return;
+  pumping = true;
+  await firstScreen;
+  await stage();
+  const away = (c) => { const r = c.el.getBoundingClientRect(); return Math.max(0, -r.bottom, r.top - innerHeight); };
+  while (queue.size) {
+    const [cell, ...next] = [...queue].map((c) => [away(c), c]).sort((a, b) => a[0] - b[0]).map(([, c]) => c);
+    queue.delete(cell);
+    // The next two cells' parts download while this one is built.
+    for (const c of next.slice(0, 2)) for (const id of c.o.show) S.loadPart(S.partUrl(id)).catch(() => {});
+    await boot(cell);
+    await nextTask();
+  }
+  pumping = false;
+}
+
+function boot(cell) {
+  return (cell.boot ??= (async () => {
+    queue.delete(cell);
+    await stage();
+    const { fig, multi } = await S.figureFor(cell.o);
+    await nextTask();
+    cell.s = liveFigure(cell.el.querySelector("canvas"), fig, S.cellFraming(multi));
+    cell.s.sync = true;
+    placeHalo(cell, cell.s.view);
+    // Without a poster it arrives the old way: fading in mid-turn and settling at rest.
+    if (!cell.poster) { cell.el.setAttribute("data-in", ""); if (!reduced) { cell.s.view.spin = -30; kick(cell.s); } }
+    cell.s.view.paint();
+    cell.el.setAttribute("data-live", "");
+    cell.update();
+    idle(() => { if (!cell.mask) measureMask(cell); });
+  })().catch((err) => { console.warn(err.message); if (!cell.poster) { cell.el.setAttribute("data-in", ""); cell.el.dataset.empty = ""; } }));
+}
+
+{
+  const near = new IntersectionObserver((es) => {
+    for (const e of es) if (e.isIntersecting) { near.unobserve(e.target); const c = cells.find((x) => x.el === e.target); want(c, !c.poster); }
+  }, { rootMargin: "50% 0px" });
+  for (const c of cells) if (canHover || !c.poster) near.observe(c.el);
+}
+
+// The shadow under a figure, from its live view or its poster's record of it.
+function placeHalo(cell, { floor, width }) {
+  const halo = cell.el.querySelector(".halo");
+  halo.style.setProperty("--floor", `${(floor * 100).toFixed(1)}%`);
+  halo.style.setProperty("--w", `${Math.min(90, width * 90).toFixed(1)}%`);
 }
 
 function paintCells() {
@@ -412,9 +487,9 @@ function openView(id) {
     btn.addEventListener("click", () => showPart(t));
     btn.addEventListener("pointerenter", () => { $("#inside-name").textContent = t.name; });
     btn.addEventListener("pointerleave", () => { $("#inside-name").textContent = showing?.name ?? ""; });
-    loadPart(partUrl(t.cad)).then((data) => {
-      const f = new Figure(data); f.holo = t.adopted ? 1 : 0;
-      new View(btn.querySelector("canvas"), f, { fill: 0.84, dpr: 2 }).paint();
+    stage().then(() => S.loadPart(S.partUrl(t.cad))).then((data) => {
+      const f = new S.Figure(data); f.holo = t.adopted ? 1 : 0;
+      new S.View(btn.querySelector("canvas"), f, { fill: 0.84, dpr: 2 }).paint();
     }).catch(() => btn.querySelector("canvas").replaceWith(Object.assign(document.createElement("span"), { className: "ph", textContent: "·" })));
   });
   $("#view-note").textContent = plain.length ? `Also inside: ${plain.map((p) => p.name).join(", ")}.` : "";
@@ -442,16 +517,16 @@ function mount(fig, multi) {
 function showOffer(o) {
   showing = null;
   document.querySelectorAll("#view-inside button[data-k]").forEach((b) => b.removeAttribute("aria-current"));
-  figureFor(o).then(({ fig, multi }) => { if (current === o && !showing) mount(fig, multi); }).catch(() => {});
+  stage().then(() => S.figureFor(o)).then(({ fig, multi }) => { if (current === o && !showing) mount(fig, multi); }).catch(() => {});
 }
 
 function showPart(t) {
   showing = t;
   $("#inside-name").textContent = t.name;
   document.querySelectorAll("#view-inside button[data-k]").forEach((btn) => btn.setAttribute("aria-current", btn.getAttribute("aria-label") === t.name));
-  loadPart(partUrl(t.cad)).then((data) => {
+  stage().then(() => S.loadPart(S.partUrl(t.cad))).then((data) => {
     if (showing !== t) return;
-    const f = new Figure(data); f.holo = t.adopted ? 1 : 0;
+    const f = new S.Figure(data); f.holo = t.adopted ? 1 : 0;
     mount(f, false);
   }).catch(() => {});
 }
@@ -541,21 +616,27 @@ let resizeTimer = 0;
 addEventListener("resize", () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
-    for (const c of cells) if (c.s) { c.s.view.resize(); placeHalo(c); measureMask(c); }
+    for (const c of cells) if (c.s) { c.s.view.resize(); c.s.view.paint(); placeHalo(c, c.s.view); c.mask = null; }
     if (big) { big.view.resize(); big.view.paint(); }
   }, 120);
 });
 
 render();
 const deep = location.hash.match(/^#part-([\w-]+)/);
-if (ITEM_VIEW) import("./trip.js").then(({ tripSection }) => {
-  trip = tripSection({
-    km: () => kmIn(), seats: () => seatsIn(),
-    setKm: (km) => { setKm(km); save(); render(true); },
-    setSeats: (n) => { setSeats(n); save(); render(true); },
-  });
-  shelves.querySelector(".featured").after(trip.el);
-}).catch((err) => console.warn(`trip: ${err.message}`));
+if (tripEl) {
+  const near = new IntersectionObserver((es) => {
+    if (!es.some((e) => e.isIntersecting)) return;
+    near.disconnect();
+    firstScreen.then(() => import("./trip.js")).then(({ tripSection }) => {
+      trip = tripSection({
+        el: tripEl, km: () => kmIn(), seats: () => seatsIn(),
+        setKm: (km) => { setKm(km); save(); render(true); },
+        setSeats: (n) => { setSeats(n); save(); render(true); },
+      });
+    }).catch((err) => console.warn(`trip: ${err.message}`));
+  }, { rootMargin: "100% 0px" });
+  near.observe(tripEl);
+}
 if (deep && byId.has(deep[1])) openView(deep[1]);
 
 // Inspection hook for automated checks.

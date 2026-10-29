@@ -16,7 +16,7 @@
 // composition.  ?ids=finish,match (default: every bundle)  &all=1  &real=1  &spin=35  &cols=4
 import { OFFERS, ITEMS, isAdopted } from "./js/catalog.js";
 import { loadPart, Figure, Group, View } from "./js/stage.js";
-const VISUAL = 0.165, GROUP_FRAME = 0.66; // as in js/app.js
+import { cellFraming } from "./js/figure.js";
 const Q = new URLSearchParams(location.search);
 document.body.style.setProperty("--cols", Q.get("cols") ?? 4);
 const offers = Q.has("ids") ? Q.get("ids").split(",").map((id) => [...OFFERS, ...ITEMS].find((o) => o.id === id))
@@ -29,7 +29,7 @@ for (const o of offers) {
   const fig = datas.length > 1 ? new Group(datas, { hero: o.hero }) : new Figure(datas[0]);
   fig.holo = isAdopted(o) ? 1 : 0;
   fig.color = +(Q.get("real") ?? 0);
-  const v = new View(el.querySelector("canvas"), fig, datas.length > 1 ? { frame: GROUP_FRAME } : { visual: VISUAL });
+  const v = new View(el.querySelector("canvas"), fig, cellFraming(datas.length > 1));
   v.spin = +(Q.get("spin") ?? 0);
   v.paint();
 }

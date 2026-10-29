@@ -1,4 +1,6 @@
-// Everything RIFT's first season needs, from the 2026–27 budget (CAD, tax included).
+// Everything RIFT's first season needs, from the 2026–27 budget (CAD, tax included), plus
+// items 33–42 the captain added after it, priced from the suppliers in
+// docs/budget-additions.md (quantities estimated).
 //
 // LINES are the budget lines. Items 1–25, less the omni wheels (item 4), were funded by
 // the Skule Endowment Fund. Everything else is open, the wheels included: the sheet counts
@@ -67,8 +69,29 @@ export const LINES = {
       { name: "Nylon-CF filament", qty: 4, unit: "kg", cad: "filament-spool" },
     ] }),
   ammo: L(29, "17 mm fluorescent projectiles", 1, 142.56, "projectile-17mm", { note: "one package, for testing" }),
-  entry: L(30, "ARC 1v1 event registration", 1, 207.96, null),
+  entry: L(30, "ARC 1v1 event registration", 1, 207.96, "entry-ticket"),
   van: L(31, "Return drive with the robot", 4534, 2267.0, "cargo-van", { unit: "km", note: "estimated, Toronto to UT Arlington" }),
+  // Added after the budget. No models yet, so they stand in as cubes.
+  pcb: L(33, "PCB round: three boards, components and shipping", 3, 342.0, null, { note: "supercap controller, power distribution, gimbal adapter" }),
+  bearings: L(34, "Turret X-contact bearings and small bearings", 1, 206.6, null, { parts: [
+    { name: "Four-point-contact thin-section bearing KA040, yaw", qty: 1 },
+    { name: "Four-point-contact thin-section bearing KA020, pitch", qty: 2 },
+    { name: "Miniature bearing assortment, 70 pieces", qty: 1 },
+    { name: "6800-2RS bearings, 10-pack", qty: 1 },
+  ] }),
+  metal: L(35, "Aluminium sheet, bar and standoffs", 1, 194.42, null, { parts: [
+    { name: "6061 aluminium sheet, 1/4 in, 12 × 12 in", qty: 2 },
+    { name: "6061 aluminium sheet, 1/8 in, 12 × 12 in", qty: 2 },
+    { name: "6061 round bar, 1 in × 12 in", qty: 2 },
+    { name: "M3 aluminium standoffs and spacers", qty: 1 },
+  ] }),
+  print: L(36, "Nylon-CF filament for the gimbal and launcher", 2, 169.48, null, { unit: "kg" }),
+  slipring: L(37, "Slip ring with gigabit Ethernet", 1, 159.32, null, { note: "power, CAN and data through the turning yaw axis" }),
+  wire: L(38, "Silicone copper wire, 12 to 22 AWG", 1, 99.69, null),
+  hardware: L(39, "Screws, nylock nuts, rivets and zip ties", 1, 97.81, null),
+  crimper: L(40, "Crimping tool", 1, 73.17, null, { note: "may be borrowed" }),
+  connectors: L(41, "XT30, XT60 and JST-GH connectors and contacts", 1, 66.72, null),
+  tpu: L(42, "TPU filament for the launcher's friction wheels", 1, 29.37, null, { unit: "kg" }),
 };
 // Eight return flights, one line per seat so seats can be taken one at a time.
 for (let i = 1; i <= 8; i++) LINES[`seat${i}`] = L(32, "Return flight to the competition", 1, 916.74, "airline-seat");
@@ -127,14 +150,17 @@ const ITEM_LABELS = {
   rack: "BATTERY RACK", batt: "BATTERIES", supercap: "SUPERCAPS", hub: "CHARGING HUB", adapter: "POWER ADAPTER", cm01: "CAP MONITOR",
   mc02: "REFEREE", am03: "ARMOR", sm01: "SPEED MONITOR", fi02: "RFID", pm02: "POWER MODULE", li01: "LIGHT BAR",
   mat: "CHASSIS", ammo: "AMMO", entry: "ENTRY", van: "VAN",
+  pcb: "PCBS", bearings: "BEARINGS", metal: "METAL", print: "FILAMENT", slipring: "SLIP RING",
+  wire: "WIRE", hardware: "HARDWARE", crimper: "CRIMPER", connectors: "CONNECTORS", tpu: "FRICTION WHEELS",
 };
 const BUDGET_GROUPS = [
   ["Drivetrain", ["m3508", "c620d", "kit", "wheels"]],
-  ["Turret and launcher", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l"]],
+  ["Turret and launcher", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l", "bearings", "slipring", "print", "tpu"]],
   ["Control, vision and video", ["devc", "cam", "rpi5", "hat", "vt03"]],
   ["Power and charging", ["rack", "batt", "supercap", "hub", "adapter", "cm01"]],
   ["Scoring system", ["mc02", "am03", "sm01", "fi02", "pm02", "li01"]],
-  ["Materials and projectiles", ["mat", "ammo"]],
+  ["Wiring and electronics", ["pcb", "wire", "connectors", "crimper"]],
+  ["Materials and projectiles", ["mat", "metal", "hardware", "ammo"]],
   ["Getting there", ["entry", "van", "seat"]],
 ];
 // A line shows each of its parts as many times as it buys them; a measure (4 kg, 4,534 km)

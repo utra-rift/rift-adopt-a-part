@@ -15,8 +15,20 @@ The reference figure is `m3508-p19` (`tools/parts/m3508-p19.json`). Read it firs
 | `node tools/convert.mjs <id>` | Reads `tools/parts/<id>.json`, writes `site/parts/<id>.bin`, prints triangles, size in mm, KB. |
 | `tools/shot.sh <id> shots/<id>-plan.png "real=0" 900` | Renders the figure in the drawing (plan) look. |
 | `tools/shot.sh <id> shots/<id>-real.png "real=1" 900` | Renders it in its real materials. Query also takes `spin=deg`, `elev=deg`, `az=deg`, `fill=0.8`. |
+| `node tools/posters.mjs` | Re-renders the grid posters that are missing or stale. Run it after converting a part or changing what an offer shows. |
 
 The dev server (http://localhost:4173) is already running; `shot.sh` uses it. Read every PNG you make.
+
+## Posters
+
+The grid first shows each cell as a poster, `site/posters/<cell id>-<width>.webp`: the cell's
+figure at rest, drawn by the site's own renderer (`site/dev-posters.html`, framing from
+`site/js/figure.js`) at five widths. The live figure loads afterwards and fades in over it, so
+a poster has to be the same picture. `node tools/posters.mjs` (dev server running) renders
+the posters whose cell is new, shows different parts, or uses a part file that changed, and
+rewrites `site/posters/manifest.js`. `--all` renders every one; `--ids a,b` just those.
+A cell whose poster is missing or stale still works: it loads its figure straight away, as the
+site did before posters, which is slower. Commit the posters with the part.
 
 ## The config (`tools/parts/<id>.json`)
 

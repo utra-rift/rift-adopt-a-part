@@ -1,0 +1,21 @@
+{
+  "src": "cad/models/entry-ticket.step",
+  "up": "z",
+  "rotate": [-14, -7, 0],
+  "deflection": 0.0003,
+  "angular": 0.2,
+  "lit": "/foil/",
+  "notes": "Generic admission ticket, modelled (no real ticket): 150 × 60 × 0.5 mm card, 38 mm tear-off stub behind a perforation line with edge notches, punched hole, colour panel, hairline frame and seat grid, holographic foil strip, stub barcode. Bowed (7 mm) and folded 16° at the tear line like real card stock; stood on its long edge, leaning back 14° and rolled 7° onto a corner.",
+  "defaultMaterial": "card-stock",
+  "materials": [
+    { "match": "/band/", "mat": "panel-ink" },
+    { "match": "/foil/", "mat": "holo-foil" },
+    { "match": "/(ink|barcode)/", "mat": "black-ink" }
+  ],
+  "customMaterials": {
+    "card-stock": { "color": "#efebe2", "mr": [0, 0.86] },
+    "panel-ink": { "color": "#8a2430", "mr": [0, 0.7] },
+    "black-ink": { "color": "#1c1c1f", "mr": [0, 0.62] },
+    "holo-foil": { "color": "#d6d3e4", "mr": [1, 0.24] }
+  }
+}

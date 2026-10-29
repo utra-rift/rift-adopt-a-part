@@ -1,17 +1,33 @@
-// The road strip: a close-up, bird's-eye two-lane highway running left to right with the
-// team's van on it. Ahead of the van the land is a pencil drawing on white paper; behind
-// it, colour. Both looks are painted once per size into two stacked canvases with
-// identical geometry, and the colour one is revealed through a feathered mask that moves
-// with the van, so set() only moves three composited layers.
-import { loadPart, Figure, View } from "./stage.js";
+// The road strip: the team's van driving a winding two-lane road over a sculptural white
+// landscape, seen 3/4 from above. Ahead of the van the land is a plaster model drawn in
+// grey ink; behind it, the land comes alive: the road darkens and its lines paint
+// themselves in, grass grows across the slopes in a fine stipple, rock faces flake from
+// plaster into stone, trees and flowers pop up, and a thin hologram rim rides the front.
+// Every 500 km of the trip the strip answers the slider's milestone pulse with a ripple.
+//
+// Everything is one three.js scene with its own renderer. The colour front is a single
+// uniform (metres along the route); every vertex carries its own route coordinate, its
+// height above the road and its distance from it, so the front soaks outward from the road
+// and climbs the rock faces last. The loop renders only while something moves.
+import * as THREE from "../vendor/three.module.min.js";
+import { loadPart, Figure } from "./stage.js";
 
-const SEED = 0x52494654;
 const VAN_URL = "parts/cargo-van.bin";
-const OMEGA = 13;                // critically damped follow: settles from 0 to 1 in ~0.5 s
+const TRIP_KM = 4534, MILESTONE_KM = 500;
+const LANE = 3.6, HALF = 4.5;                 // lane width, road half-width (lanes + shoulders), metres
+const WHEEL_R = 0.356, WHEEL_RPM = 40;        // 235/65 R16; the rpm the part file spins at for speed 1
+const ELEV = 30, AZIM = -20, FOV = 24;        // camera, degrees (a long lens)
+const SEED = 0x52494654;
 
-// ------------------------------------------------------------------ seeded randomness
+// ------------------------------------------------------------------ seeded noise
+function hash(a, b, c) {
+  let h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul((b | 0) + 0x3c6ef372, 0x165667b1) ^ Math.imul((c | 0) + 0x1b873593, 0x9e3779b1) ^ SEED;
+  h = Math.imul(h ^ (h >>> 15), 0x85ebca6b);
+  h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35);
+  return (h ^ (h >>> 16)) >>> 0;
+}
 function rng(seed) {
-  let t = seed ^ SEED;
+  let t = hash(seed, 7, 11);
   return () => {
     t = (t + 0x6d2b79f5) | 0;
     let r = Math.imul(t ^ (t >>> 15), 1 | t);
@@ -19,235 +35,737 @@ function rng(seed) {
     return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
   };
 }
+function noise(x, y, salt) {
+  const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+  const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+  const a = hash(xi, yi, salt), b = hash(xi + 1, yi, salt), c = hash(xi, yi + 1, salt), d = hash(xi + 1, yi + 1, salt);
+  return (a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v) / 4294967296;
+}
+function fbm(x, y, oct, salt) {
+  let s = 0, a = 1, n = 0;
+  for (let o = 0; o < oct; o++) { s += a * noise(x, y, salt + o * 31); n += a; a *= 0.5; x *= 2.03; y *= 2.03; }
+  return s / n;
+}
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const smooth = (a, b, v) => { const t = clamp((v - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const lerp = (a, b, t) => a + (b - a) * t;
+const col = (h) => new THREE.Color(h);
+const ramp = (stops, t) => {
+  const f = clamp(t, 0, 1) * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(f));
+  return col(stops[i]).lerp(col(stops[i + 1]), f - i);
+};
 
-const INK = { edge: "#6a6a70", line: "#a4a4aa", soft: "#c9c9ce", hair: "#e2e2e5" };
-const GREENS = ["#5d7b3f", "#668546", "#54723a", "#6f8c4b"];
-
-// ------------------------------------------------------------------ layout
-// Everything is in CSS px and scales with the van's length `L`, so a phone and a desktop
-// show the same scene. Everything is seeded, so the same width always draws the same land.
-function build(W, H) {
-  const L = clamp(W * 0.118, 64, 190);          // van length
-  const road = L * 0.94;                         // ~2.6 van widths
-  const sh = road * 0.09, lane = (road - 2 * sh) / 2;
-  const verge = road * 0.13;
-  const cy = H / 2, top = cy - road / 2, bot = cy + road / 2;
-  const u = L / 170;
-
-  // Sparse marks either side of the road, placed across the ground beyond each verge.
-  const r = rng(1);
-  const roomA = top - verge, roomB = H - bot - verge;
-  const across = (side, t) => (side < 0 ? top - verge - t * roomA : bot + verge + t * roomB);
-
-  const trees = [];
-  const nTrees = Math.max(3, Math.round(W / 150));
-  for (let k = 0; k < nTrees; k++) {
-    const x = ((k + 0.15 + r() * 0.7) / nTrees) * W, side = r() < 0.5 ? -1 : 1;
-    const t = 0.3 + r() * 0.5, rad = (12 + r() * 9) * u;
-    const clump = r() < 0.4 ? 3 : r() < 0.6 ? 2 : 1;
-    for (let c = 0; c < clump; c++) {
-      const rr = rad * (c ? 0.6 + r() * 0.3 : 1);
-      const x2 = x + (c ? (r() - 0.5) * rad * 2.6 : 0), y2 = across(side, t) + (c ? (r() - 0.5) * rad * 1.2 : 0);
-      const lim = side < 0 ? [rr * 1.1, top - verge - rr * 1.1] : [bot + verge + rr * 1.1, H - rr * 1.1];
-      if (lim[1] <= lim[0]) continue;
-      trees.push({ x: x2, y: clamp(y2, lim[0], lim[1]), r: rr, c: GREENS[Math.floor(r() * GREENS.length)], seed: Math.floor(r() * 1e9) });
+// ------------------------------------------------------------------ the route
+// Toronto at x = 0, Arlington at x = END. S-curves, a climb over a rise, a drop into a
+// valley, a bridge over a ravine, a second climb past the mesas and a run down to the plain.
+const END = 560, RAVINE_X = 331;
+const CONTROL = [
+  [-120, 0, 0], [-60, 2, 0], [0, 0, 0], [35, -4, 0.4], [70, 6, 1.4], [105, -6, 3.8], [140, -15, 8.5], [175, -9, 13],
+  [205, 2, 15], [235, 9, 12], [265, 5, 7], [295, -3, 4.2], [318, -6, 4], [344, -5, 4.2], [372, 2, 7.5], [405, 9, 13],
+  [438, 4, 17], [470, -7, 15.5], [500, -11, 9.5], [530, -4, 4], [560, 3, 1], [610, 5, 0], [700, 4, 0],
+];
+function buildRoute() {
+  const curve = new THREE.CatmullRomCurve3(CONTROL.map(([x, z, y]) => new THREE.Vector3(x, y, z)), false, "centripetal");
+  const len = curve.getLength(), ds = 0.5, n = Math.ceil(len / ds) + 1;
+  const pts = curve.getSpacedPoints(n - 1);
+  const X = new Float32Array(n), Y = new Float32Array(n), Z = new Float32Array(n), S = new Float32Array(n);
+  const TX = new Float32Array(n), TY = new Float32Array(n), TZ = new Float32Array(n), K = new Float32Array(n);
+  const step = len / (n - 1);
+  pts.forEach((p, i) => { X[i] = p.x; Y[i] = p.y; Z[i] = p.z; S[i] = i * step; });
+  for (let i = 0; i < n; i++) {
+    const a = Math.max(0, i - 2), b = Math.min(n - 1, i + 2);
+    const dx = X[b] - X[a], dy = Y[b] - Y[a], dz = Z[b] - Z[a], l = Math.hypot(dx, dy, dz) || 1;
+    TX[i] = dx / l; TY[i] = dy / l; TZ[i] = dz / l;
+  }
+  for (let i = 0; i < n; i++) {
+    const a = Math.max(0, i - 4), b = Math.min(n - 1, i + 4);
+    const ya = Math.atan2(TZ[a], TX[a]), yb = Math.atan2(TZ[b], TX[b]);
+    K[i] = (yb - ya) / Math.max(1e-3, S[b] - S[a]);       // yaw per metre, + turning right (toward +z)
+  }
+  // Nearest sample to (x, z): the route never doubles back in x, so search a window.
+  // With `hint` (the answer for a nearby point) only a short window is searched.
+  const near = (x, z, hint = -1) => {
+    let best = -1, bd = Infinity;
+    if (hint >= 0) {
+      for (let i = Math.max(0, hint - 16); i <= Math.min(n - 1, hint + 16); i++) {
+        const d = (X[i] - x) ** 2 + (Z[i] - z) ** 2;
+        if (d < bd) { bd = d; best = i; }
+      }
+      if (Math.abs(best - hint) >= 16 && best > 0 && best < n - 1) best = -1;
     }
-  }
-
-  const tufts = [];
-  const nTufts = Math.max(8, Math.round((W * (roomA + roomB)) / 2600));
-  for (let k = 0; k < nTufts; k++) {
-    const side = r() < 0.5 ? -1 : 1;
-    const t = Math.pow(r(), 1.6) * 0.9;          // a little denser near the verge
-    tufts.push({ x: r() * W, y: across(side, t) + (side < 0 ? -2 : 6) * u, s: (5 + r() * 4) * u, n: 3 + Math.floor(r() * 3), seed: Math.floor(r() * 1e9) });
-  }
-
-  // A post-and-wire fence on each side, in a few long runs rather than end to end.
-  const fences = [];
-  for (const side of [-1, 1]) {
-    const y = side < 0 ? top - verge - Math.min(roomA * 0.22, 12 * u) : bot + verge + Math.min(roomB * 0.22, 12 * u);
-    let x = -20 + r() * W * 0.2;
-    while (x < W) {
-      const len = W * (0.25 + r() * 0.35);
-      fences.push({ y, xa: x, xb: Math.min(W + 20, x + len) });
-      x += len + W * (0.08 + r() * 0.2);
+    if (best < 0) {
+      let lo = 0, hi = n - 1;
+      while (hi - lo > 1) { const m = (lo + hi) >> 1; if (X[m] < x) lo = m; else hi = m; }
+      best = lo; bd = Infinity;
+      for (let i = Math.max(0, lo - 140); i <= Math.min(n - 1, lo + 140); i += 3) {
+        const d = (X[i] - x) ** 2 + (Z[i] - z) ** 2;
+        if (d < bd) { bd = d; best = i; }
+      }
     }
+    for (let i = Math.max(0, best - 3); i <= Math.min(n - 1, best + 3); i++) {
+      const d = (X[i] - x) ** 2 + (Z[i] - z) ** 2;
+      if (d < bd) { bd = d; best = i; }
+    }
+    const u = (x - X[best]) * -TZ[best] + (z - Z[best]) * TX[best];   // + toward the right of travel (+z)
+    return { i: best, s: S[best], u, d: Math.abs(u), y: Y[best] };
+  };
+  const atX = (x) => near(x, 0).s;
+  const at = (s) => {
+    const f = clamp(s / step, 0, n - 1.0001), i = f | 0, t = f - i;
+    return {
+      x: lerp(X[i], X[i + 1], t), y: lerp(Y[i], Y[i + 1], t), z: lerp(Z[i], Z[i + 1], t),
+      tx: lerp(TX[i], TX[i + 1], t), ty: lerp(TY[i], TY[i + 1], t), tz: lerp(TZ[i], TZ[i + 1], t), k: lerp(K[i], K[i + 1], t),
+    };
+  };
+  return { n, step, len, X, Y, Z, S, TX, TY, TZ, near, at, s0: atX(0), s1: atX(END) };
+}
+
+// ------------------------------------------------------------------ shaders
+// Shared by everything that reveals. frontP: metres the colour front has passed this point
+// (negative: not yet). Height above the road and distance from it hold the colour back,
+// so it soaks out from the road and reaches the peaks last; noise makes the edge organic.
+const COMMON = /* glsl */ `
+  uniform float uReveal; uniform float uBase; uniform float uFeather; uniform float uTime; uniform float uMotion;
+  uniform vec3 uKey; uniform vec4 uPulse[2]; uniform vec3 uFocus; uniform sampler2D uNoise;
+  float hash12(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
+  vec2 hash22(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973)); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.xx + p3.yz) * p3.zy); }
+  // Smooth value noise, baked into a tiling texture (64 lattice cells across): one fetch.
+  float vnoise(vec2 p) { return textureLod(uNoise, p / 64.0, 0.0).r; }
+  // The base layer: everything behind the van's middle, plus a soft oval pool around the van
+  // that bulges ahead of it across the road and verges, symmetric about the road, so the van
+  // carries its colour with it. uBase is the van's middle (metres along the route).
+  float baseAt(float s, float d, vec3 wp) {
+    float q = d / 10.5;
+    float ahead = 4.6 * sqrt(max(0.0, 1.0 - q * q)) - max(d - 10.5, 0.0) * 0.6;
+    float n = (vnoise(wp.xz * 0.35 + 5.0) - 0.5) * 1.1;
+    return smoothstep(0.0, 1.0, (uBase - s + ahead + n) / 1.8);
   }
+  float frontP(float s, float h, float d, vec3 wp) {
+    float n = (vnoise(wp.xz * 0.09) - 0.5) * 8.0 + (vnoise(wp.xz * 0.42 + 17.0) - 0.5) * 2.4;
+    // A short stagger for character: higher and further from the road colours a little later.
+    return uReveal - s - min(max(h, 0.0), 6.0) * 0.3 - min(max(d - ${HALF.toFixed(1)}, 0.0), 30.0) * 0.12 + n;
+  }
+  // Milestone ripples: rings that run outward from where the van passed a milestone.
+  float pulseAt(vec3 wp) {
+    float r = 0.0;
+    for (int i = 0; i < 2; i++) {
+      vec4 P = uPulse[i];
+      if (P.w < 0.0) continue;
+      float R = P.w * 24.0, w = 1.4 + P.w * 2.2;
+      float dd = length(wp.xz - P.xz);
+      r = max(r, exp(-pow((dd - R) / w, 2.0)) * pow(max(0.0, 1.0 - P.w / 2.0), 1.6));
+    }
+    return r;
+  }
+  vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }
+  float rimAt(float p, vec3 wp) {
+    float shimmer = 0.75 + 0.25 * sin(uTime * 5.0 + wp.x * 1.7 + wp.z * 1.3);
+    return exp(-pow((p + 0.35) / 0.42, 2.0)) * uMotion * shimmer;
+  }
+  float backOut(float t) { float c1 = 1.70158, c3 = c1 + 1.0; float u = t - 1.0; return 1.0 + c3 * u * u * u + c1 * u * u; }
+`;
+// Fragment-only: the site's hologram language, cool grey-blue with fine scanlines.
+const FRAG = /* glsl */ `
+  ${COMMON}
+  vec3 holo(vec3 c, float a) {
+    float scan = 0.5 + 0.5 * sin(gl_FragCoord.y * 2.0943951);
+    return mix(c, lin(vec3(0.58, 0.70, 0.88)) * (1.0 - 0.22 * scan), clamp(a, 0.0, 1.0));
+  }
+  // Colour soaking into paper: blotchy thresholds at two scales, so the colour arrives in
+  // pools that join up, with a darker tide line where each pool's edge has dried.
+  vec2 soak(float t, vec2 q, float scale) {
+    float m = 0.68 * vnoise(q * 1.25 * scale) + 0.32 * vnoise(q * 3.9 * scale + 3.0);
+    float th = m * 0.92 + 0.04;
+    float aw = fwidth(t - th) * 1.5 + 0.03;
+    float g = smoothstep(th - aw, th + aw, t);
+    float tide = g * (1.0 - smoothstep(th + aw, th + aw + 0.09, t));
+    return vec2(g, tide);
+  }
+  // The model fades to paper toward its edges.
+  vec3 haze(vec3 c, vec3 wp) { return mix(c, vec3(1.0), smoothstep(48.0, 78.0, length(wp.xz - uFocus.xz))); }
+`;
 
-  // Reflector posts on both shoulders, and a few distance markers on the far side.
-  const posts = [], gapP = L * 1.25;
-  for (let x = gapP * 0.4; x < W; x += gapP) posts.push({ x, y: top - 3 * u }, { x: x + gapP / 2, y: bot + 3 * u });
-  const markers = [];
-  const nM = Math.max(1, Math.round(W / 480));
-  for (let k = 0; k < nM; k++) markers.push({ x: ((k + 0.5) / nM) * W + (r() - 0.5) * 80 * u, y: bot + verge * 0.55 });
+const SOLID_VS = /* glsl */ `
+  attribute float aS; attribute float aH; attribute float aD; attribute vec3 aCol;
+  varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vS; varying float vH; varying float vD;
+  void main() {
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vW = wp.xyz; vN = normalize(mat3(modelMatrix) * normal); vCol = aCol; vS = aS; vH = aH; vD = aD;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }`;
 
-  return {
-    W, H, L, u, road, sh, lane, verge, cy, top, bot,
-    x0: L * 0.5 + 16, x1: W - L * 0.5 - 16, vanY: bot - sh - lane / 2,
-    trees, tufts, fences, posts, markers,
+// Terrain: plaster with contour lines; grass grows across it in a fine stipple.
+const TERRAIN_FS = /* glsl */ `
+  ${FRAG}
+  varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vS; varying float vH; varying float vD;
+  float contour(float v) { float fw = max(fwidth(v), 1e-4); return 1.0 - smoothstep(0.55, 1.25, abs(fract(v + 0.5) - 0.5) / fw); }
+  void main() {
+    // Halfway between smooth and faceted, like a carved plaster model.
+    vec3 fn = normalize(cross(dFdx(vW), dFdy(vW)));
+    vec3 n = normalize(mix(normalize(vN), fn, 0.55));
+    vec3 L = normalize(uKey);
+    float dl = dot(n, L);
+    vec3 paper = mix(lin(vec3(0.80, 0.80, 0.80)), vec3(1.0), smoothstep(0.2, 0.95, dl * 0.5 + 0.5));
+    float c1 = contour(vW.y / 1.0), c5 = contour(vW.y / 5.0);
+    vec3 draw = mix(paper, lin(vec3(0.62, 0.62, 0.66)), max(c1 * 0.55, c5 * 0.9));
+
+    float p = frontP(vS, vH, vD, vW);
+    float t = clamp(p / uFeather, 0.0, 1.0);
+    // The verge beside the road takes the base layer at once; the bloom spreads on from there.
+    float bv = baseAt(vS, vD, vW) * (1.0 - smoothstep(10.5, 14.5, vD));
+    vec2 sk = soak(max(t, bv), vW.xz, 1.0);
+    float g = sk.x;
+    float blade = hash12(floor(vW.xz * vec2(11.0, 4.0)));
+    vec3 lit = vCol * (0.9 + 0.16 * blade) * (0.5 + 0.62 * max(dl, 0.0) + 0.14 * n.y) * (1.0 - 0.3 * sk.y);
+    vec3 c = mix(draw, lit, g);
+    c = mix(c, c * 0.84, c5 * 0.3 * g);
+    float pul = pulseAt(vW) * uMotion;
+    c *= 1.0 + pul * 0.18 * g;
+    c = holo(c, rimAt(p, vW) * 0.22 * (1.0 - g) + pul * 0.32);
+    gl_FragColor = vec4(haze(c, vW), 1.0);
+    #include <colorspace_fragment>
+  }`;
+
+// Rock, bridge and anything faceted: plaster that cracks and flakes into stone.
+const ROCK_FS = /* glsl */ `
+  ${FRAG}
+  varying vec3 vW; varying vec3 vN; varying vec3 vCol; varying float vS; varying float vH; varying float vD;
+  void voro(vec2 x, out float id, out float edge) {
+    vec2 nn = floor(x), f = fract(x); float d1 = 8.0, d2 = 8.0; vec2 best = nn;
+    for (int j = -1; j <= 1; j++) for (int i = -1; i <= 1; i++) {
+      vec2 g = vec2(float(i), float(j)); vec2 r = g + hash22(nn + g) - f; float d = dot(r, r);
+      if (d < d1) { d2 = d1; d1 = d; best = nn + g; } else if (d < d2) d2 = d;
+    }
+    id = hash12(best); edge = sqrt(d2) - sqrt(d1);
+  }
+  void main() {
+    vec3 n = normalize(vN);
+    if (!gl_FrontFacing) n = -n;
+    vec3 L = normalize(uKey);
+    float dl = dot(n, L);
+    vec3 an = abs(n);
+    vec3 draw = mix(lin(vec3(0.72, 0.72, 0.72)), vec3(1.0), smoothstep(0.1, 0.95, dl * 0.5 + 0.5));
+    // Strata: the same contour language as the land, so rock reads as layered plaster.
+    float hv = vW.y / 0.9, fw = max(fwidth(hv), 1e-4);
+    float strata = (1.0 - smoothstep(0.5, 1.2, abs(fract(hv + 0.5) - 0.5) / fw)) * (1.0 - an.y * 0.9);
+    draw = mix(draw, lin(vec3(0.64, 0.64, 0.68)), strata * 0.6);
+
+    float p = frontP(vS, vH, vD, vW);
+    // Rock and the bridge take the base layer too, so near the van they colour at once.
+    float t = max(clamp(p / uFeather, 0.0, 1.0), baseAt(vS, vD, vW) * (1.0 - smoothstep(10.5, 14.5, vD)));
+    vec2 q = (an.y > max(an.x, an.z) ? vW.xz : (an.x > an.z ? vW.zy : vW.xy)) * 1.15;
+    float id, edge; voro(q, id, edge);
+    float flip = smoothstep(id * 0.45 + 0.02, id * 0.45 + 0.3, t);
+    float crack = (1.0 - smoothstep(0.025, 0.07, edge)) * smoothstep(0.0, 0.12, t) * (1.0 - smoothstep(0.8, 1.0, t));
+    vec3 stone = vCol * (0.92 + 0.14 * id) * (0.42 + 0.7 * max(dl, 0.0) + 0.12 * n.y);
+    vec3 c = mix(draw, stone, flip);
+    c = mix(c, lin(vec3(0.33, 0.31, 0.30)), crack * 0.75);
+    float pul = pulseAt(vW) * uMotion;
+    c *= 1.0 + pul * 0.15 * flip;
+    c = holo(c, rimAt(p, vW) * 0.25 * (1.0 - flip) + pul * 0.3);
+    gl_FragColor = vec4(haze(c, vW), 1.0);
+    #include <colorspace_fragment>
+  }`;
+
+const ROAD_VS = /* glsl */ `
+  attribute float aS; attribute float aU;
+  varying vec3 vW; varying float vS; varying float vU;
+  void main() {
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vW = wp.xyz; vS = aS; vU = aU;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }`;
+// Road: white with inked edges ahead; behind, the asphalt darkens and then the lines paint
+// themselves in with a wet gleam at the brush.
+const ROAD_FS = /* glsl */ `
+  ${FRAG}
+  varying vec3 vW; varying float vS; varying float vU;
+  void main() {
+    float au = abs(vU), fu = fwidth(vU);
+    float ds = fract(vS / 12.0) * 12.0, fs = max(fwidth(vS), 1e-3);
+    float dash = smoothstep(0.0, fs, ds) * (1.0 - smoothstep(4.0 - fs, 4.0, ds));
+    float centre = (1.0 - smoothstep(0.075, 0.075 + fu, au)) * dash;
+    float edgeL = 1.0 - smoothstep(0.08, 0.08 + fu, abs(au - ${LANE.toFixed(2)}));
+    float rim = smoothstep(${(HALF - 0.12).toFixed(2)} - fu, ${(HALF - 0.12).toFixed(2)}, au);
+    vec3 draw = vec3(0.985);
+    draw = mix(draw, lin(vec3(0.66, 0.66, 0.70)), max(edgeL * 0.8, centre * 0.8));
+    draw = mix(draw, lin(vec3(0.42, 0.42, 0.46)), rim);
+
+    float n = (vnoise(vW.xz * 0.42 + 17.0) - 0.5) * 2.4 + (vnoise(vW.xz * 0.09) - 0.5) * 3.0;
+    float p = uReveal - vS + n + 1.5;
+    float grain = hash12(floor(vW.xz * 9.0));
+    float base = baseAt(vS, abs(vU), vW);
+    vec2 sk = soak(max(clamp(p / 2.8, 0.0, 1.0), base), vW.xz, 1.6);
+    float t = sk.x;
+    vec3 asphalt = lin(vec3(0.33, 0.34, 0.35)) * (0.94 + 0.1 * grain);
+    asphalt = mix(asphalt, lin(vec3(0.43, 0.43, 0.43)), smoothstep(${(LANE + 0.1).toFixed(2)}, ${(LANE + 0.2).toFixed(2)}, au));
+    asphalt *= 1.0 - 0.07 * exp(-pow((abs(abs(vU) - 1.8) - 0.86) / 0.3, 2.0));
+    float lp = p - 3.0;
+    float paint = max(smoothstep(0.0, 0.5, lp), base);
+    float wet = exp(-pow((lp - 0.5) / 0.55, 2.0)) * uMotion;
+    vec3 white = lin(vec3(0.95, 0.95, 0.93)), yellow = lin(vec3(0.93, 0.76, 0.26));
+    vec3 cr = asphalt;
+    cr = mix(cr, white + wet * 0.25, edgeL * paint);
+    cr = mix(cr, yellow + wet * 0.2, centre * paint);
+    cr = mix(cr, cr * 0.7, rim * 0.5);
+    cr *= 1.0 - 0.25 * sk.y;
+    vec3 c = mix(draw, cr, t);
+    float pul = pulseAt(vW) * uMotion;
+    c = holo(c, rimAt(p - 1.5, vW) * 0.38 * (1.0 - t) + pul * 0.28);
+    gl_FragColor = vec4(haze(c, vW), 1.0);
+    #include <colorspace_fragment>
+  }`;
+
+const LINE_VS = /* glsl */ `
+  attribute float aS; attribute float aH; attribute float aD; attribute vec3 aCol;
+  varying vec3 vW; varying vec3 vCol; varying float vS; varying float vH; varying float vD;
+  void main() {
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vW = wp.xyz; vCol = aCol; vS = aS; vH = aH; vD = aD;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }`;
+const LINE_FS = /* glsl */ `
+  ${FRAG}
+  varying vec3 vW; varying vec3 vCol; varying float vS; varying float vH; varying float vD;
+  void main() {
+    float t = max(clamp(frontP(vS, vH, vD, vW) / uFeather, 0.0, 1.0), baseAt(vS, vD, vW) * (1.0 - smoothstep(10.5, 14.5, vD)));
+    vec3 c = mix(lin(vec3(0.52, 0.52, 0.56)), vCol * 0.55, smoothstep(0.5, 1.0, t));
+    gl_FragColor = vec4(haze(c, vW), 1.0);
+    #include <colorspace_fragment>
+  }`;
+
+// Trees, shrubs and flowers: absent in the drawing, they grow in with a little overshoot
+// once the colour has arrived, and bounce when a milestone ripple passes.
+const GROW_VS = /* glsl */ `
+  ${COMMON}
+  attribute vec4 iData;   // route s, height above the road, distance from it, delay (m)
+  varying vec3 vN; varying vec3 vCol; varying vec3 vW;
+  void main() {
+    mat4 m = modelMatrix * instanceMatrix;
+    vec3 base = (m * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+    float p = frontP(iData.x, iData.y, iData.z, base) - iData.w;
+    float t = clamp(p / 2.4, 0.0, 1.0);
+    float g = uMotion > 0.5 ? max(backOut(t), 0.0) : step(0.001, p);
+    g *= 1.0 + 0.3 * pulseAt(base) * uMotion;
+    vec4 wp = m * vec4(position * g, 1.0);
+    vW = wp.xyz;
+    vN = normalize(mat3(m) * normal);
+    vCol = color.r > 0.99 && color.b > 0.99 ? instanceColor : color;
+    gl_Position = projectionMatrix * viewMatrix * wp;
+  }`;
+const GROW_FS = /* glsl */ `
+  uniform vec3 uKey;
+  varying vec3 vN; varying vec3 vCol; varying vec3 vW;
+  void main() {
+    vec3 n = normalize(vN);
+    float dl = max(dot(n, normalize(uKey)), 0.0);
+    gl_FragColor = vec4(vCol * (0.48 + 0.7 * dl + 0.12 * n.y), 1.0);
+    #include <colorspace_fragment>
+  }`;
+
+const MOTE_VS = /* glsl */ `
+  uniform float uDpr;
+  attribute float aLife; attribute float aSize; attribute vec3 aColor;
+  varying float vA; varying vec3 vC;
+  void main() {
+    vA = sin(3.14159 * clamp(aLife, 0.0, 1.0));
+    vC = aColor;
+    gl_PointSize = aSize * uDpr * (0.6 + 0.4 * vA);
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1.0);
+  }`;
+const MOTE_FS = /* glsl */ `
+  varying float vA; varying vec3 vC;
+  void main() {
+    float d = length(gl_PointCoord - 0.5);
+    float a = (1.0 - smoothstep(0.3, 0.5, d)) * vA;
+    if (a < 0.01) discard;
+    gl_FragColor = vec4(vC, a * 0.9);
+    #include <colorspace_fragment>
+  }`;
+
+const SHADOW_FS = /* glsl */ `
+  varying vec2 vUv;
+  void main() {
+    vec2 q = (vUv - 0.5) * 2.0;
+    float d = length(q * vec2(1.0, 1.0));
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 0.32 * (1.0 - smoothstep(0.45, 1.0, d)));
+  }`;
+
+// ------------------------------------------------------------------ the land
+function attrs(geo, list) { for (const [k, v, n] of list) geo.setAttribute(k, new THREE.BufferAttribute(v, n)); return geo; }
+
+// Cooperative building: `slice()` yields to the browser whenever the current task has run
+// for more than a few milliseconds, so construction never blocks the page.
+// It stops the build (by throwing ABORT) once the strip has been destroyed.
+const ABORT = new Error("road: destroyed");
+function slicer(budget, isAlive) {
+  let start = performance.now();
+  const yieldNow = () => (globalThis.scheduler?.yield ? globalThis.scheduler.yield() : new Promise((r) => setTimeout(r, 0)));
+  return async () => {
+    if (performance.now() - start > budget) { await yieldNow(); start = performance.now(); }
+    if (!isAlive()) throw ABORT;
   };
 }
 
-// ------------------------------------------------------------------ painting
-let grainTile = null;
-function grain() {
-  if (grainTile) return grainTile;
-  grainTile = document.createElement("canvas");
-  grainTile.width = grainTile.height = 128;
-  const g = grainTile.getContext("2d"), img = g.createImageData(128, 128), r = rng(7);
-  for (let i = 0; i < img.data.length; i += 4) { const v = 96 + r() * 64; img.data[i] = img.data[i + 1] = img.data[i + 2] = v; img.data[i + 3] = 255; }
-  g.putImageData(img, 0, 0);
-  return grainTile;
+async function buildTerrain(R, slice) {
+  const x0 = -110, x1 = 690, z0 = -62, z1 = 44, st = 2;
+  const nx = Math.round((x1 - x0) / st) + 1, nz = Math.round((z1 - z0) / st) + 1;
+  const N = nx * nz;
+  const P = new Float32Array(N * 3), AS = new Float32Array(N), AH = new Float32Array(N), AD = new Float32Array(N), U = new Float32Array(N), E = new Float32Array(N);
+  const H = new Float32Array(N);
+  const ravineX = (z) => RAVINE_X + 4 * Math.sin(z / 11);
+  const calmOf = new Float32Array(nx);
+  for (let i = 0; i < nx; i++) calmOf[i] = smooth(0.32, 0.62, fbm((x0 + i * st) / 120, 3.7, 2, 5));
+  for (let j = 0; j < nz; j++) {
+   await slice();
+   let hint = -1;
+   for (let i = 0; i < nx; i++) {
+    const k = j * nx + i, x = x0 + i * st, z = z0 + j * st;
+    const nr = R.near(x, z, hint);
+    hint = nr.i;
+    const far = nr.u < 0, d = nr.d;
+    // Hills either side, taller on the far side, with flat stretches of calm plain between.
+    const amp = (far ? 17 : 5.5) * smooth(HALF + 2.5, HALF + 17, d) * (0.5 + 0.5 * calmOf[i]);
+    let nat = nr.y + amp * Math.max(-0.15, fbm(x / 30, z / 30, 3, 9) - 0.32) * 2.2;
+    nat += (far ? 2.5 : 0.8) * smooth(HALF + 3, HALF + 18, d) * (noise(x / 9, z / 9, 13) - 0.5);
+    const rav = Math.exp(-(((x - ravineX(z)) / 7.5) ** 2));
+    nat -= 13 * rav;
+    const keep = Math.max(smooth(HALF + 0.6, HALF + 13, d), Math.exp(-(((x - ravineX(z)) / 12) ** 2)) * smooth(HALF - 1, HALF + 1, d));
+    const h = lerp(nr.y - 0.1, nat, keep);
+    H[k] = h; P[k * 3] = x; P[k * 3 + 1] = h; P[k * 3 + 2] = z;
+    AS[k] = nr.s; AH[k] = h - nr.y; AD[k] = d; U[k] = nr.u; E[k] = nr.y;
+   }
+  }
+  const index = new Uint32Array((nx - 1) * (nz - 1) * 6);
+  let q = 0;
+  for (let j = 0; j < nz - 1; j++) for (let i = 0; i < nx - 1; i++) {
+    const a = j * nx + i, b = a + 1, c = a + nx, d = c + 1;
+    index[q++] = a; index[q++] = c; index[q++] = b; index[q++] = b; index[q++] = c; index[q++] = d;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.BufferAttribute(P, 3));
+  geo.setIndex(new THREE.BufferAttribute(index, 1));
+  geo.computeVertexNormals();
+  // True colours: lush in Ontario drying to Texas, rock on the steep faces, gravel and mown
+  // verges by the road, a creek in the ravine.
+  const nrm = geo.attributes.normal.array, AC = new Float32Array(N * 3);
+  const GRASS = ["#7aa451", "#8aae58", "#a3ac62", "#b6a86e"], ROCK = ["#9d9b95", "#b3ab98", "#b98d66", "#ad724f"];
+  const c = new THREE.Color();
+  for (let k = 0; k < N; k++) {
+    if (k % nx === 0) await slice();
+    const x = P[k * 3], z = P[k * 3 + 2], prog = x / END, d = AD[k];
+    const v = fbm(x / 16, z / 16, 2, 21);
+    c.copy(ramp(GRASS, prog + (v - 0.5) * 0.25)).multiplyScalar(0.88 + v * 0.24);
+    const slope = 1 - nrm[k * 3 + 1];
+    c.lerp(ramp(ROCK, prog + (noise(x / 10, z / 10, 22) - 0.5) * 0.3), smooth(0.28, 0.5, slope));
+    if (d < HALF + 1.1) c.copy(col("#b8b2a2"));
+    else if (d < HALF + 4) c.lerp(col("#b9cb83"), 0.3);
+    if (H[k] < E[k] - 9.5) c.lerp(col("#6f97a4"), smooth(E[k] - 9.5, E[k] - 11, H[k]));
+    c.toArray(AC, k * 3);
+  }
+  attrs(geo, [["aS", AS, 1], ["aH", AH, 1], ["aD", AD, 1], ["aCol", AC, 3]]);
+  const heightAt = (x, z) => {
+    const fx = clamp((x - x0) / st, 0, nx - 1.001), fz = clamp((z - z0) / st, 0, nz - 1.001);
+    const i = fx | 0, j = fz | 0, tx = fx - i, tz = fz - j, k = j * nx + i;
+    return lerp(lerp(H[k], H[k + 1], tx), lerp(H[k + nx], H[k + nx + 1], tx), tz);
+  };
+  const slopeAt = (x, z) => {
+    const e = 1.2, gx = heightAt(x + e, z) - heightAt(x - e, z), gz = heightAt(x, z + e) - heightAt(x, z - e);
+    return Math.hypot(gx, gz) / (2 * e);
+  };
+  return { geo, heightAt, slopeAt, ravineX };
 }
 
-// A tree from above: a main disc ringed by a few lobes, the same shape in both looks.
-function crown(t) {
-  const r = rng(t.seed), lobes = [];
-  const n = 5 + Math.floor(r() * 3);
-  for (let k = 0; k < n; k++) {
-    const a = (k / n) * 6.283 + r() * 0.5, d = t.r * (0.42 + r() * 0.15);
-    lobes.push([t.x + Math.cos(a) * d, t.y + Math.sin(a) * d, t.r * (0.5 + r() * 0.15)]);
+function buildRoad(R) {
+  const n = R.n, P = new Float32Array(n * 2 * 3), AS = new Float32Array(n * 2), AU = new Float32Array(n * 2);
+  for (let i = 0; i < n; i++) {
+    const rx = -R.TZ[i], rz = R.TX[i], l = Math.hypot(rx, rz) || 1;
+    for (let k = 0; k < 2; k++) {
+      const u = k ? HALF : -HALF, o = (i * 2 + k);
+      P[o * 3] = R.X[i] + (rx / l) * u; P[o * 3 + 1] = R.Y[i] + 0.12; P[o * 3 + 2] = R.Z[i] + (rz / l) * u;
+      AS[o] = R.S[i]; AU[o] = u;
+    }
   }
-  lobes.push([t.x, t.y, t.r * 0.62]);
-  return lobes;
+  const index = [];
+  for (let i = 0; i < n - 1; i++) { const a = i * 2; index.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
+  const geo = attrs(new THREE.BufferGeometry(), [["position", P, 3], ["aS", AS, 1], ["aU", AU, 1]]);
+  geo.setIndex(index);
+  return geo;
 }
 
-function paint(canvas, w, color, dpr) {
-  const ctx = canvas.getContext("2d");
-  canvas.width = Math.round(w.W * dpr); canvas.height = Math.round(w.H * dpr);
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  const { W, H, u, road, sh, lane, verge, cy, top, bot } = w;
-  ctx.lineCap = "round"; ctx.lineJoin = "round";
-
-  // Ground: white paper, or a pale meadow that greens toward the mown verges.
-  if (color) {
-    const g = ctx.createLinearGradient(0, 0, 0, H);
-    const f = (y) => clamp(y / H, 0, 1);
-    g.addColorStop(0, "#fdfdfa");
-    g.addColorStop(f(top - verge - 30 * u), "#e3ebcf");
-    g.addColorStop(f(top - verge), "#d3e0b6");
-    g.addColorStop(f(bot + verge), "#d3e0b6");
-    g.addColorStop(f(bot + verge + 30 * u), "#e3ebcf");
-    g.addColorStop(1, "#fdfdfa");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = "#a9bf7a";
-    ctx.fillRect(0, top - verge, W, verge); ctx.fillRect(0, bot, W, verge);
-    ctx.fillStyle = "rgba(255,255,255,.18)";
-    ctx.fillRect(0, top - verge, W, verge * 0.35); ctx.fillRect(0, bot + verge * 0.65, W, verge * 0.35);
-  } else {
-    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, W, H);
-    ctx.beginPath();
-    for (const y of [top - verge, bot + verge]) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
-    ctx.setLineDash([1.5, 5]); ctx.strokeStyle = INK.soft; ctx.lineWidth = 0.7; ctx.stroke(); ctx.setLineDash([]);
+// Faceted solids (rocks, the bridge) go into one geometry, with ink edges in another.
+class Solids {
+  // Each vertex carries its route coordinate (s), height above the road (h) and distance
+  // from it (d). A rock takes them from the road point nearest its middle, so the whole rock
+  // colours with the ground it stands on; long things (the bridge) take them per vertex.
+  constructor(R) { this.R = R; this.tris = []; this.lines = []; }
+  route(x, y, z, at) { const nr = at ?? this.R.near(x, z); return [nr.s, y - nr.y, nr.d]; }
+  add(geo, colour, faceJitter = 0.06, edgeAngle = 22, perVertex = false) {
+    const g = geo.index ? geo.toNonIndexed() : geo;
+    const p = g.attributes.position.array, base = new THREE.Color(colour);
+    let at = null;
+    if (!perVertex) {
+      g.computeBoundingBox();
+      const m = g.boundingBox.getCenter(new THREE.Vector3());
+      at = this.R.near(m.x, m.z);
+    }
+    for (let t = 0; t < p.length; t += 9) {
+      const c = base.clone().multiplyScalar(1 + (noise(p[t] * 3.1, p[t + 2] * 2.7, 77) - 0.5) * 2 * faceJitter);
+      for (let v = 0; v < 3; v++) { const o = t + v * 3; this.tris.push(p[o], p[o + 1], p[o + 2], c.r, c.g, c.b, ...this.route(p[o], p[o + 1], p[o + 2], at)); }
+    }
+    const e = new THREE.EdgesGeometry(g, edgeAngle).attributes.position.array;
+    const lc = base.clone().multiplyScalar(0.6);
+    for (let v = 0; v < e.length; v += 3) this.lines.push(e[v], e[v + 1], e[v + 2], lc.r, lc.g, lc.b, ...this.route(e[v], e[v + 1], e[v + 2], at));
+    g.dispose(); if (g !== geo) geo.dispose();
   }
+  line(a, b, colour) {
+    const c = new THREE.Color(colour).multiplyScalar(0.6);
+    this.lines.push(...a, c.r, c.g, c.b, ...this.route(...a), ...b, c.r, c.g, c.b, ...this.route(...b));
+  }
+  build() {
+    const pack = (arr, withNormals) => {
+      const n = arr.length / 9;
+      const P = new Float32Array(n * 3), C = new Float32Array(n * 3), AS = new Float32Array(n), AH = new Float32Array(n), AD = new Float32Array(n);
+      for (let i = 0, o = 0; i < n; i++, o += 9) {
+        P[i * 3] = arr[o]; P[i * 3 + 1] = arr[o + 1]; P[i * 3 + 2] = arr[o + 2];
+        C[i * 3] = arr[o + 3]; C[i * 3 + 1] = arr[o + 4]; C[i * 3 + 2] = arr[o + 5];
+        AS[i] = arr[o + 6]; AH[i] = arr[o + 7]; AD[i] = arr[o + 8];
+      }
+      const geo = attrs(new THREE.BufferGeometry(), [["position", P, 3], ["aCol", C, 3], ["aS", AS, 1], ["aH", AH, 1], ["aD", AD, 1]]);
+      if (withNormals) geo.computeVertexNormals();
+      return geo;
+    };
+    return { solid: pack(this.tris, true), lines: pack(this.lines, false) };
+  }
+}
 
-  // Grass tufts.
-  ctx.beginPath();
-  for (const t of w.tufts) {
-    const r = rng(t.seed);
-    for (let k = 0; k < t.n; k++) {
-      const a = -Math.PI / 2 + (k / (t.n - 1) - 0.5) * 1.5 + (r() - 0.5) * 0.3, len = t.s * (0.6 + r() * 0.5);
-      const bx = t.x + (k - t.n / 2) * 0.9 * u;
-      ctx.moveTo(bx, t.y);
-      ctx.quadraticCurveTo(bx + Math.cos(a) * len * 0.3, t.y + Math.sin(a) * len * 0.6, bx + Math.cos(a) * len, t.y + Math.sin(a) * len);
+// A boulder: a jittered icosahedron, squashed and turned.
+function boulder(r, sx, sy, sz, rot, x, y, z, seed) {
+  const g = new THREE.IcosahedronGeometry(1, 1);
+  const p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) {
+    const vx = p.getX(i), vy = p.getY(i), vz = p.getZ(i);
+    const j = 0.78 + 0.44 * (hash(Math.round(vx * 100), Math.round(vy * 100) + Math.round(vz * 100) * 7, seed) / 4294967296);
+    p.setXYZ(i, vx * j, Math.max(vy * j, -0.35), vz * j);
+  }
+  g.scale(r * sx, r * sy, r * sz); g.rotateY(rot); g.translate(x, y, z);
+  return g;
+}
+// A mesa: an irregular prism with a slight batter and a smaller tier on top.
+function mesa(r, h, x, y, z, seed, tiers = 2) {
+  const rr = rng(seed), pos = [];
+  let base = y - 2, rad = r, top = y + h;
+  for (let t = 0; t < tiers; t++) {
+    const n = 9 + Math.floor(rr() * 4), ring = [];
+    for (let k = 0; k < n; k++) { const a = (k / n) * Math.PI * 2 + rr() * 0.3; ring.push([Math.cos(a) * rad * (0.75 + rr() * 0.35), Math.sin(a) * rad * (0.75 + rr() * 0.35)]); }
+    const taper = 0.86 - rr() * 0.08;
+    for (let k = 0; k < n; k++) {
+      const [ax, az] = ring[k], [bx, bz] = ring[(k + 1) % n];
+      const A = [x + ax, base, z + az], B = [x + bx, base, z + bz], C = [x + bx * taper, top, z + bz * taper], D = [x + ax * taper, top, z + az * taper];
+      pos.push(...A, ...C, ...B, ...A, ...D, ...C);
+      pos.push(x, top, z, ...C, ...D);
+    }
+    base = top - 0.2; rad = rad * taper * (0.45 + rr() * 0.2); top = top + h * (0.28 + rr() * 0.2);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  return g;
+}
+
+async function buildRocks(R, T, slice) {
+  const S = new Solids(R), r = rng(31), placed = [];
+  const ROCK = ["#a6a39d", "#b9b09c", "#bd8f67", "#b07450"];
+  const ok = (x, z, rad) => {
+    const nr = R.near(x, z);
+    if (nr.d < HALF + 2.5 + rad) return false;
+    if (Math.abs(x - T.ravineX(z)) < 10 + rad) return false;
+    return !placed.some((q) => Math.hypot(q.x - x, q.z - z) < q.r + rad + 1);
+  };
+  const put = (x, z, rad, top) => placed.push({ x, z, r: rad, top });
+  // Mesas and buttes on the far side, every so often.
+  for (let x = 20; x < 640; x += 30 + r() * 34) {
+    await slice();
+    const rad = 3.5 + r() * 6, h = 3.5 + r() * 7;
+    const nr = R.near(x, 0), z = R.Z[nr.i] - (HALF + 6 + rad + r() * 10);
+    if (!ok(x, z, rad)) continue;
+    S.add(mesa(rad, h, x, T.heightAt(x, z), z, Math.floor(r() * 1e9), r() < 0.7 ? 2 : 1), ramp(ROCK, x / END), 0.07, 30);
+    put(x, z, rad, T.heightAt(x, z) + h * 1.5);
+    // Fallen blocks at its foot.
+    for (let k = 0; k < 4; k++) {
+      const a = r() * Math.PI * 2, bx = x + Math.cos(a) * (rad + 1.5 + r() * 3), bz = z + Math.sin(a) * (rad + 1.5 + r() * 3), br = 0.6 + r() * 1.1;
+      if (!ok(bx, bz, br)) continue;
+      S.add(boulder(br, 1, 0.7, 1.1, r() * 6, bx, T.heightAt(bx, bz), bz, k + 1), ramp(ROCK, x / END), 0.08, 26);
+      put(bx, bz, br, T.heightAt(bx, bz) + br);
     }
   }
-  ctx.strokeStyle = color ? "rgba(84,116,52,.75)" : INK.line; ctx.lineWidth = color ? 0.9 : 0.6; ctx.stroke();
-
-  // Fences: posts and two strands of wire.
-  for (const f of w.fences) {
-    ctx.beginPath();
-    for (const dy of [-1, 1]) { ctx.moveTo(f.xa, f.y + dy * 0.8 * u); ctx.lineTo(f.xb, f.y + dy * 0.8 * u); }
-    ctx.strokeStyle = color ? "rgba(110,100,85,.45)" : INK.soft; ctx.lineWidth = 0.6; ctx.stroke();
-    ctx.beginPath();
-    const step = Math.max(9, 22 * u), s = 2.2 * u + 0.4;
-    for (let x = f.xa; x <= f.xb; x += step) ctx.rect(x - s / 2, f.y - s / 2, s, s);
-    if (color) { ctx.fillStyle = "#8b7a63"; ctx.fill(); } else { ctx.fillStyle = "#fff"; ctx.fill(); ctx.strokeStyle = INK.line; ctx.lineWidth = 0.6; ctx.stroke(); }
+  // Clusters of boulders both sides; low and rounded like Canadian Shield granite at the start.
+  for (let k = 0; k < 80; k++) {
+    await slice();
+    const s = R.s0 - 40 + r() * (R.s1 - R.s0 + 100), p = R.at(s);
+    const side = r() < 0.6 ? -1 : 1;
+    const d = HALF + 3 + Math.pow(r(), 1.5) * (side < 0 ? 20 : 14);
+    const cx = p.x - p.tz * d * side, cz = p.z + p.tx * d * side;
+    const n = 1 + Math.floor(r() * 4), shield = p.x < 90;
+    for (let m = 0; m < n; m++) {
+      const br = (shield ? 1.6 + r() * 2.6 : 0.5 + r() * 1.6) * (side > 0 ? 0.7 : 1);
+      const bx = cx + (r() - 0.5) * 6, bz = cz + (r() - 0.5) * 5;
+      if (!ok(bx, bz, br)) continue;
+      S.add(boulder(br, 1, shield ? 0.42 : 0.75, 1.15, r() * 6, bx, T.heightAt(bx, bz) - br * 0.15, bz, k * 9 + m), ramp(ROCK, bx / END), 0.08, 26);
+      put(bx, bz, br, T.heightAt(bx, bz) + br);
+    }
   }
+  // Long fins of rock on the far side, like strata breaking the surface.
+  for (let k = 0; k < 16; k++) {
+    const s = R.s0 - 20 + ((k + r()) / 16) * (R.s1 - R.s0 + 40), p = R.at(s);
+    const d = HALF + 6 + r() * 9, x = p.x + p.tz * d, z = p.z - p.tx * d, len = 4 + r() * 5;
+    if (!ok(x, z, len * 0.8)) continue;
+    S.add(boulder(len, 1.6, 0.55 + r() * 0.3, 0.55, Math.atan2(p.tz, p.tx) * -1 + (r() - 0.5) * 0.6, x, T.heightAt(x, z) - 0.6, z, 500 + k), ramp(ROCK, x / END), 0.08, 24);
+    put(x, z, len * 0.8, T.heightAt(x, z) + len * 0.75);
+  }
+  // Hoodoos toward Texas.
+  for (let k = 0; k < 7; k++) {
+    const x = 380 + r() * 220, nr = R.near(x, 0), z = R.Z[nr.i] - (HALF + 9 + r() * 22);
+    const rad = 1 + r() * 0.8;
+    if (!ok(x, z, rad)) continue;
+    const hh = 4 + r() * 4;
+    S.add(mesa(rad, hh, x, T.heightAt(x, z), z, k + 900, 2), ramp(ROCK, x / END), 0.08, 30);
+    put(x, z, rad, T.heightAt(x, z) + hh * 1.5);
+  }
+  return { S, placed };
+}
 
-  // Trees: shadow, crown, light.
-  const crowns = w.trees.map(crown);
-  if (color) {
-    ctx.beginPath();
-    for (const lobes of crowns) for (const [x, y, r] of lobes) { const sx = x + r * 0.45, sy = y + r * 0.6; ctx.moveTo(sx + r, sy); ctx.arc(sx, sy, r, 0, 6.283); }
-    ctx.fillStyle = "rgba(40,60,25,.22)"; ctx.fill();
-    w.trees.forEach((t, i) => {
-      ctx.beginPath(); for (const [x, y, r] of crowns[i]) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 6.283); }
-      ctx.fillStyle = t.c; ctx.fill();
-      ctx.beginPath(); for (const [x, y, r] of crowns[i]) { const hx = x - r * 0.25, hy = y - r * 0.3; ctx.moveTo(hx + r * 0.55, hy); ctx.arc(hx, hy, r * 0.55, 0, 6.283); }
-      ctx.fillStyle = "rgba(255,255,210,.14)"; ctx.fill();
+function buildBridge(R, T, S) {
+  // Deck sides and soffit, parapets and two piers where the road crosses the ravine.
+  const xa = RAVINE_X - 15, xb = RAVINE_X + 15, ia = R.near(xa, 0).i, ib = R.near(xb, 0).i;
+  const pos = [], rails = [];
+  const pt = (i, u, dy) => { const rx = -R.TZ[i], rz = R.TX[i]; return [R.X[i] + rx * u, R.Y[i] + dy, R.Z[i] + rz * u]; };
+  for (let i = ia; i < ib; i += 2) {
+    const j = Math.min(ib, i + 2);
+    for (const u of [-HALF - 0.3, HALF + 0.3]) {
+      const a = pt(i, u, 0.1), b = pt(j, u, 0.1), c = pt(j, u, -1.1), d = pt(i, u, -1.1);
+      pos.push(...a, ...b, ...c, ...a, ...c, ...d);
+      const ra = pt(i, u, 1.05), rb = pt(j, u, 1.05);
+      pos.push(...a, ...b, ...rb, ...a, ...rb, ...ra);
+    }
+    const a = pt(i, -HALF - 0.3, -1.1), b = pt(j, -HALF - 0.3, -1.1), c = pt(j, HALF + 0.3, -1.1), d = pt(i, HALF + 0.3, -1.1);
+    pos.push(...a, ...c, ...b, ...a, ...d, ...c);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  S.add(g, "#c2c0b9", 0.02, 60, true);
+  for (const u of [-HALF - 0.3, HALF + 0.3]) {
+    S.line(pt(ia, u, 1.05), pt(ib, u, 1.05), "#c2c0b9");
+    S.line(pt(ia, u, -1.1), pt(ib, u, -1.1), "#c2c0b9");
+    S.line(pt(ia, u, 0.1), pt(ib, u, 0.1), "#c2c0b9");
+  }
+  for (const f of [0.36, 0.64]) {
+    const i = Math.round(lerp(ia, ib, f)), floor = T.heightAt(R.X[i], R.Z[i]) - 1, top = R.Y[i] - 1.1;
+    const box = new THREE.BoxGeometry(1.4, top - floor, HALF * 1.6);
+    box.rotateY(-Math.atan2(R.TZ[i], R.TX[i]));
+    box.translate(R.X[i], (top + floor) / 2, R.Z[i]);
+    S.add(box, "#c2c0b9", 0.02, 30, true);
+  }
+  return [R.S[ia], R.S[ib]];
+}
+
+async function buildGrowth(R, T, placed, bridge, slice) {
+  const r = rng(57);
+  const free = (x, z, rad) => !placed.some((q) => Math.hypot(q.x - x, q.z - z) < q.r + rad + 0.6);
+  const kinds = [];
+  const make = async (geo, count, pick) => {
+    const items = [];
+    for (let k = 0; k < count * 4 && items.length < count; k++) {
+      if (k % 40 === 0) await slice();
+      const it = pick();
+      if (!it) continue;
+      const { x, z, scale } = it;
+      const nr = R.near(x, z);
+      if (nr.d < HALF + 2 || !free(x, z, scale)) continue;
+      if (Math.abs(x - T.ravineX(z)) < 9 || T.slopeAt(x, z) > 0.45) continue;
+      if (nr.s > bridge[0] - 5 && nr.s < bridge[1] + 5 && nr.d < HALF + 6) continue;
+      const y = T.heightAt(x, z);
+      items.push({ x, y, z, scale, colour: it.colour, s: nr.s, h: y - nr.y, d: nr.d, delay: 0.5 + r() * 2.5 });
+    }
+    const mesh = new THREE.InstancedMesh(geo, null, items.length);
+    const data = new Float32Array(items.length * 4), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+    items.forEach((it, i) => {
+      e.set(0, r() * 6.28, 0);
+      m.compose(new THREE.Vector3(it.x, it.y, it.z), q.setFromEuler(e), new THREE.Vector3(it.scale, it.scale * (0.85 + r() * 0.3), it.scale));
+      mesh.setMatrixAt(i, m);
+      mesh.setColorAt(i, it.colour);
+      data.set([it.s, it.h, it.d, it.delay], i * 4);
     });
-  } else {
-    // Outline the union of each crown's lobes: stroke them all, then cover the inside.
-    w.trees.forEach((t, i) => {
-      ctx.beginPath(); for (const [x, y, r] of crowns[i]) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, 6.283); }
-      ctx.strokeStyle = INK.line; ctx.lineWidth = 1.4; ctx.stroke();
-      ctx.fillStyle = "#fff"; ctx.fill();
-      ctx.beginPath();
-      for (const [x, y, r] of crowns[i].slice(0, -1)) { ctx.moveTo(x + r * 0.55 * Math.cos(-0.6), y + r * 0.55 * Math.sin(-0.6)); ctx.arc(x, y, r * 0.55, -0.6, 1.2); }
-      ctx.strokeStyle = INK.hair; ctx.lineWidth = 0.6; ctx.stroke();
-      ctx.beginPath(); ctx.arc(t.x, t.y, 0.9, 0, 6.283); ctx.fillStyle = INK.soft; ctx.fill();
-    });
-  }
+    geo.setAttribute("iData", new THREE.InstancedBufferAttribute(data, 4));
+    kinds.push(mesh);
+  };
+  const around = (dMin, dMax, nearMin) => {
+    const s = R.s0 - 40 + r() * (R.s1 - R.s0 + 100), p = R.at(s), side = r() < 0.55 ? -1 : 1;
+    const d = (side > 0 ? Math.max(nearMin, dMin) : dMin) + Math.pow(r(), 1.4) * (dMax - dMin);
+    return { x: p.x - p.tz * d * side, z: p.z + p.tx * d * side, prog: p.x / END };
+  };
+  // Trees: a trunk and a faceted crown, in loose clumps; autumn colour through the middle.
+  const tree = () => {
+    const trunk = new THREE.CylinderGeometry(0.1, 0.14, 1.4, 5).translate(0, 0.7, 0);
+    const crown = new THREE.IcosahedronGeometry(1, 0).scale(1, 1.25, 1).translate(0, 2.2, 0);
+    const paint = (g, c) => { const n = g.attributes.position.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) c.toArray(a, i * 3); g.setAttribute("color", new THREE.BufferAttribute(a, 3)); return g; };
+    const g = mergeNonIndexed([paint(trunk.toNonIndexed(), col("#5a4632")), paint(crown, new THREE.Color(1, 1, 1))]);
+    return g;
+  };
+  const blob = (sy) => {
+    const g = new THREE.IcosahedronGeometry(1, 0).scale(1, sy, 1).translate(0, sy * 0.7, 0);
+    const n = g.attributes.position.count, a = new Float32Array(n * 3).fill(1);
+    g.setAttribute("color", new THREE.BufferAttribute(a, 3)); g.computeVertexNormals();
+    return g;
+  };
+  const GREENS = ["#5b7f3a", "#668a40", "#4f7535", "#729446"], FALL = ["#c07a35", "#a9532e", "#d1a13f"];
+  let clump = null;
+  await make(tree(), 110, () => {
+    if (!clump || r() < 0.25) clump = around(HALF + 5, 34, 11);
+    const x = clump.x + (r() - 0.5) * 9, z = clump.z + (r() - 0.5) * 7;
+    const fall = clump.prog > 0.3 && clump.prog < 0.75 && r() < 0.22;
+    return { x, z, scale: 0.8 + r() * 0.7, colour: col((fall ? FALL : GREENS)[Math.floor(r() * 4) % (fall ? 3 : 4)]).lerp(col("#9a9a5a"), clamp(clump.prog - 0.6, 0, 0.4)) };
+  });
+  await make(blob(0.65), 150, () => {
+    const p = around(HALF + 2.5, 30, 3);
+    return { ...p, scale: 0.35 + r() * 0.45, colour: col(["#6f8a45", "#7d9a4c", "#8a8f55", "#6a7d40"][Math.floor(r() * 4)]) };
+  });
+  // Wildflowers: Ontario daisies and goldenrod, Texas bluebonnets and paintbrush.
+  await make(blob(0.8), 320, () => {
+    const p = around(HALF + 1.6, 16, 1.6);
+    const set = p.prog < 0.5 ? ["#f4f1e6", "#f0c43f", "#e8d35a", "#b493d6"] : ["#4d6cc9", "#5a78d6", "#d9573f", "#f0c43f"];
+    return { ...p, scale: 0.13 + r() * 0.08, colour: col(set[Math.floor(r() * 4)]) };
+  });
+  return kinds;
+}
 
-  // Distance markers: a small green sign.
-  for (const m of w.markers) {
-    const sw = 7 * u + 3, shh = 4.5 * u + 2;
-    if (color) {
-      ctx.fillStyle = "rgba(40,50,30,.25)"; ctx.fillRect(m.x - sw / 2 + 1.5 * u, m.y - shh / 2 + 2 * u, sw, shh);
-      ctx.fillStyle = "#2f6b45"; ctx.fillRect(m.x - sw / 2, m.y - shh / 2, sw, shh);
-      ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.fillRect(m.x - sw / 2 + 1, m.y - 0.4, sw - 2, 0.8);
-    } else {
-      ctx.fillStyle = "#fff"; ctx.fillRect(m.x - sw / 2, m.y - shh / 2, sw, shh);
-      ctx.strokeStyle = INK.line; ctx.lineWidth = 0.7; ctx.strokeRect(m.x - sw / 2, m.y - shh / 2, sw, shh);
-    }
+function mergeNonIndexed(list) {
+  const out = new THREE.BufferGeometry();
+  for (const name of ["position", "color"]) {
+    const parts = list.map((g) => g.attributes[name].array), n = parts.reduce((a, p) => a + p.length, 0);
+    const arr = new Float32Array(n); let o = 0;
+    for (const p of parts) { arr.set(p, o); o += p.length; }
+    out.setAttribute(name, new THREE.BufferAttribute(arr, 3));
   }
+  out.computeVertexNormals();
+  list.forEach((g) => g.dispose());
+  return out;
+}
 
-  // The road: asphalt with paler shoulders and worn wheel tracks, or two inked edges.
-  if (color) {
-    ctx.fillStyle = "#717375"; ctx.fillRect(0, top, W, road);
-    ctx.fillStyle = "#86888a"; ctx.fillRect(0, top, W, sh); ctx.fillRect(0, bot - sh, W, sh);
-    ctx.fillStyle = "rgba(40,40,42,.1)";
-    for (const lc of [top + sh + lane / 2, bot - sh - lane / 2]) for (const o of [-0.26, 0.26]) ctx.fillRect(0, lc + o * lane - lane * 0.07, W, lane * 0.14);
-    ctx.fillStyle = "rgba(0,0,0,.18)"; ctx.fillRect(0, top, W, 1); ctx.fillRect(0, bot - 1, W, 1);
-  } else {
-    ctx.fillStyle = "#fff"; ctx.fillRect(0, top, W, road);
-    ctx.beginPath(); ctx.moveTo(0, top); ctx.lineTo(W, top); ctx.moveTo(0, bot); ctx.lineTo(W, bot);
-    ctx.strokeStyle = INK.edge; ctx.lineWidth = 0.9; ctx.stroke();
+// Tiling smooth value noise: 64 lattice cells across 256 texels, sampled with filtering.
+function noiseTexture() {
+  const N = 256, P = 64, k = N / P, data = new Uint8Array(N * N);
+  const h = (i, j) => hash(((i % P) + P) % P, ((j % P) + P) % P, 404) / 4294967296;
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const fx = x / k, fy = y / k, i = Math.floor(fx), j = Math.floor(fy);
+    let u = fx - i, w = fy - j; u = u * u * (3 - 2 * u); w = w * w * (3 - 2 * w);
+    const v = lerp(lerp(h(i, j), h(i + 1, j), u), lerp(h(i, j + 1), h(i + 1, j + 1), u), w);
+    data[y * N + x] = Math.round(v * 255);
   }
-  const lw = Math.max(1, 2.2 * u);
-  ctx.lineCap = "butt";
-  ctx.beginPath(); ctx.moveTo(0, top + sh); ctx.lineTo(W, top + sh); ctx.moveTo(0, bot - sh); ctx.lineTo(W, bot - sh);
-  ctx.strokeStyle = color ? "rgba(246,246,242,.92)" : INK.line; ctx.lineWidth = color ? lw : 0.7; ctx.stroke();
-  const dash = w.L * 0.42, gap = w.L * 0.58;
-  ctx.beginPath(); ctx.moveTo(-gap * 0.3, cy); ctx.lineTo(W, cy);
-  ctx.setLineDash([dash, gap]);
-  ctx.strokeStyle = color ? "rgba(236,196,72,.95)" : INK.line; ctx.lineWidth = color ? lw : 0.8; ctx.stroke();
-  ctx.setLineDash([]);
-
-  // Reflector posts just off the shoulders.
-  for (const p of w.posts) {
-    const s = Math.max(1.6, 2.6 * u);
-    if (color) {
-      ctx.fillStyle = "rgba(0,0,0,.2)"; ctx.fillRect(p.x - s / 2 + s * 0.5, p.y - s / 2 + s * 0.6, s, s);
-      ctx.fillStyle = "#f4f4f1"; ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
-      ctx.fillStyle = "#e0782f"; ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s * 0.4);
-    } else {
-      ctx.fillStyle = "#fff"; ctx.fillRect(p.x - s / 2, p.y - s / 2, s, s);
-      ctx.strokeStyle = INK.line; ctx.lineWidth = 0.6; ctx.strokeRect(p.x - s / 2, p.y - s / 2, s, s);
-    }
-  }
-
-  if (color) {
-    ctx.save();
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalCompositeOperation = "overlay"; ctx.globalAlpha = 0.07;
-    ctx.fillStyle = ctx.createPattern(grain(), "repeat");
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.restore();
-  }
+  const t = new THREE.DataTexture(data, N, N, THREE.RedFormat, THREE.UnsignedByteType);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.magFilter = t.minFilter = THREE.LinearFilter;
+  t.needsUpdate = true;
+  return t;
 }
 
 // ------------------------------------------------------------------ the module
@@ -256,125 +774,489 @@ export function roadStrip(host) {
   const el = make("div", "road");
   el.setAttribute("role", "img");
   const map = make("div", "road-map");
-  const ink = make("canvas", "road-ink");
-  const reveal = make("div", "road-reveal");
-  const color = make("canvas", "road-color");
-  reveal.append(color);
-  const shadowWrap = make("div", "road-van road-van-shadow"), shadow = make("canvas");
-  const vanWrap = make("div", "road-van"), van = make("canvas");
-  shadowWrap.append(shadow); vanWrap.append(van);
-  map.append(ink, reveal, shadowWrap, vanWrap);
+  const canvas = make("canvas", "road-canvas");
+  map.append(canvas);
   const labels = make("div", "road-labels");
   labels.innerHTML = "<span>Toronto</span><span>Arlington, TX</span>";
   el.append(map, labels);
   host.append(el);
 
-  const motion = matchMedia("(prefers-reduced-motion: reduce)");
-  let alive = true, world = null, W = 0, H = 0, F = 30, regenTimer = 0, raf = 0, last = 0;
-  let target = 0, cur = 0, vel = 0, pct = -1, first = true;
-  let vanView = null, vanFrac = null, vanS = 0, vanOx = 0, vanOy = 0;
+  const motionQuery = matchMedia("(prefers-reduced-motion: reduce)");
+  const still = () => motionQuery.matches;
 
-  // Van at the current progress, in CSS px of the current size (stretched while a resize settles).
-  function place() {
-    if (!world) return;
-    const k = W / world.W;
-    const X = (world.x0 + (world.x1 - world.x0) * cur) * k, Y = world.vanY * (H / world.H);
-    if (vanS) {
-      const tx = X - vanS / 2 - vanOx, ty = Y - vanS / 2 - vanOy;
-      vanWrap.style.transform = `translate3d(${tx.toFixed(2)}px,${ty.toFixed(2)}px,0)`;
-      const sd = vanS * 0.035;
-      shadowWrap.style.transform = `translate3d(${(tx + sd * 0.8).toFixed(2)}px,${(ty + sd).toFixed(2)}px,0)`;
+  // ---- scene. Nothing heavy happens until the strip comes within a screen of the viewport:
+  // then the road and van go up first, and the land is built in small slices after.
+  let renderer = null, R = null, T = null, placed = [], ready = false, started = false;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(FOV, 1, 0.5, 500);
+  let camDist = 30;
+  const viewDir = new THREE.Vector3();
+  const dirOf = (out, elDeg, azDeg) => {
+    const e = THREE.MathUtils.degToRad(elDeg), a = THREE.MathUtils.degToRad(azDeg);
+    return out.set(Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e)).normalize();
+  };
+  dirOf(viewDir, ELEV, AZIM);
+  const ground = (x, z) => (T ? T.heightAt(x, z) : -1e3);
+
+  const uniforms = {
+    uReveal: { value: 0 }, uBase: { value: 0 }, uFeather: { value: 6 }, uTime: { value: 0 }, uMotion: { value: still() ? 0 : 1 },
+    uKey: { value: new THREE.Vector3(-0.45, 0.8, 0.5).normalize() },
+    uPulse: { value: [new THREE.Vector4(0, 0, 0, -1), new THREE.Vector4(0, 0, 0, -1)] }, uFocus: { value: new THREE.Vector3() },
+    uNoise: { value: null },
+  };
+  const owned = [];
+  const mat = (vs, fs, extra = {}) => { const m = new THREE.ShaderMaterial({ vertexShader: vs, fragmentShader: fs, uniforms, ...extra }); owned.push(m); return m; };
+  // Compile a program off the main thread where the browser allows it. The renderer is only
+  // disposed once no compile is pending (three polls the programs until they are ready).
+  let compiling = 0, disposeLater = null;
+  async function compile(obj) {
+    if (!renderer?.compileAsync) return;
+    compiling++;
+    try { await renderer.compileAsync(obj, camera, scene); } catch { /* compiles on first draw */ }
+    if (--compiling === 0 && disposeLater) disposeLater();
+  }
+  // Compile a mesh's program, then show it.
+  const addMesh = async (obj) => {
+    owned.push(obj.geometry);
+    await compile(obj);
+    if (alive) scene.add(obj);
+    return obj;
+  };
+
+  // Motes: pollen and petals lifting off where the colour arrives. A fixed pool.
+  const MOTES = 160;
+  const mPos = new Float32Array(MOTES * 3), mLife = new Float32Array(MOTES).fill(2), mSize = new Float32Array(MOTES), mCol = new Float32Array(MOTES * 3);
+  const mVel = new Float32Array(MOTES * 3), mDur = new Float32Array(MOTES).fill(1);
+  const moteGeo = attrs(new THREE.BufferGeometry(), [["position", mPos, 3], ["aLife", mLife, 1], ["aSize", mSize, 1], ["aColor", mCol, 3]]);
+  const moteMat = new THREE.ShaderMaterial({ vertexShader: MOTE_VS, fragmentShader: MOTE_FS, uniforms: { uDpr: { value: 1 } }, transparent: true, depthWrite: false });
+  owned.push(moteMat, moteGeo);
+  const motes = new THREE.Points(moteGeo, moteMat);
+  motes.frustumCulled = false;
+  const MOTE_COLS = ["#f0c43f", "#e9e3c9", "#a9c46a", "#d9a441", "#ffffff"].map((h) => col(h));
+  let moteNext = 0, motesAlive = 0;
+  const rm = rng(99);
+  let spawned = false;
+  function spawn(x, y, z, burst) {
+    spawned = true;
+    const i = moteNext; moteNext = (moteNext + 1) % MOTES;
+    mPos[i * 3] = x; mPos[i * 3 + 1] = y + 0.3; mPos[i * 3 + 2] = z;
+    const a = rm() * Math.PI * 2, sp = burst ? 2 + rm() * 3 : 0.4 + rm() * 0.8;
+    mVel[i * 3] = Math.cos(a) * sp * 0.6 + 0.5; mVel[i * 3 + 1] = (burst ? 2.2 : 1) + rm() * 1.4; mVel[i * 3 + 2] = Math.sin(a) * sp * 0.6;
+    mLife[i] = 0; mDur[i] = 1.4 + rm() * 1.4;
+    mSize[i] = 2 + rm() * 2.6;
+    MOTE_COLS[Math.floor(rm() * MOTE_COLS.length)].toArray(mCol, i * 3);
+  }
+
+  // ---- the van
+  const vanGroup = new THREE.Group(), body = new THREE.Group(), holder = new THREE.Group();
+  vanGroup.matrixAutoUpdate = false;
+  vanGroup.add(body); body.add(holder);
+  const shadowGeo = new THREE.PlaneGeometry(2.9, 7.0).rotateX(-Math.PI / 2);
+  const shadowMat = new THREE.ShaderMaterial({ vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }", fragmentShader: SHADOW_FS, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+  owned.push(shadowGeo, shadowMat);
+  const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+  shadow.position.set(0.25, 0.04, 0.1);
+  vanGroup.add(shadow);
+  let fig = null;
+  function loadVan() {
+    loadPart(VAN_URL).then(async (data) => {
+      if (!alive) return;
+      fig = new Figure(data);
+      fig.color = 1; fig.holo = 0;
+      fig.setView(viewDir);
+      // Put the ground point midway between the axles at the holder's origin; mm to metres.
+      const wheels = data.groups.filter((g) => g.name.startsWith("wheel"));
+      const mid = wheels.reduce((a, g) => a + g.center[2], 0) / Math.max(1, wheels.length);
+      let minY = Infinity;
+      for (let i = 1; i < data.position.length; i += 3) minY = Math.min(minY, data.position[i]);
+      const c = data.centre;
+      fig.root.scale.setScalar(0.001);
+      fig.root.position.set(-(0 - c[0]) * 0.001, -(minY - c[1]) * 0.001, -(mid - c[2]) * 0.001);
+      await compile(fig.root);
+      if (!alive) return;
+      holder.add(fig.root);
+      redraw();
+    }).catch((e) => console.warn("road: van", e));
+  }
+
+  // ---- motion state
+  const span = () => R.s1 - R.s0;
+  const sOf = (f) => R.s0 + f * span();
+  const milestones = [];
+  let target = 0, s = 0, v = 0, front = 0, fv = 0;
+  const cam = new THREE.Vector3();
+  let dip = 0, dipV = 0, roll = 0, odo = 0, prevV = 0;
+  let raf = 0, last = 0, visible = true, alive = true, W = 0, H = 0, ppm = 28;
+  const pulses = uniforms.uPulse.value, pulseBorn = [-1, -1];
+  let lastPulse = -10, clock = 0;
+
+  // The base layer is centred on the van (a pool around it, in the shaders). The bloom trails
+  // the van's tail, catching up faster the further behind it is, and never runs ahead of it.
+  const tail = () => s - 3.2;
+  const frontTarget = () => tail() - 0.3;
+
+  // ---- the camera director
+  // At rest: the composed 3/4 view. Driving: a chase framing, lower and further behind,
+  // widening with speed, with a few authored beats along the route blended in and out.
+  // az is degrees about the vertical (0: camera on the near side looking across the road,
+  // negative: behind the van); while driving it partly follows the van's heading.
+  // The van is the hero of every shot: the camera stays close (the same distance in every
+  // shot) and the beats change only its angle and height, like a chase car alongside.
+  const REST = { el: ELEV, az: AZIM, dist: 1, look: 1, lift: 1.2 };
+  // Parked at Arlington the rest view turns to look along the road it came by (az relative to
+  // the van's heading), so the land past the end of the trip stays out of shot.
+  const END_REST = { el: 34, az: -62, dist: 1, look: -1.2, lift: 1.2 };
+  const DRIVE = { el: 22, az: -38, dist: 1, look: 1.6, lift: 1.2 };
+  const BEATS = [
+    [105, 190, { el: 15, az: -62, dist: 1, look: 1.4, lift: 1.3 }],   // the climb: low from behind, the road rising past it
+    [197, 240, { el: 46, az: -14, dist: 1, look: 2.4, lift: 1.0 }],   // the crest: rise over the van as the valley opens ahead
+    [312, 352, { el: 11, az: 4, dist: 1, look: 0.6, lift: 1.1 }],     // the bridge: track alongside, the ravine below
+    [408, 498, { el: 33, az: -30, dist: 1, look: 1.6, lift: 1.2 }],   // the mesas: a higher three-quarter, rock behind
+    [518, 600, { el: 30, az: -52, dist: 1, look: 0.6, lift: 1.2 }],   // the final run: from behind and above, the road it came by
+  ];
+  const ROUGH = [[316, 346], [470, 505]];             // bridge joints and a washboard descent: a touch of shake
+  const KEYS = ["el", "az", "dist", "look", "lift"];
+  const shot = { ...REST }, shotV = { el: 0, az: 0, dist: 0, look: 0, lift: 0 };
+  let drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
+  const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), vanTop = new THREE.Vector3();
+  const nearRocks = [];
+  const blocked = (a, b) => {
+    // Does the line from the camera to the van pass through the land or a rock?
+    for (let k = 1; k < 16; k++) {
+      tmp.lerpVectors(a, b, k / 16);
+      if (tmp.y < ground(tmp.x, tmp.z) + 0.8) return true;
+      for (const q of nearRocks) if (tmp.y < q.top + 0.5 && Math.hypot(tmp.x - q.x, tmp.z - q.z) < q.r + 0.8) return true;
     }
-    // The colour edge rides at the van's tail and sweeps off the right edge on arrival.
-    let bx = X - world.L * k * 0.42;
-    bx += (W + F - bx) * smooth(0.9, 1, cur);
-    reveal.style.transform = `translate3d(${(bx - F - W).toFixed(2)}px,0,0)`;
-    color.style.transform = `translate3d(${(W + F - bx).toFixed(2)}px,0,0)`;
+    return false;
+  };
+  const want = { el: 0, az: 0, dist: 1, look: 0, lift: 0 };
+  let losLift = 0, losTick = 0;
+  function desired(m, out = want) {
+    const p = R.at(s);
+    let wBeat = 0, beat = null;
+    for (const [x0, x1, b] of BEATS) { const w = smooth(x0 - 28, x0, p.x) * (1 - smooth(x1, x1 + 28, p.x)); if (w > wBeat) { wBeat = w; beat = b; } }
+    const hy = THREE.MathUtils.radToDeg(Math.atan2(p.tz, p.tx));
+    const atEnd = smooth(0.94, 1, (s - R.s0) / span());
+    for (const k of KEYS) {
+      const d = beat ? lerp(DRIVE[k], beat[k], wBeat) : DRIVE[k];
+      const rest = lerp(REST[k], k === "az" ? END_REST.az - hy : END_REST[k], atEnd);
+      out[k] = lerp(rest, k === "az" ? d - 0.55 * hy : d, m);
+    }
+    // Line of sight: lift the camera until nothing stands between it and the van. Checked
+    // every third frame (it moves slowly); the lift itself is smoothed with the shot.
+    if (losTick++ % 3 === 0) {
+      vanTop.set(p.x - p.tz * 1.8, p.y + 1.6, p.z + p.tx * 1.8);
+      nearRocks.length = 0;
+      for (const q of placed) if (Math.abs(q.x - p.x) < 45 && Math.abs(q.z - p.z) < 45) nearRocks.push(q);
+      losLift = 0;
+      for (let k = 0; k < 8; k++) {
+        dirOf(tmp2, out.el + losLift, out.az);
+        const camPos = tmp2.multiplyScalar(camDist * out.dist * fit).add(vanTop);
+        if (camPos.y > ground(camPos.x, camPos.z) + 2 && !blocked(camPos, vanTop)) break;
+        losLift += 5;
+      }
+    }
+    out.el = Math.min(70, out.el + losLift);
+    return out;
+  }
+  const camGoal = (out) => {
+    const p = R.at(s), look = shot.look + clamp(v * 0.01, 0, 1.2) * drive;
+    // The van's own lane, at mid-height, a little ahead.
+    return out.set(p.x + p.tx * look - p.tz * 1.8, p.y + shot.lift, p.z + p.tz * look + p.tx * 1.8);
+  };
+
+  const vF = new THREE.Vector3(), vR = new THREE.Vector3(), vU = new THREE.Vector3(), vL = new THREE.Vector3(), Y = new THREE.Vector3(0, 1, 0);
+  function pose() {
+    const p = R.at(s);
+    vF.set(p.tx, p.ty, p.tz).normalize();
+    vR.crossVectors(vF, Y).normalize();
+    vU.crossVectors(vR, vF).normalize();
+    vL.copy(vR).negate();
+    vanGroup.matrix.makeBasis(vL, vU, vF).setPosition(p.x + vR.x * 1.8, p.y + 0.12 + vR.y * 1.8, p.z + vR.z * 1.8);
+    vanGroup.matrixWorldNeedsUpdate = true;
+    const moving = still() ? 0 : 1;
+    const bob = moving * 0.03 * Math.sin(odo * 1.9) * clamp(Math.abs(v) / 10, 0, 1);
+    body.position.set(0, bob, 0);
+    body.rotation.set(dip * moving, 0, roll * moving, "XYZ");
+  }
+  const corners = [[3.1, 0, 1.2], [3.1, 0, -1.2], [-3.1, 0, 1.2], [-3.1, 0, -1.2], [3.1, 2.7, 1.1], [3.1, 2.7, -1.1], [-3.1, 2.7, 1.1], [-3.1, 2.7, -1.1]];
+  const NC = corners.length;
+  const INNER_GOAL = [0.6, 0.55], OUTER_GOAL = [0.96, 0.92], INNER_HARD = [0.74, 0.72], OUTER_HARD = [1, 1], goalV = new THREE.Vector3();
+  const pts = Array.from({ length: NC + 2 }, () => new THREE.Vector3()), fRight = new THREE.Vector3(), fUp = new THREE.Vector3(), proj = new THREE.Vector3();
+  // Aim the camera at `at`, then slide `at` until the van (inner margin) and ten metres of road
+  // behind it (outer margin) are in frame. Used on the goal, and as a hard limit on the camera.
+  function frame(at, inner, outer, shake = 0) {
+    dirOf(viewDir, shot.el, shot.az);
+    const D = camDist * shot.dist * fit;
+    const aim = () => {
+      camera.position.copy(at).addScaledVector(viewDir, D);
+      camera.position.y += shake;
+      camera.up.set(0, 1, 0);
+      camera.lookAt(at);
+      camera.rotateZ(camRoll);
+      camera.updateMatrixWorld();
+    };
+    aim();
+    const p = R.at(s);
+    corners.forEach(([f, u, l], i) => pts[i].set(p.x + p.tx * f - p.tz * (1.8 + l), p.y + u, p.z + p.tz * f + p.tx * (1.8 + l)));
+    pts[NC].set(p.x - p.tx * 6 - p.tz * 1.8, p.y, p.z - p.tz * 6 + p.tx * 1.8);     // the colour just behind it
+    pts[NC + 1].set(p.x - p.tz * 1.8, p.y + 1.3, p.z + p.tx * 1.8);                  // the van's centre: middle third
+    const halfH = D * Math.tan(THREE.MathUtils.degToRad(FOV / 2)), halfW = halfH * camera.aspect;
+    const right = fRight.setFromMatrixColumn(camera.matrixWorld, 0), up = fUp.setFromMatrixColumn(camera.matrixWorld, 1);
+    for (let it = 0; it < 6; it++) {
+      let dx = 0, dy = 0;
+      pts.forEach((q, i) => {
+        const n = proj.copy(q).project(camera);
+        if (!(n.z > -1 && n.z < 1)) return;                // behind the camera or past the far plane
+        const [mx, my] = i < NC ? inner : i === NC ? outer : [0.2, 0.2];
+        if (n.x > mx) dx = Math.max(dx, n.x - mx); else if (n.x < -mx) dx = Math.min(dx, n.x + mx);
+        if (n.y > my) dy = Math.max(dy, n.y - my); else if (n.y < -my) dy = Math.min(dy, n.y + my);
+      });
+      if (!dx && !dy) break;
+      at.addScaledVector(right, dx * halfW).addScaledVector(up, dy * halfH);
+      aim();
+    }
+    return at;
+  }
+  const fitFor = () => {
+    const f = clamp(fit * Math.max(vanBox[0] / (0.34 * sizeK), vanBox[1] / 1.36), 0.5, 2);
+    return Number.isFinite(f) ? f : 1;
+  };
+  // At rest the size is settled at once, so the strip never zooms on its own.
+  function settleFit() {
+    if (!W) return;
+    for (let i = 0; i < 6; i++) { frame(camGoal(cam), INNER_GOAL, OUTER_GOAL); placeCamera(); fit = fitFor(); }
+    frame(camGoal(cam), INNER_GOAL, OUTER_GOAL); placeCamera();
+  }
+  function placeCamera(shake = 0) {
+    frame(cam, INNER_HARD, OUTER_HARD, shake);
+    // The van's outline on screen (NDC), which holds its size steady.
+    let x0 = 1, x1 = -1, y0 = 1, y1 = -1;
+    let behind = false;
+    for (let i = 0; i < NC; i++) {
+      const q = proj.copy(pts[i]).project(camera);
+      if (!(q.z > -1 && q.z < 1)) behind = true;
+      x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); y0 = Math.min(y0, q.y); y1 = Math.max(y1, q.y);
+    }
+    if (!behind) { vanBox[0] = x1 - x0; vanBox[1] = y1 - y0; }
+    uniforms.uFocus.value.copy(cam);
+    if (fig) fig.setView(tmp.copy(camera.position).sub(cam).normalize());
+  }
+
+  function fire(at) {
+    if (clock - lastPulse < 0.35) {                 // quick drags: merge into the ring already running
+      const k = pulseBorn[0] > pulseBorn[1] ? 0 : 1;
+      pulses[k].set(at.x, 0, at.z, 0); pulseBorn[k] = clock;
+    } else {
+      const k = pulses[0].w < 0 ? 0 : pulses[1].w < 0 ? 1 : (pulseBorn[0] < pulseBorn[1] ? 0 : 1);
+      pulses[k].set(at.x, 0, at.z, 0); pulseBorn[k] = clock;
+      for (let i = 0; i < 28; i++) spawn(at.x + (rm() - 0.5) * 4, at.y, at.z + (rm() - 0.5) * 4, true);
+    }
+    lastPulse = clock;
   }
 
   function step(t) {
     raf = 0;
     if (!alive) return;
     const dt = Math.min(0.05, Math.max(0.001, (t - last) / 1000));
-    last = t;
-    const a = OMEGA * OMEGA * (target - cur) - 2 * OMEGA * vel;
-    vel += a * dt; cur += vel * dt;
-    if (Math.abs(target - cur) < 2e-4 && Math.abs(vel) < 2e-3) { cur = target; vel = 0; place(); return; }
-    place();
+    last = t; clock += dt;
+    uniforms.uTime.value += dt;
+    const reduced = still();
+    uniforms.uMotion.value = reduced ? 0 : 1;
+    const goal = sOf(target), before = s;
+
+    // Van: critically damped on route distance, with a soft speed limit.
+    const w = 5.5;
+    v += (w * w * (goal - s) - 2 * w * v) * dt;
+    v = clamp(v, -600, 600);
+    s += v * dt;
+    if (Math.abs(goal - s) < 0.02 && Math.abs(v) < 0.05) { s = goal; v = 0; }
+    odo += v * dt;
+    const acc = (v - prevV) / dt; prevV = v;
+    // Nose dips under braking and lifts under power, then settles with a small bounce.
+    const dipGoal = clamp(-acc * 0.0012, -0.035, 0.035), wd = 9, zd = 0.42;
+    dipV += (wd * wd * (dipGoal - dip) - 2 * zd * wd * dipV) * dt; dip += dipV * dt;
+    roll += (clamp(-R.at(s).k * v * v * 0.0009, -0.05, 0.05) - roll) * Math.min(1, dt * 6);
+    if (fig) fig.tick(dt, v / WHEEL_R / ((WHEEL_RPM / 60) * Math.PI * 2));
+
+    // Milestones the van actually drives past.
+    if (!reduced) for (const m of milestones) if (before < m - 0.8 && s >= m - 0.8) fire(R.at(m));
+
+    // The colour front trails the van and catches up slowly.
+    const ft = frontTarget(), prevFront = front;
+    const wf = 2.4 + Math.max(0, ft - front) * 0.1;
+    fv += (wf * wf * (ft - front) - 2 * wf * fv) * dt; front += fv * dt;
+    const hi = tail();
+    if (front > hi) { front = hi; fv = Math.min(fv, 0); }
+    if (front < tail() - 45) front = tail() - 45;
+    if (Math.abs(ft - front) < 0.03 && Math.abs(fv) < 0.05) { front = ft; fv = 0; }
+    uniforms.uReveal.value = front;
+    uniforms.uBase.value = s;
+    // Pollen lifts where the colour arrives, more the faster it travels, never a flood.
+    if (!reduced && front > prevFront) {
+      let n = Math.min(4, (front - prevFront) * 0.7);
+      while (n > 0) {
+        if (rm() < n) {
+          const fs = front - 2 - rm() * 4, p = R.at(fs), side = rm() < 0.5 ? -1 : 1, d = HALF + rm() * 16;
+          const x = p.x - p.tz * d * side, z = p.z + p.tx * d * side;
+          spawn(x, ground(x, z), z, false);
+        }
+        n -= 1;
+      }
+    }
+    motesAlive = 0;
+    for (let i = 0; i < MOTES; i++) {
+      if (mLife[i] >= 1) continue;
+      mLife[i] += dt / mDur[i];
+      const o = i * 3;
+      mVel[o + 1] -= 0.6 * dt;
+      mVel[o] += Math.sin(clock * 2 + i) * 0.4 * dt;
+      mPos[o] += mVel[o] * dt; mPos[o + 1] += mVel[o + 1] * dt; mPos[o + 2] += mVel[o + 2] * dt;
+      if (mLife[i] < 1) motesAlive++;
+    }
+    moteGeo.attributes.position.needsUpdate = true; moteGeo.attributes.aLife.needsUpdate = true;
+    if (spawned) { moteGeo.attributes.aSize.needsUpdate = true; moteGeo.attributes.aColor.needsUpdate = true; spawned = false; }
+    for (let k = 0; k < 2; k++) if (pulses[k].w >= 0) { pulses[k].w += dt; if (pulses[k].w > 2) pulses[k].w = -1; }
+
+    // Camera: how much it is "driving" eases in fast and out slowly, so it settles calmly. The
+    // chase framing is for going forward; reversing keeps the calm rest view.
+    const mt = reduced ? 0 : smooth(0.5, 12, v);
+    drive += (mt - drive) * Math.min(1, dt * (mt > drive ? 1.6 : 0.8));
+    if (Math.abs(mt - drive) < 1e-3) drive = mt;
+    desired(drive); const ws = 2.1;
+    let shotBusy = false;
+    for (const k of KEYS) {
+      shotV[k] += (ws * ws * (want[k] - shot[k]) - 2 * ws * shotV[k]) * dt; shot[k] += shotV[k] * dt;
+      if (Math.abs(want[k] - shot[k]) < 1e-3 && Math.abs(shotV[k]) < 1e-3) { shot[k] = want[k]; shotV[k] = 0; } else shotBusy = true;
+    }
+    // Bank a little into curves; a touch of shake only over the rough bits.
+    const rollGoal = reduced ? 0 : clamp(R.at(s).k * v * 0.05, -0.045, 0.045) * drive;
+    camRoll += (rollGoal - camRoll) * Math.min(1, dt * 2.5);
+    if (Math.abs(rollGoal - camRoll) < 1e-4) camRoll = rollGoal;
+    const px = R.at(s).x;
+    let rough = 0;
+    if (!reduced) for (const [a, b] of ROUGH) rough = Math.max(rough, smooth(a - 4, a, px) * (1 - smooth(b, b + 4, px)) * clamp(Math.abs(v) / 25, 0, 1));
+    const shake = rough * 0.025 * (Math.sin(clock * 31) * 0.6 + Math.sin(clock * 47 + 1.3) * 0.4);
+    // Hold the van at a steady size on screen whatever the angle: its outline should span
+    // ~17% of the strip's width (end-on it reads narrower, so the camera comes in) without
+    // ever taking more than 68% of its height.
+    if (vanBox[0] > 0) fit += (fitFor() - fit) * Math.min(1, dt * 2.5);
+    // The rig rides with the van: its aim is the van's own (already smoothed) position plus the
+    // shot's offsets, so the van stays in frame at any speed, in either direction.
+    const g = frame(camGoal(goalV), INNER_GOAL, OUTER_GOAL);
+    cam.copy(g);
+
+    pose(); placeCamera(shake);
+    renderer.render(scene, camera);
+
+    const busy = s !== goal || v !== 0 || front !== ft || shotBusy || drive > 0 || Math.abs(camRoll) > 1e-4 ||
+      Math.abs(dip) > 1e-4 || Math.abs(dipV) > 1e-3 || Math.abs(roll) > 1e-4 || motesAlive > 0 || pulses[0].w >= 0 || pulses[1].w >= 0;
+    if (busy && visible) raf = requestAnimationFrame(step);
+  }
+  function kick() {
+    if (!alive || !ready || raf || !visible || !W) return;
+    last = performance.now();
     raf = requestAnimationFrame(step);
   }
-
-  function paintVan() {
-    if (!vanView || !world) return;
-    vanWrap.style.transform = "none";
-    if (!vanFrac) {
-      // Measure the van's footprint once in a probe paint.
-      van.style.width = van.style.height = "160px";
-      vanView.resize(); vanView.paint();
-      const { width: cw, height: ch } = van, data = van.getContext("2d").getImageData(0, 0, cw, ch).data;
-      let x0 = cw, x1 = 0, y0 = ch, y1 = 0;
-      for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) if (data[(y * cw + x) * 4 + 3] > 24) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-      vanFrac = { len: (x1 - x0 + 1) / cw, cx: (x0 + x1 + 1) / 2 / cw - 0.5, cy: (y0 + y1 + 1) / 2 / ch - 0.5 };
-    }
-    vanS = Math.round(world.L / vanFrac.len);
-    vanOx = vanFrac.cx * vanS; vanOy = vanFrac.cy * vanS;
-    for (const c of [van, shadow]) c.style.width = c.style.height = vanS + "px";
-    vanWrap.style.width = vanWrap.style.height = shadowWrap.style.width = shadowWrap.style.height = vanS + "px";
-    vanView.resize(); vanView.paint();
-    // Soft shadow from the van's own silhouette.
-    shadow.width = van.width; shadow.height = van.height;
-    const sx = shadow.getContext("2d");
-    sx.clearRect(0, 0, shadow.width, shadow.height);
-    const sil = document.createElement("canvas");
-    sil.width = van.width; sil.height = van.height;
-    const g = sil.getContext("2d");
-    g.drawImage(van, 0, 0); g.globalCompositeOperation = "source-in"; g.fillStyle = "#000"; g.fillRect(0, 0, sil.width, sil.height);
-    sx.filter = `blur(${Math.max(1, van.width * 0.02)}px)`;
-    sx.drawImage(sil, 0, 0);
-    sx.filter = "none";
-    el.classList.add("road-has-van");
-    place();
+  // One frame when idle (something was added, the van arrived, a resize).
+  function redraw() {
+    if (!ready || !W) return;
+    if (raf) return;
+    pose(); placeCamera(); renderer.render(scene, camera);
+  }
+  function snap() {
+    s = sOf(target); v = 0; prevV = 0; front = frontTarget(); fv = 0; dip = dipV = roll = 0;
+    uniforms.uReveal.value = front; uniforms.uBase.value = s;
+    drive = 0; camRoll = 0;
+    losTick = 0; Object.assign(shot, desired(0)); for (const k of KEYS) shotV[k] = 0;
+    frame(camGoal(cam), INNER_GOAL, OUTER_GOAL);
+    settleFit();
   }
 
-  function regen() {
-    regenTimer = 0;
-    if (!alive || !W) return;
-    const dpr = Math.min(2, devicePixelRatio || 1);
-    world = build(W, H);
-    paint(ink, world, false, dpr);
-    paint(color, world, true, dpr);
-    el.classList.add("road-ready");
-    paintVan();
-    place();
-  }
-
+  // Size is known (and the strip's height set) before anything is built.
   function layout() {
     const w = Math.round(map.clientWidth);
     if (!w || w === W) return;
-    W = w; H = Math.round(clamp(W * 0.2, 150, 300));
-    F = Math.round(clamp(W * 0.03, 20, 46));
+    W = w; H = Math.round(clamp(W * 0.236, 200, 380));
+    ppm = clamp(W * 0.0245, 16.5, 40);        // starting distance; `fit` then holds the van's size
+    sizeK = clamp(100 / (0.17 * W), 1, 1.7);    // a phone keeps it at ~100 px
     map.style.height = H + "px";
-    color.style.width = W + "px"; color.style.height = H + "px";
-    reveal.style.width = W + 2 * F + "px";
-    map.style.setProperty("--feather", F + "px");
-    if (!world) regen();
-    else { place(); clearTimeout(regenTimer); regenTimer = setTimeout(regen, 160); }
+    if (renderer) applySize();
+  }
+  function applySize() {
+    const dpr = Math.min(1.5, devicePixelRatio || 1);   // the fill-rate budget for a full-width live scene
+    renderer.setPixelRatio(dpr);
+    renderer.setSize(W, H, false);
+    moteMat.uniforms.uDpr.value = dpr;
+    // Distance so the van's spot on the road shows `ppm` pixels per metre.
+    camDist = H / ppm / (2 * Math.tan(THREE.MathUtils.degToRad(FOV / 2)));
+    camera.aspect = W / H;
+    camera.updateProjectionMatrix();
+    if (!ready) return;
+    pose(); settleFit();
+    renderer.render(scene, camera);
+    kick();
+  }
+
+  // Build: road and van first (one short task, then the first frame), the land after in slices.
+  async function start() {
+    if (started || !alive) return;
+    started = true;
+    const slice = slicer(8, () => alive);
+    loadVan();
+    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
+    renderer.setClearColor(0xffffff, 1);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    uniforms.uNoise.value = noiseTexture();
+    owned.push(uniforms.uNoise.value);
+    await slice();
+    R = buildRoute();
+    for (let k = 1; k * MILESTONE_KM < TRIP_KM; k++) milestones.push(sOf((k * MILESTONE_KM) / TRIP_KM));
+    s = R.s0; front = R.s0 - 3.5;
+    scene.add(vanGroup);
+    await slice();
+    await addMesh(new THREE.Mesh(buildRoad(R), mat(ROAD_VS, ROAD_FS, { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })));
+    if (!alive) return;
+    scene.add(motes);
+    applySize();
+    ready = true;
+    snap();
+    redraw();
+    el.classList.add("road-live");
+    kick();
+
+    T = await buildTerrain(R, slice);
+    if (!alive) return;
+    await addMesh(new THREE.Mesh(T.geo, mat(SOLID_VS, TERRAIN_FS)));
+    redraw();
+    const rocks = await buildRocks(R, T, slice);
+    placed = rocks.placed;
+    const bridge = buildBridge(R, T, rocks.S);
+    await slice();
+    const solids = rocks.S.build();
+    await slice();
+    await addMesh(new THREE.Mesh(solids.solid, mat(SOLID_VS, ROCK_FS, { side: THREE.DoubleSide })));
+    await addMesh(new THREE.LineSegments(solids.lines, mat(LINE_VS, LINE_FS)));
+    redraw();
+    const growMat = mat(GROW_VS, GROW_FS, { vertexColors: true });
+    for (const m of await buildGrowth(R, T, placed, bridge, slice)) { m.material = growMat; m.frustumCulled = false; await addMesh(m); }
+    if (!alive) return;
+    losTick = 0; settleFit();
+    redraw();
   }
 
   const ro = new ResizeObserver(layout);
   ro.observe(map);
   layout();
+  // Start building when the strip is within a screen of the viewport; render only while visible.
+  const nearIO = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { nearIO.disconnect(); start().catch((e) => { if (e !== ABORT) console.warn("road:", e); }); } }, { rootMargin: "100% 0px 100% 0px" });
+  nearIO.observe(map);
+  const io = new IntersectionObserver((es) => { visible = es[es.length - 1].isIntersecting; if (visible) kick(); });
+  io.observe(map);
+  const onMotion = () => { uniforms.uMotion.value = still() ? 0 : 1; if (ready && still()) snap(); redraw(); kick(); };
+  motionQuery.addEventListener("change", onMotion);
 
-  loadPart(VAN_URL).then((data) => {
-    if (!alive) return;
-    const fig = new Figure(data);
-    fig.color = 1; fig.holo = 0;
-    van.style.width = van.style.height = "160px";
-    vanWrap.style.transform = "none";
-    vanView = new View(van, fig, { elevation: 89.5, azimuth: 270, fill: 0.9 });
-    paintVan();
-  }).catch((e) => console.warn("road: van", e));
-
+  let pct = -1;
   function label() {
     const p = Math.round(target * 100);
     if (p === pct) return;
@@ -388,14 +1270,24 @@ export function roadStrip(host) {
     set(f) {
       target = clamp(+f || 0, 0, 1);
       label();
-      // The first value, reduced motion and hidden pages snap; everything else glides.
-      if (first || motion.matches || !world || document.hidden) { first = false; cur = target; vel = 0; place(); return; }
-      if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+      if (!ready) return;                     // the first frame starts wherever the target is by then
+      // Reduced motion jumps straight there; everything else drives.
+      if (still()) snap();
+      kick();
+      redraw();
     },
     destroy() {
       alive = false;
-      cancelAnimationFrame(raf); clearTimeout(regenTimer); ro.disconnect();
+      cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); nearIO.disconnect();
+      motionQuery.removeEventListener("change", onMotion);
       el.remove();
+      disposeLater = () => {
+        disposeLater = null;
+        if (fig) { holder.remove(fig.root); fig.surface.dispose(); fig.creaseMat.dispose(); }
+        for (const o of owned) o.dispose();
+        renderer?.dispose();
+      };
+      if (!compiling) disposeLater();
     },
   };
 }

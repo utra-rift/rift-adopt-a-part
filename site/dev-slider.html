@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="css/tierslider.css">
   <style>
     .dev { padding: 48px var(--gutter) 96px; display: grid; gap: 72px; }
-    .dev h2 { margin: 0 0 28px; font: 400 11px/16px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
-    .dev .log { margin-top: 18px; font: 400 11px/16px var(--mono); color: #555; }
+    .dev h2 { margin: 0 0 36px; font: 400 11px/16px var(--mono); letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+    .dev .log { margin-top: 24px; font: 400 11px/16px var(--mono); color: #555; }
     .fps { position: fixed; right: 12px; bottom: 10px; font: 400 10px/14px var(--mono); color: var(--muted); }
   </style>
   <script>
@@ -27,7 +27,20 @@
         ? { matches: true, media: q, addEventListener() {}, removeEventListener() {} }
         : mm(q);
     }
-    if (location.search.includes("timer")) {
+    if (location.search.includes("manual")) {
+      // ?manual: frames only advance when you call advance(ms), for exact mid-effect screenshots.
+      let pending = [], now = performance.now(), id = 0;
+      window.requestAnimationFrame = (cb) => { window.__raf++; pending.push({ id: ++id, cb }); return id; };
+      window.cancelAnimationFrame = (x) => { pending = pending.filter((p) => p.id !== x); };
+      window.advance = (ms) => {
+        for (let t = 0; t < ms; t += 16) {
+          now += 16;
+          const run = pending; pending = [];
+          for (const p of run) p.cb(now);
+        }
+      };
+      performance.now = () => now;
+    } else if (location.search.includes("timer")) {
       window.requestAnimationFrame = (cb) => { window.__raf++; return setTimeout(() => cb(performance.now()), 16); };
       window.cancelAnimationFrame = (id) => clearTimeout(id);
     } else {
@@ -58,10 +71,14 @@
     const configs = {
       drive: {
         label: "Kilometres to fund", max: 4534, step: 1, amountOf: (km) => km * 0.5,
+        milestones: 500, milestoneLabel: (km) => `${km.toLocaleString("en-CA")} km`,
+        thumbLabel: (km) => `${km.toLocaleString("en-CA")} km`,
         valueText: (km) => `${km.toLocaleString("en-CA")} km, ${money(km * 0.5)}${tierFor(km * 0.5) ? ", " + tierFor(km * 0.5).name : ""}`,
       },
       flights: {
         label: "Seats to fund", max: 8, step: 1, amountOf: (n) => n * 916.74,
+        milestones: 1, milestoneLabel: (n) => String(n),
+        thumbLabel: (n) => `${n} seat${n === 1 ? "" : "s"}`,
         valueText: (n) => `${n} seat${n === 1 ? "" : "s"}, ${money(n * 916.74)}${tierFor(n * 916.74) ? ", " + tierFor(n * 916.74).name : ""}`,
       },
     };

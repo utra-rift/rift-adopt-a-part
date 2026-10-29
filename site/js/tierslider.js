@@ -1,52 +1,75 @@
-// A full-width slider whose track takes on the sponsorship tier's material as the amount
-// crosses each threshold. A native <input type="range"> sits on top (transparent) so pointer,
-// touch, keyboard and screen readers all work; a canvas underneath draws the track, the tier
-// ticks, the glints and the crossing pulse. The tick labels are HTML so they stay crisp.
+// A full-width gauge slider. The track is a row of cells, one per milestone; passed cells ignite
+// and stay lit, the current one fills up to a needle. Crossing a milestone upward fires a pulse
+// (the cell flashes, a shockwave and a light burst run out from it, sparks fly). Crossing a
+// sponsorship tier threshold changes the material of the whole gauge with a sweep that runs out
+// from the threshold. Everything gets brighter and busier tier by tier.
+//
+// A transparent native <input type="range"> sits on top so pointer, touch, keyboard and screen
+// readers all work. A canvas underneath draws the gauge and effects; labels are HTML.
 
 import { TIERS, tierFor, money } from "./catalog.js";
+import { TextMorph } from "../vendor/torph.mjs";
 
-const PAD = 6;                       // thumb radius; the native thumb is 2 * PAD wide so both map value to x alike
-const LABEL_H = 16;
-const INPUT_H = 32;
-const TRACK_Y = LABEL_H + INPUT_H / 2;
-const BLEED = 20;                    // canvas overhang above and below, room for rings and sparks
+// Geometry, in CSS px. Must match css/tierslider.css.
+const PAD = 6;            // half the native thumb width: value 0 and max sit PAD in from the edges
+const BAR_Y = 36;         // centre line of the gauge
+const BAR_H = 10;
+const RADIUS = 2.5;
+const GAP = 4;            // between cells
+const H = 66;             // control height
+const BLEED_X = 16;       // canvas overhang for glow and sparks
+const BLEED_Y = 48;
 const DPR_CAP = 2;
-const ease = (t) => 1 - Math.pow(1 - t, 4);   // close to cubic-bezier(.23, 1, .32, 1)
+const BAR_TOP = BAR_Y - BAR_H / 2;
+const BAR_BOT = BAR_Y + BAR_H / 2;
+
+const ease = (t) => 1 - Math.pow(1 - t, 4);
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const rand = (a, b) => a + Math.random() * (b - a);
 
-// Track materials. `bands` repeat along the track every `period` px and drift at `drift` px/s;
-// `edge` outlines the filled part so pale stops still read on white; `rgb` colours glints and the pulse.
+// Materials. Metals: horizontal `bands` drifting at `drift` px/s; `glow` blooms around lit cells;
+// `deep` draws rings and marks; `sparks` are the burst colours. Title is a holographic foil built per frame.
 const METALS = [
-  { bands: ["#6b3518", "#a8612f", "#dd9c6a", "#f2c9a4", "#b46e3a", "#7d421d"], edge: "#5e2f15", rgb: [184, 108, 52], period: 260, drift: 9 },
-  { bands: ["#737b84", "#a3acb6", "#d9dee3", "#f1f3f5", "#a7b0b9", "#7b838c"], edge: "#5f666e", rgb: [118, 130, 144], period: 240, drift: 14 },
-  { bands: ["#7d5609", "#c18f1f", "#ecc552", "#fbe7a1", "#d4a12a", "#8c630f"], edge: "#6a4706", rgb: [205, 152, 24], period: 220, drift: 20 },
-  null, // Title: iridescent, built per frame from the running hue
+  { bands: ["#6b3518", "#a8612f", "#e0a06c", "#f8d6b4", "#b46e3a", "#7d421d"], glow: [232, 140, 70], deep: [170, 92, 38],
+    sparks: [[255, 230, 204], [244, 172, 108], [204, 118, 56]], period: 240, drift: 14 },
+  { bands: ["#646c75", "#a0a9b3", "#e2e7ec", "#ffffff", "#aeb7c0", "#737b84"], glow: [160, 178, 202], deep: [92, 106, 126],
+    sparks: [[255, 255, 255], [218, 230, 245], [150, 172, 200]], period: 220, drift: 22 },
+  { bands: ["#7a5206", "#c79320", "#f3cd52", "#fff4be", "#dcaa2c", "#8c630f"], glow: [255, 190, 30], deep: [196, 138, 6],
+    sparks: [[255, 252, 222], [255, 216, 90], [230, 164, 20]], period: 200, drift: 32 },
 ];
-const TITLE = { period: 420, edge: "rgba(40,40,60,.35)", spin: 36 };
 
-// How much lives on the track at each tier: glints per 1000 px of track, a floor, their size,
-// how far they stray from the line, how fast they twinkle, and the line thicknesses.
-const ENERGY = [
-  { per: 5, min: 3, size: 3, spread: 6, speed: 0.75, fill: 3, rest: 1.5 },
-  { per: 9, min: 5, size: 3.3, spread: 8, speed: 0.9, fill: 3.5, rest: 1.5 },
-  { per: 14, min: 8, size: 3.6, spread: 10, speed: 1.05, fill: 4, rest: 2 },
-  { per: 22, min: 12, size: 4, spread: 12, speed: 1.2, fill: 4.5, rest: 2 },
+// Intensity per level: index 0 is below Bronze, then Bronze, Silver, Gold, Title.
+const LEVELS = [
+  { glow: 0, glowA: 0, glints: 0, glintSize: 0, sheen: 0, sparks: 6, sparkSize: 1.5, sparkSpeed: 150, shock: 16, travel: 90 },
+  { glow: 10, glowA: 0.55, glints: 7, glintSize: 3.6, sheen: 260, sparks: 16, sparkSize: 2.1, sparkSpeed: 230, shock: 28, travel: 200 },
+  { glow: 14, glowA: 0.65, glints: 12, glintSize: 4, sheen: 340, sparks: 24, sparkSize: 2.4, sparkSpeed: 270, shock: 34, travel: 280 },
+  { glow: 19, glowA: 0.75, glints: 20, glintSize: 4.6, sheen: 420, sparks: 32, sparkSize: 2.8, sparkSpeed: 310, shock: 42, travel: 360 },
+  { glow: 26, glowA: 0.85, glints: 30, glintSize: 5.4, sheen: 520, sparks: 46, sparkSize: 3.2, sparkSpeed: 370, shock: 54, travel: 480 },
 ];
 
 const reducedQuery = typeof matchMedia === "function" ? matchMedia("(prefers-reduced-motion: reduce)") : null;
 
-export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (v) => v, onInput, valueText } = {}) {
+function vibrate(pattern) {
+  // Chrome refuses (and logs an error) before the page has had a user gesture.
+  if (!(navigator.userActivation?.hasBeenActive ?? true)) return;
+  try { navigator.vibrate?.(pattern); } catch {}
+}
+
+export function tierSlider(host, {
+  label, max, step = 1, value = 0, amountOf = (v) => v, onInput, valueText,
+  milestones, milestoneLabel = (v) => v.toLocaleString("en-CA"), thumbLabel,
+} = {}) {
   const tierAt = (v) => TIERS.indexOf(tierFor(amountOf(v)));
   const text = valueText ?? ((v) => {
     const t = tierFor(amountOf(v));
     return money(amountOf(v)) + (t ? `, ${t.name}` : "");
   });
 
-  // The first step at which each tier is reached; tiers out of range get no tick.
-  const decimals = (String(step).split(".")[1] ?? "").length;
+  // Tier thresholds: the first step at which each tier is reached. Out-of-range tiers get no mark.
+  const decimals = (n) => (String(n).split(".")[1] ?? "").length;
   const steps = Math.floor(max / step + 1e-9);
-  const atStep = (k) => +(k * step).toFixed(decimals);
-  const ticks = [];
+  const atStep = (k) => +(k * step).toFixed(decimals(step));
+  const marks = [];
   TIERS.forEach((t, i) => {
     if (amountOf(max) < t.min) return;
     let lo = 0, hi = steps;
@@ -54,24 +77,46 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
       const mid = (lo + hi) >> 1;
       if (amountOf(atStep(mid)) >= t.min) hi = mid; else lo = mid + 1;
     }
-    ticks.push({ i, tier: t, value: atStep(lo), frac: atStep(lo) / max, flare: 0 });
+    marks.push({ i, tier: t, frac: atStep(lo) / max });
   });
+
+  // Milestones split the gauge into cells. Cell k ends at milestone k; a last partial cell runs to max.
+  const ms = [];
+  if (milestones > 0) {
+    for (let k = 1; k * milestones <= max + 1e-9; k++) {
+      const v = +(k * milestones).toFixed(decimals(milestones));
+      ms.push({ k: k - 1, v, frac: v / max });
+    }
+  }
+  // A sliver of a last cell (the drive's 4,500 to 4,534 km) folds into the one before it.
+  const cuts = ms.map((m) => m.frac).filter((f) => f < 1 - 1e-9);
+  if (cuts.length && (1 - cuts[cuts.length - 1]) * max < milestones * 0.35) cuts.pop();
+  const bounds = [0, ...cuts, 1];
 
   // DOM
   const el = document.createElement("div");
   el.className = "tslider";
-  const marks = document.createElement("div");
-  marks.className = "tslider-marks";
-  marks.setAttribute("aria-hidden", "true");
-  for (const t of ticks) {
+  const tierRow = document.createElement("div");
+  tierRow.className = "tslider-tiers";
+  const msRow = document.createElement("div");
+  msRow.className = "tslider-ms";
+  for (const row of [tierRow, msRow]) row.setAttribute("aria-hidden", "true");
+  for (const m of marks) {
     const s = document.createElement("span");
-    s.className = "tslider-label";
-    s.dataset.tier = t.tier.id;
-    s.dataset.name = t.tier.name;
-    s.textContent = t.tier.name;
-    s.addEventListener("animationend", () => s.classList.remove("is-flare"));
-    t.label = s;
-    marks.append(s);
+    s.className = "tslider-tier";
+    s.dataset.tier = m.tier.id;
+    s.dataset.name = m.tier.name;
+    s.textContent = m.tier.name;
+    m.label = s;
+    tierRow.append(s);
+  }
+  for (const m of ms) {
+    const s = document.createElement("span");
+    s.className = "tslider-mlabel";
+    s.textContent = milestoneLabel(m.v);
+    s.addEventListener("animationend", () => s.classList.remove("is-pop"));
+    m.label = s;
+    msRow.append(s);
   }
   const canvas = document.createElement("canvas");
   canvas.className = "tslider-canvas";
@@ -84,377 +129,651 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
   input.step = String(step);
   input.value = String(clamp(value, 0, max));
   if (label) input.setAttribute("aria-label", label);
-  el.append(marks, canvas, input);
+  // Optional value pill riding the needle; its digits morph with torph.
+  let pill = null, morph = null;
+  if (thumbLabel) {
+    pill = document.createElement("div");
+    pill.className = "tslider-pill";
+    pill.setAttribute("aria-hidden", "true");
+    const txt = document.createElement("span");
+    pill.append(txt);
+    morph = new TextMorph({ element: txt, numbers: true, locale: "en-CA", duration: 480, ease: "cubic-bezier(.23, 1, .32, 1)" });
+    morph.update(thumbLabel(+input.value));
+  }
+  el.append(tierRow, canvas, input, msRow);
+  if (pill) el.append(pill);
   host.append(el);
   const ctx = canvas.getContext("2d");
 
   // State
-  let W = 0, dpr = 1;
+  let W = 0, dpr = 1, segs = [];
   let reduced = !!reducedQuery?.matches;
   let visible = true;
-  let tier = tierAt(+input.value);
-  let fromTier = tier, mix = 1, mixDur = 0.5;
-  let target = +input.value / max, shown = target;
-  let dragging = false, hoverTarget = 0, hover = 0, focusRing = false;
-  let hue = 200, clock = 0, spawnAcc = 0;
-  let effects = [];   // { kind: "sweep" | "ring", t, dur, x, tier }
-  let sparks = [];    // glints (ambient) and burst sparks
-  let raf = 0, last = 0;
+  let val = +input.value;
+  let tier = tierAt(val);
+  let wipe = null;                 // { from, to, x, t, dur, up }
+  let target = val / max, shown = target;
+  let dragging = false, hover = 0, hoverTarget = 0, focusRing = false;
+  let fx = 0, hue = 210;           // effect clock and Title hue; frozen under reduced motion
+  let kick = 0;                    // short glow boost after a pulse
+  let queue = [], gap = 0;         // milestone pulses waiting their turn
+  let effects = [];                // { kind: "shock" | "travel", x, t, dur, ti, w }
+  let sparks = [], glints = [], spawnAcc = 0;
+  const flash = ms.map(() => -1);  // age of each cell's ignition flash, -1 when idle
+  let trail = [], movedAt = -1;
+  let raf = 0, last = 0, lastBuzz = -1;
 
   const x0 = () => PAD;
   const x1 = () => W - PAD;
   const xOf = (f) => PAD + f * (W - 2 * PAD);
-
-  // Colour helpers. For Title the colour depends on the hue and a position offset.
-  const rgba = (ti, a, off = 0) => {
-    if (ti === 3) return `hsla(${(hue + off) % 360}, 82%, 58%, ${a})`;
-    const [r, g, b] = METALS[ti].rgb;
-    return `rgba(${r},${g},${b},${a})`;
+  const xDone = () => {
+    let f = 0;
+    for (const m of ms) if (m.frac <= shown + 1e-9) f = m.frac;
+    return xOf(f);
   };
-  function material(ti, ax, bx) {
-    const iri = ti === 3;
-    const m = iri ? null : METALS[ti];
-    const period = iri ? TITLE.period : m.period;
-    const n = iri ? 6 : m.bands.length;
-    const off = iri ? 0 : ((clock * m.drift) % period + period) % period;
-    const gx0 = ax - period + off;
-    const span = Math.ceil((bx - gx0) / period) * period;
-    const g = ctx.createLinearGradient(gx0, 0, gx0 + span, 0);
-    const reps = span / period;
-    for (let k = 0; k < reps; k++) {
-      for (let j = 0; j < n; j++) {
-        const c = iri ? `hsl(${(hue + j * 60) % 360}, 72%, 62%)` : m.bands[j];
-        g.addColorStop((k + j / n) / reps, c);
+  const levelOf = (ti) => LEVELS[ti + 1];
+
+  // Colours
+  const rgb = ([r, g, b], a) => `rgba(${r},${g},${b},${a})`;
+  // Title's light wanders through pink, violet and blue (never green or brown on white).
+  const titleHue = (off) => 275 + 50 * Math.sin(fx * 0.7 + off / 50);
+  const glowOf = (ti, a, off = 0) =>
+    ti < 0 ? `rgba(17,17,17,${a * 0.5})` : ti === 3 ? `hsla(${titleHue(off)},90%,70%,${a})` : rgb(METALS[ti].glow, a);
+  const deepOf = (ti, a, off = 0) =>
+    ti < 0 ? `rgba(17,17,17,${a})` : ti === 3 ? `hsla(${titleHue(off)},70%,55%,${a})` : rgb(METALS[ti].deep, a);
+
+  function material(ti) {
+    const ax = x0() - 40, bx = x1() + 40;
+    if (ti === 3) {
+      // Holographic foil: hue flows along the bar, with a second, faster ripple for the shimmer.
+      const g = ctx.createLinearGradient(ax, 0, bx, 0);
+      // Pastel spectrum bands over a pearly base, every few stops a near-white flash like foil.
+      const n = Math.max(12, Math.ceil((bx - ax) / 12));
+      for (let i = 0; i <= n; i++) {
+        const x = ax + ((bx - ax) * i) / n;
+        const h = (hue + x * 1.4 + 70 * Math.sin(x / 41 + fx * 2.1)) % 360;
+        const shine = Math.sin(x / 17 - fx * 4.2);
+        const c = shine > 0.82 ? `hsl(${h},40%,93%)` : `hsl(${h},${72 + 10 * shine}%,${68 + 7 * shine}%)`;
+        g.addColorStop(i / n, c);
       }
+      return g;
     }
-    g.addColorStop(1, iri ? `hsl(${hue % 360}, 72%, 62%)` : m.bands[0]);
+    const m = METALS[ti];
+    const off = ((fx * m.drift) % m.period + m.period) % m.period;
+    const gx0 = ax - m.period + off;
+    const span = Math.ceil((bx - gx0) / m.period) * m.period;
+    const g = ctx.createLinearGradient(gx0, 0, gx0 + span, 0);
+    const reps = span / m.period, n = m.bands.length;
+    for (let k = 0; k < reps; k++) for (let j = 0; j < n; j++) g.addColorStop((k + j / n) / reps, m.bands[j]);
+    g.addColorStop(1, m.bands[0]);
     return g;
+  }
+
+  // One path of rounded cells covering [xa, xb]; a cell cut short gets a square end, like a fill level.
+  function cells(xa, xb) {
+    ctx.beginPath();
+    for (const s of segs) {
+      const a = Math.max(s.a, xa), b = Math.min(s.b, xb);
+      if (b - a < 0.3) continue;
+      const r = Math.min(RADIUS, (b - a) / 2);
+      const l = a === s.a ? r : 0, rr = b === s.b ? r : 0;
+      ctx.roundRect(a, BAR_TOP, b - a, BAR_H, [l, rr, rr, l]);
+    }
   }
 
   function layout() {
     W = el.clientWidth;
     dpr = Math.min(DPR_CAP, window.devicePixelRatio || 1);
-    const h = LABEL_H + INPUT_H + 2 * BLEED;
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(h * dpr);
-    // Labels centre on their tick, stay inside the box and don't collide.
-    const boxes = ticks.map((t) => {
-      const w = t.label.offsetWidth;
-      return { t, w, left: clamp(xOf(t.frac) - w / 2, 0, W - w) };
-    });
-    for (let k = 1; k < boxes.length; k++) {
-      const p = boxes[k - 1];
-      boxes[k].left = Math.max(boxes[k].left, p.left + p.w + 6);
+    canvas.width = Math.round((W + 2 * BLEED_X) * dpr);
+    canvas.height = Math.round((H + 2 * BLEED_Y) * dpr);
+    segs = [];
+    for (let i = 0; i < bounds.length - 1; i++) {
+      segs.push({
+        a: xOf(bounds[i]) + (i > 0 ? GAP / 2 : 0),
+        b: xOf(bounds[i + 1]) - (i < bounds.length - 2 ? GAP / 2 : 0),
+      });
     }
+    // Tier names centre on their mark, stay inside, never collide.
+    place(marks.map((m) => ({ el: m.label, x: xOf(m.frac) })), 6);
+    // Milestone labels: show every n-th, the smallest n at which none overlap.
+    const items = ms.map((m) => ({ el: m.label, x: xOf(m.frac), w: m.label.offsetWidth }));
+    let stride = 1;
+    for (; stride <= Math.max(1, items.length); stride++) {
+      const pick = items.filter((_, k) => (k + 1) % stride === 0);
+      if (fits(pick, 10)) break;
+    }
+    items.forEach((it, k) => it.el.classList.toggle("is-thin", (k + 1) % stride !== 0));
+    place(items.filter((_, k) => (k + 1) % stride === 0), 10);
+    draw();
+  }
+  function fits(items, gap) {
+    let right = -Infinity;
+    for (const it of items) {
+      const left = clamp(it.x - it.w / 2, 0, W - it.w);
+      if (left < right + gap) return false;
+      right = left + it.w;
+    }
+    return true;
+  }
+  function place(items, gap) {
+    const boxes = items.map((it) => {
+      const w = it.w ?? it.el.offsetWidth;
+      return { it, w, left: clamp(it.x - w / 2, 0, W - w) };
+    });
+    for (let k = 1; k < boxes.length; k++) boxes[k].left = Math.max(boxes[k].left, boxes[k - 1].left + boxes[k - 1].w + gap);
     for (let k = boxes.length - 1; k >= 0; k--) {
-      const lim = k === boxes.length - 1 ? W : boxes[k + 1].left - 6;
+      const lim = k === boxes.length - 1 ? W : boxes[k + 1].left - gap;
       boxes[k].left = Math.min(boxes[k].left, lim - boxes[k].w);
     }
-    for (const b of boxes) b.t.label.style.left = `${Math.round(b.left)}px`;
-    draw();
+    for (const b of boxes) b.it.el.style.left = `${Math.round(b.left)}px`;
   }
 
   function syncLabels() {
-    for (const t of ticks) t.label.classList.toggle("is-lit", tier >= t.i);
+    for (const m of marks) m.label.classList.toggle("is-lit", tier >= m.i);
+    for (const m of ms) m.label.classList.toggle("is-passed", val >= m.v);
     el.dataset.tier = tier >= 0 ? TIERS[tier].id : "none";
   }
 
-  function setTier(next, celebrate) {
+  // Tier change: the new material sweeps out from the threshold.
+  function setTier(next, animate) {
     if (next === tier) return;
+    const up = next > tier;
     const prev = tier;
-    fromTier = tier;
     tier = next;
-    mix = reduced ? 1 : 0;
-    mixDur = next > prev ? 0.28 : 0.6;
     syncLabels();
-    if (!(celebrate && next > prev)) return;
-    // Chrome refuses (and logs an error) before the page has had a user gesture.
-    if (navigator.userActivation?.hasBeenActive ?? true) {
-      try { navigator.vibrate?.(12); } catch {}
-    }
-    if (reduced) return;
-    for (const t of ticks) {
-      if (t.i <= prev || t.i > next) continue;
-      t.flare = 1e-6;
-      t.label.classList.remove("is-flare");
-      void t.label.offsetWidth;
-      t.label.classList.add("is-flare");
-    }
-    const origin = ticks.find((t) => t.i === next) ?? ticks[ticks.length - 1];
-    const ox = xOf(origin.frac);
-    effects.push({ kind: "sweep", t: 0, dur: 0.95, x: ox, tier: next });
-    effects.push({ kind: "ring", t: 0, dur: 0.65, tier: next });
-    burst(ox, next);
-    // Scrubbing back and forth over a threshold shouldn't pile up effects.
-    effects = effects.slice(-6);
-    sparks = sparks.slice(-160);
+    if (!animate || reduced) { wipe = null; return; }
+    const at = marks.find((m) => m.i === (up ? next : prev));
+    wipe = { from: prev, to: next, x: xOf(at ? at.frac : shown), t: 0, dur: up ? 0.85 : 1.1, up };
+    if (up) vibrate([14, 45, 26]);
   }
 
-  function burst(x, ti) {
-    const n = 7 + ti * 3;
-    for (let k = 0; k < n; k++) {
-      const a = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 1.25;
-      const v = 40 + Math.random() * (110 + ti * 30);
+  // Milestone pulse
+  function fire(m, w) {
+    const ti = tierAt(m.v);
+    const L = levelOf(ti);
+    const x = xOf(m.frac);
+    effects.push({ kind: "shock", x, t: 0, dur: 0.8, ti, w });
+    effects.push({ kind: "travel", x, t: 0, dur: 0.9, ti, w });
+    flash[m.k] = 0;
+    kick = Math.max(kick, w);
+    const n = Math.round(L.sparks * w);
+    for (let i = 0; i < n; i++) {
+      const a = -Math.PI / 2 + rand(-1.25, 1.25);
+      const v = rand(0.35, 1) * L.sparkSpeed;
+      const pal = ti >= 0 && ti < 3 ? METALS[ti].sparks : null;
       sparks.push({
-        x, y: TRACK_Y, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6,
-        age: 0, life: 0.55 + Math.random() * 0.45, size: 2 + Math.random() * (1.4 + ti * 0.4),
-        rot: Math.random() * Math.PI, spin: (Math.random() - 0.5) * 6, tier: ti, hue: Math.random() * 360, burst: true,
+        x: x + rand(-3, 3), y: BAR_TOP + rand(0, 3), vx: Math.cos(a) * v * 1.15, vy: Math.sin(a) * v,
+        age: 0, life: rand(0.45, 0.95), size: L.sparkSize * rand(0.6, 1.25),
+        col: ti < 0 ? (Math.random() < 0.5 ? [17, 17, 17] : [120, 120, 126]) : pal ? pal[(Math.random() * pal.length) | 0] : null,
+        hue: hue + rand(-140, 140), hot: ti >= 0 && Math.random() < 0.3,
       });
     }
+    m.label.classList.remove("is-pop");
+    void m.label.offsetWidth;
+    m.label.classList.add("is-pop");
+    if (fx - lastBuzz > 0.06) { lastBuzz = fx; vibrate(w < 1 ? 6 : 10); }
+    effects = effects.slice(-14);
+    sparks = sparks.slice(-320);
   }
 
   function spawnGlint() {
-    const e = ENERGY[tier];
+    const L = levelOf(tier);
     const xt = xOf(shown);
-    const onFill = xt - x0() > 16 && Math.random() < 0.65;
-    const x = onFill ? x0() + Math.random() * (xt - x0()) : x0() + Math.random() * (x1() - x0());
-    sparks.push({
-      x, y: TRACK_Y + (Math.random() * 2 - 1) * e.spread,
-      vx: (Math.random() * 2 - 0.5) * 7 * e.speed, vy: -(1 + Math.random() * 5) * e.speed,
-      age: 0, life: (0.9 + Math.random() * 1.1) / e.speed, size: e.size * (0.6 + Math.random() * 0.6),
-      rot: Math.random() * Math.PI, spin: (Math.random() - 0.5) * 1.2 * e.speed, tier, hue: Math.random() * 360, burst: false,
+    const x = xt - x0() > 20 && Math.random() < 0.75 ? rand(x0(), xt) : rand(x0(), x1());
+    const side = Math.random() < 0.5 ? -1 : 1;
+    glints.push({
+      x, y: BAR_Y + side * rand(BAR_H / 2 - 2, BAR_H / 2 + 6 + tier * 2), vx: rand(-4, 10), vy: rand(-8, -2),
+      age: 0, life: rand(0.9, 2.0), size: L.glintSize * rand(0.55, 1.15), rot: rand(0, Math.PI), spin: rand(-1, 1),
+      hue: rand(0, 360), ti: tier,
     });
   }
 
   function update(dt) {
-    clock += dt;
-    if (!reduced) hue = (hue + TITLE.spin * dt) % 360;
-    if (mix < 1) mix = Math.min(1, mix + dt / mixDur);
-
+    if (!reduced) { fx += dt; hue = (hue + 48 * dt) % 360; }
     const diff = target - shown;
     if (dragging || reduced || Math.abs(diff) * W < 0.2) shown = target;
-    else shown += diff * (1 - Math.exp(-dt / 0.055));
+    else shown += diff * (1 - Math.exp(-dt / 0.06));
     hover += (hoverTarget - hover) * (1 - Math.exp(-dt / 0.08));
     if (Math.abs(hoverTarget - hover) < 0.002) hover = hoverTarget;
+    kick = Math.max(0, kick - dt * 2.2);
+
+    // Thumb trail: where the needle was over the last 90 ms.
+    const xt = xOf(shown);
+    if (reduced) trail = [];
+    else {
+      if (!trail.length || trail[trail.length - 1].x !== xt) movedAt = fx;
+      trail.push({ x: xt, t: fx });
+      while (trail.length && trail[0].t < fx - 0.09) trail.shift();
+    }
+
+    // Milestone pulses fire in order with a little spacing, quicker and lighter when many are waiting.
+    gap -= dt;
+    while (queue.length && gap <= 0) {
+      const waiting = queue.length - 1;
+      fire(queue.shift(), waiting > 1 ? 0.55 : waiting === 1 ? 0.8 : 1);
+      gap = waiting > 2 ? 0.045 : 0.075;
+    }
 
     for (const f of effects) f.t += dt;
-    effects = effects.filter((f) => f.t < f.dur);
-    for (const t of ticks) if (t.flare > 0) { t.flare += dt; if (t.flare > 0.75) t.flare = 0; }
+    effects = effects.filter((f) => f.t < f.dur + 0.15);
+    if (wipe && (wipe.t += dt) >= wipe.dur) wipe = null;
+    for (let k = 0; k < flash.length; k++) if (flash[k] >= 0 && (flash[k] += dt) > 1.1) flash[k] = -1;
 
-    if (!reduced && tier >= 0 && visible) {
-      const e = ENERGY[tier];
-      const want = Math.max(e.min, Math.round((e.per * (x1() - x0())) / 1000));
-      const life = 1.45 / e.speed;
-      spawnAcc += (dt * want) / life;
-      const ambient = sparks.reduce((n, s) => n + !s.burst, 0);
-      while (spawnAcc >= 1) {
-        spawnAcc -= 1;
-        if (ambient < want * 1.4) spawnGlint();
-      }
-    }
     for (const s of sparks) {
       s.age += dt;
-      if (s.burst) { s.vy += 140 * dt; s.vx *= 1 - 1.8 * dt; }
+      s.vy += 560 * dt;
+      s.vx *= 1 - 1.4 * dt;
       s.x += s.vx * dt;
       s.y += s.vy * dt;
-      s.rot += s.spin * dt;
     }
     sparks = sparks.filter((s) => s.age < s.life);
+
+    if (!reduced && tier >= 0 && visible) {
+      const L = levelOf(tier);
+      const want = Math.max(3, Math.round((L.glints * (x1() - x0())) / 1000));
+      spawnAcc += (dt * want) / 1.45;
+      while (spawnAcc >= 1) { spawnAcc -= 1; if (glints.length < want * 1.4) spawnGlint(); }
+    }
+    for (const g of glints) { g.age += dt; g.x += g.vx * dt; g.y += g.vy * dt; g.rot += g.spin * dt; }
+    glints = glints.filter((g) => g.age < g.life);
   }
 
   // Drawing
 
-  function line(xa, xb, width, style) {
-    if (xb - xa < 0.01) return;
-    ctx.beginPath();
-    ctx.moveTo(xa, TRACK_Y);
-    ctx.lineTo(xb, TRACK_Y);
-    ctx.lineWidth = width;
-    ctx.strokeStyle = style;
-    ctx.stroke();
-  }
-
-  function drawTrack(ti, alpha, pulse) {
-    const xt = xOf(shown);
-    ctx.globalAlpha = alpha;
+  function drawGauge(ti, boost) {
+    const L = levelOf(ti);
+    const xt = xOf(shown), xd = xDone();
+    cells(x0(), x1());
+    ctx.fillStyle = "#ececec";
+    ctx.fill();
     if (ti < 0) {
-      ctx.save();
-      ctx.translate(0, dpr === 1 ? 0.5 : 0);
-      line(x0(), x1(), 1, "#dcdcdc");
-      line(x0(), xt, 1.5, "#9a9a9e");
-      ctx.restore();
-      ctx.globalAlpha = 1;
+      cells(x0(), xd);
+      ctx.fillStyle = "#111";
+      ctx.fill();
+      cells(xd, xt);
+      ctx.fillStyle = "rgba(17,17,17,.42)";
+      ctx.fill();
       return;
     }
-    const e = ENERGY[ti];
-    const mat = material(ti, x0(), x1());
-    line(x0(), x1(), 1, "#dcdcdc");
-    ctx.globalAlpha = alpha * (0.5 + 0.35 * pulse);
-    line(x0(), x1(), e.rest + 1.5 * pulse, mat);
-    ctx.globalAlpha = alpha;
-    const fw = e.fill + 2.2 * pulse;
-    line(x0(), xt, fw + 1, ti === 3 ? TITLE.edge : METALS[ti].edge);
-    line(x0(), xt, fw, mat);
+    // Unlit cells take a faint tint of the tier.
+    cells(xt, x1());
+    ctx.fillStyle = glowOf(ti, 0.1);
+    ctx.fill();
+    const mat = material(ti);
+    // Lit cells, blooming.
+    ctx.shadowColor = glowOf(ti, Math.min(1, L.glowA * (1 + 0.6 * boost)));
+    ctx.shadowBlur = L.glow * (1 + 0.9 * boost) * dpr;
+    cells(x0(), xd);
+    ctx.fillStyle = mat;
+    ctx.fill();
+    // The cell being filled: same material, less light.
+    ctx.shadowBlur = L.glow * 0.35 * dpr;
+    ctx.globalAlpha = 0.72;
+    cells(xd, xt);
+    ctx.fill();
     ctx.globalAlpha = 1;
-  }
-
-  function drawTicks() {
-    for (const t of ticks) {
-      const x = Math.round(xOf(t.frac) * dpr) / dpr + (dpr === 1 ? 0.5 : 0);
-      const lit = tier >= t.i;
-      let k = 0;
-      if (t.flare > 0) {
-        const p = t.flare / 0.75;
-        k = p < 0.18 ? ease(p / 0.18) : 1 - ease((p - 0.18) / 0.82);
-      }
-      const half = (lit ? 6 : 5) + 9 * k;
-      ctx.beginPath();
-      ctx.moveTo(x, TRACK_Y - half);
-      ctx.lineTo(x, TRACK_Y + half * (lit ? 0.75 : 1));
-      ctx.lineWidth = (lit ? 1.5 : 1) + 1.2 * k;
-      ctx.lineCap = "butt";
-      if (lit) {
-        ctx.strokeStyle = t.i === 3 ? `hsl(${hue % 360}, 78%, 52%)` : METALS[t.i].edge;
-        if (k > 0) { ctx.shadowColor = rgba(t.i, 0.8); ctx.shadowBlur = 10 * k; }
-      } else ctx.strokeStyle = "#c9c9cd";
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-      if (k > 0) {
-        ctx.beginPath();
-        ctx.arc(x, TRACK_Y, 3 + 16 * (t.flare / 0.75), 0, Math.PI * 2);
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = rgba(t.i, 0.55 * (1 - t.flare / 0.75));
-        ctx.stroke();
-      }
-    }
-    ctx.lineCap = "round";
-  }
-
-  function drawSweep(f) {
-    const p = f.t / f.dur;
-    const e = ease(p);
-    const fade = 1 - p;
-    const reach = Math.max(f.x - x0(), x1() - f.x) + 40;
-    const d = e * reach;
-    for (const side of [-1, 1]) {
-      const xf = f.x + side * d;
-      if (xf < x0() - 60 || xf > x1() + 60) continue;
-      const w = 46 + 60 * e;
-      // Wide soft halo: a radial glow squashed into an ellipse along the track
-      const hh = 6 + 10 * fade;
-      ctx.save();
-      ctx.translate(xf, TRACK_Y);
-      ctx.scale((w * 1.5) / hh, 1);
-      let g = ctx.createRadialGradient(0, 0, 0, 0, 0, hh);
-      g.addColorStop(0, rgba(f.tier, 0.2 * fade, side * 40));
-      g.addColorStop(1, rgba(f.tier, 0, side * 40));
-      ctx.fillStyle = g;
-      ctx.fillRect(-hh, -hh, hh * 2, hh * 2);
-      ctx.restore();
-      // The bright band riding the track
-      g = ctx.createLinearGradient(xf - w, 0, xf + w, 0);
-      g.addColorStop(0, rgba(f.tier, 0, side * 40));
-      g.addColorStop(0.5, rgba(f.tier, 0.95 * fade, side * 40));
-      g.addColorStop(1, rgba(f.tier, 0, side * 40));
-      ctx.fillStyle = g;
-      const bh = 2.5 + 5 * fade;
-      ctx.beginPath();
-      ctx.roundRect(xf - w, TRACK_Y - bh / 2, w * 2, bh, bh / 2);
-      ctx.fill();
-      // Specular core
-      g = ctx.createLinearGradient(xf - w * 0.5, 0, xf + w * 0.5, 0);
+    ctx.shadowBlur = 0;
+    // Depth: a specular top edge and a darker underside, then the travelling sheen.
+    ctx.save();
+    cells(x0(), xt);
+    ctx.clip();
+    const v = ctx.createLinearGradient(0, BAR_TOP, 0, BAR_BOT);
+    v.addColorStop(0, "rgba(255,255,255,.75)");
+    v.addColorStop(0.28, "rgba(255,255,255,.08)");
+    v.addColorStop(0.6, "rgba(0,0,0,0)");
+    v.addColorStop(1, "rgba(0,0,0,.22)");
+    ctx.fillStyle = v;
+    ctx.fillRect(x0(), BAR_TOP, xt - x0(), BAR_H);
+    const len = xt - x0();
+    if (len > 6) {
+      const cyc = len + 420;
+      const sx = x0() - 210 + ((fx * L.sheen) % cyc);
+      const g = ctx.createLinearGradient(sx - 80, 0, sx + 80, 0);
       g.addColorStop(0, "rgba(255,255,255,0)");
-      g.addColorStop(0.5, `rgba(255,255,255,${0.9 * fade})`);
+      g.addColorStop(0.5, "rgba(255,255,255,.85)");
       g.addColorStop(1, "rgba(255,255,255,0)");
       ctx.fillStyle = g;
-      ctx.fillRect(xf - w * 0.5, TRACK_Y - 0.6, w, 1.2);
-    }
-    // Flash at the threshold point
-    const r = 3 + 22 * e;
-    const rg = ctx.createRadialGradient(f.x, TRACK_Y, 0, f.x, TRACK_Y, r);
-    rg.addColorStop(0, rgba(f.tier, 0.5 * fade * fade));
-    rg.addColorStop(1, rgba(f.tier, 0));
-    ctx.fillStyle = rg;
-    ctx.fillRect(f.x - r, TRACK_Y - r, r * 2, r * 2);
-  }
-
-  function drawRing(f, xt) {
-    const p = f.t / f.dur;
-    ctx.beginPath();
-    ctx.arc(xt, TRACK_Y, PAD + 2 + 20 * ease(p), 0, Math.PI * 2);
-    ctx.lineWidth = 0.6 + 1.6 * (1 - p);
-    ctx.strokeStyle = rgba(f.tier, 0.85 * (1 - p));
-    ctx.stroke();
-  }
-
-  function drawSpark(s) {
-    const p = s.age / s.life;
-    const k = s.burst ? 1 - ease(p) : Math.pow(Math.sin(Math.PI * p), 1.6);
-    const r = s.size * (s.burst ? 0.6 + 0.4 * k : k);
-    if (r < 0.25) return;
-    ctx.save();
-    ctx.translate(s.x, s.y);
-    ctx.rotate(s.rot);
-    ctx.globalAlpha = s.burst ? k : 0.4 + 0.6 * k;
-    const tint = (a) => (s.tier === 3 ? `hsla(${s.hue}, 85%, 58%, ${a})` : rgba(s.tier, a));
-    const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 2.2);
-    halo.addColorStop(0, tint(0.28));
-    halo.addColorStop(1, tint(0));
-    ctx.fillStyle = halo;
-    ctx.fillRect(-r * 2.2, -r * 2.2, r * 4.4, r * 4.4);
-    ctx.fillStyle = tint(1);
-    ctx.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = (i * Math.PI) / 4;
-      const rr = i % 2 ? r * 0.3 : r;
-      ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-    }
-    ctx.closePath();
-    ctx.fill();
-    if (r > 1.6) {
-      ctx.fillStyle = "#fff";
-      ctx.beginPath();
-      ctx.arc(0, 0, r * 0.22, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillRect(sx - 80, BAR_TOP, 160, BAR_H);
     }
     ctx.restore();
   }
 
-  function draw() {
-    if (!W) return;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, W, LABEL_H + INPUT_H + 2 * BLEED);
-    ctx.translate(0, BLEED);
-    ctx.lineCap = "round";
-
-    const xt = xOf(shown);
-    let pulse = 0;
-    for (const f of effects) if (f.kind === "sweep") pulse = Math.max(pulse, Math.pow(1 - f.t / f.dur, 3));
-
-    const m = ease(mix);
-    drawTrack(tier, 1, pulse);
-    if (m < 1 && fromTier !== tier) drawTrack(fromTier, 1 - m, 0);
-
-    drawTicks();
-    for (const f of effects) if (f.kind === "sweep") drawSweep(f);
-    for (const s of sparks) drawSpark(s);
-    ctx.globalAlpha = 1;
-
-    // Thumb: an ink dot with a white collar so it sits cleanly on a thick metal line.
-    const r = PAD * (1 + 0.17 * hover);
+  function drawWipe(boost) {
+    const p = wipe.t / wipe.dur;
+    const e = wipe.up ? ease(p) : 1 - Math.pow(1 - p, 2.2);
+    const reach = Math.max(wipe.x - x0(), x1() - wipe.x) + 30;
+    const d = e * reach;
+    const top = -BLEED_Y, hgt = H + 2 * BLEED_Y;
+    ctx.save();
     ctx.beginPath();
-    ctx.arc(xt, TRACK_Y, r + 1.5, 0, Math.PI * 2);
+    ctx.rect(-BLEED_X, top, wipe.x - d + BLEED_X, hgt);
+    ctx.rect(wipe.x + d, top, W + BLEED_X - wipe.x - d, hgt);
+    ctx.clip();
+    drawGauge(wipe.from, 0);
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(wipe.x - d, top, 2 * d, hgt);
+    ctx.clip();
+    drawGauge(wipe.to, boost);
+    ctx.restore();
+    if (!wipe.up) return;
+    // The front: a flare of the new material's light riding the edge, brightest on the bar.
+    const fade = 1 - p;
+    for (const side of [-1, 1]) {
+      const xf = wipe.x + side * d;
+      if (xf < x0() - 30 || xf > x1() + 30) continue;
+      const off = side * 60;
+      ctx.save();
+      ctx.translate(xf, BAR_Y);
+      ctx.scale(2.6, 1);
+      const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, 22);
+      halo.addColorStop(0, glowOf(wipe.to, 0.6 * fade, off));
+      halo.addColorStop(1, glowOf(wipe.to, 0, off));
+      ctx.fillStyle = halo;
+      ctx.fillRect(-22, -22, 44, 44);
+      ctx.restore();
+      ctx.save();
+      cells(x0(), x1());
+      ctx.clip();
+      const w = 70;
+      const g = ctx.createLinearGradient(xf - w, 0, xf + w, 0);
+      g.addColorStop(0, "rgba(255,255,255,0)");
+      g.addColorStop(side < 0 ? 0.35 : 0.65, `rgba(255,255,255,${0.95 * fade})`);
+      g.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(xf - w, BAR_TOP, 2 * w, BAR_H);
+      ctx.restore();
+    }
+  }
+
+  function drawFlashes() {
+    for (const m of ms) {
+      const age = flash[m.k];
+      if (age < 0) continue;
+      const s = segs[Math.min(m.k, segs.length - 1)];
+      if (!s) continue;
+      const ti = tierAt(m.v);
+      const L = levelOf(ti);
+      const p = age / 1.1;
+      const hot = Math.pow(1 - p, 2.2);
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(s.a, BAR_TOP, s.b - s.a, BAR_H, RADIUS);
+      if (ti >= 0) {
+        // Ignite: the cell blazes in its tier's light, blooming hard, then settles into the material.
+        ctx.shadowColor = glowOf(ti, 1);
+        ctx.shadowBlur = (L.glow * 2 + 14) * (1 - p) * dpr;
+        ctx.fillStyle = glowOf(ti, 0.85 * hot);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.clip();
+        const c = ctx.createLinearGradient(0, BAR_TOP, 0, BAR_BOT);
+        c.addColorStop(0, "rgba(255,255,255,0)");
+        c.addColorStop(0.45, `rgba(255,255,255,${0.95 * hot})`);
+        c.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = c;
+        ctx.fillRect(s.a, BAR_TOP, s.b - s.a, BAR_H);
+      } else {
+        // Below Bronze: one glint runs across the freshly inked cell.
+        ctx.clip();
+        const gx = s.a + (s.b - s.a + 60) * ease(Math.min(1, p * 1.8)) - 30;
+        const c = ctx.createLinearGradient(gx - 30, 0, gx + 30, 0);
+        c.addColorStop(0, "rgba(255,255,255,0)");
+        c.addColorStop(0.5, `rgba(255,255,255,${0.7 * (1 - p)})`);
+        c.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = c;
+        ctx.fillRect(gx - 30, BAR_TOP, 60, BAR_H);
+      }
+      ctx.restore();
+      ctx.save();
+      // An outline that lifts off the cell as it settles.
+      const g = 1 + 5 * ease(p);
+      ctx.beginPath();
+      ctx.roundRect(s.a - g, BAR_TOP - g, s.b - s.a + 2 * g, BAR_H + 2 * g, RADIUS + g);
+      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = deepOf(ti, (ti < 0 ? 0.35 : 0.7) * (1 - p));
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawMarks() {
+    for (const m of marks) {
+      const x = Math.round(xOf(m.frac) * dpr) / dpr;
+      const lit = tier >= m.i;
+      ctx.fillStyle = lit ? deepOf(m.i, 1) : "#c4c4c8";
+      ctx.fillRect(x - (lit ? 0.75 : 0.5), BAR_TOP - 9, lit ? 1.5 : 1, 6);
+    }
+    for (const m of ms) {
+      const x = Math.round(xOf(m.frac) * dpr) / dpr;
+      ctx.fillStyle = val >= m.v ? (tier >= 0 ? deepOf(tier, 0.9) : "#111") : "#c9c9cd";
+      ctx.fillRect(x - 0.5, BAR_BOT + 3, 1, 4);
+    }
+  }
+
+  function drawShock(f) {
+    const L = levelOf(f.ti);
+    const p = f.t / f.dur;
+    if (p >= 1) return;
+    const R = L.shock * (0.55 + 0.45 * f.w);
+    if (p < 0.3) {
+      const q = 1 - p / 0.3;
+      const r = R * 0.8;
+      const g = ctx.createRadialGradient(f.x, BAR_Y, 0, f.x, BAR_Y, r);
+      g.addColorStop(0, f.ti < 0 ? `rgba(17,17,17,${0.12 * q})` : `rgba(255,255,255,${0.9 * q})`);
+      g.addColorStop(0.35, glowOf(f.ti, 0.6 * q * f.w));
+      g.addColorStop(1, glowOf(f.ti, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(f.x - r, BAR_Y - r, 2 * r, 2 * r);
+    }
+    const rings = f.ti >= 2 ? [0, 0.1] : [0];
+    for (const delay of rings) {
+      const pp = (f.t - delay) / f.dur;
+      if (pp <= 0 || pp >= 1) continue;
+      const rx = 4 + R * ease(pp) * (delay ? 0.72 : 1);
+      ctx.beginPath();
+      ctx.ellipse(f.x, BAR_Y, rx, rx * 0.62, 0, 0, Math.PI * 2);
+      ctx.lineWidth = (1.4 + (f.ti + 1) * 0.55) * (1 - pp) * (delay ? 0.6 : 1) + 0.3;
+      ctx.strokeStyle = deepOf(f.ti, (f.ti < 0 ? 0.45 : 0.95) * (1 - pp), delay ? 90 : 0);
+      if (f.ti >= 1) { ctx.shadowColor = glowOf(f.ti, 0.8 * (1 - pp)); ctx.shadowBlur = 8 * dpr; }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  function drawTravel(f) {
+    const L = levelOf(f.ti);
+    const p = f.t / f.dur;
+    if (p >= 1) return;
+    const fade = Math.pow(1 - p, 1.3) * (0.55 + 0.45 * f.w);
+    const d = ease(p) * L.travel * (0.6 + 0.4 * f.w);
+    ctx.save();
+    cells(x0(), x1());
+    ctx.clip();
+    for (const side of [-1, 1]) {
+      const xf = f.x + side * d;
+      const w = 24 + 40 * ease(p);
+      let g = ctx.createLinearGradient(xf - w, 0, xf + w, 0);
+      g.addColorStop(0, glowOf(f.ti, 0, side * 50));
+      g.addColorStop(0.5, glowOf(f.ti, (f.ti < 0 ? 0.9 : 1) * fade, side * 50));
+      g.addColorStop(1, glowOf(f.ti, 0, side * 50));
+      ctx.fillStyle = g;
+      ctx.fillRect(xf - w, BAR_TOP, 2 * w, BAR_H);
+      if (f.ti >= 0) {
+        g = ctx.createLinearGradient(xf - w * 0.45, 0, xf + w * 0.45, 0);
+        g.addColorStop(0, "rgba(255,255,255,0)");
+        g.addColorStop(0.5, `rgba(255,255,255,${0.95 * fade})`);
+        g.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(xf - w * 0.45, BAR_TOP + 2, w * 0.9, BAR_H - 4);
+      }
+    }
+    ctx.restore();
+    if (f.ti < 0) return;
+    // Soft halo outside the bar, so the burst reads as light rather than paint.
+    for (const side of [-1, 1]) {
+      const xf = f.x + side * d;
+      ctx.save();
+      ctx.translate(xf, BAR_Y);
+      ctx.scale(3.2, 1);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 16);
+      g.addColorStop(0, glowOf(f.ti, 0.32 * fade, side * 50));
+      g.addColorStop(1, glowOf(f.ti, 0, side * 50));
+      ctx.fillStyle = g;
+      ctx.fillRect(-16, -16, 32, 32);
+      ctx.restore();
+    }
+  }
+
+  function drawSpark(s) {
+    const p = s.age / s.life;
+    const a = Math.pow(1 - p, 1.2);
+    const col = (alpha) => (s.col ? rgb(s.col, alpha) : `hsla(${s.hue % 360},92%,60%,${alpha})`);
+    const tl = 0.05;
+    const tx = s.x - s.vx * tl, ty = s.y - s.vy * tl;
+    const g = ctx.createLinearGradient(tx, ty, s.x, s.y);
+    g.addColorStop(0, col(0));
+    g.addColorStop(1, col(a));
+    ctx.beginPath();
+    ctx.moveTo(tx, ty);
+    ctx.lineTo(s.x, s.y);
+    ctx.lineWidth = s.size * (1 - 0.4 * p);
+    ctx.strokeStyle = g;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(s.x, s.y, s.size * 0.55, 0, Math.PI * 2);
+    ctx.fillStyle = s.hot ? `rgba(255,255,255,${a})` : col(a);
+    ctx.fill();
+  }
+
+  function drawGlint(g) {
+    const p = g.age / g.life;
+    const k = Math.pow(Math.sin(Math.PI * p), 1.5);
+    const r = g.size * k;
+    if (r < 0.3) return;
+    const tint = (a) => (g.ti === 3 ? `hsla(${g.hue},90%,60%,${a})` : rgb(METALS[g.ti].glow, a));
+    ctx.save();
+    ctx.translate(g.x, g.y);
+    const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 2.6);
+    halo.addColorStop(0, tint(0.35 * k));
+    halo.addColorStop(1, tint(0));
+    ctx.fillStyle = halo;
+    ctx.fillRect(-r * 2.6, -r * 2.6, r * 5.2, r * 5.2);
+    ctx.rotate(g.rot);
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const ang = (i * Math.PI) / 4;
+      const rr = i % 2 ? r * 0.26 : r;
+      ctx.lineTo(Math.cos(ang) * rr, Math.sin(ang) * rr);
+    }
+    ctx.closePath();
+    ctx.fillStyle = g.ti === 3 ? `hsla(${g.hue},85%,55%,${0.5 + 0.5 * k})` : rgb(METALS[g.ti].deep, 0.5 + 0.5 * k);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(0, 0, r * 0.24, 0, Math.PI * 2);
+    ctx.fillStyle = "#fff";
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawNeedle() {
+    const xt = xOf(shown);
+    const L = levelOf(tier);
+    // Light trail when the needle moves fast.
+    if (!reduced && trail.length > 1) {
+      const from = trail[0].x;
+      const dx = xt - from;
+      if (Math.abs(dx) > 10) {
+        const g = ctx.createLinearGradient(from, 0, xt, 0);
+        g.addColorStop(0, glowOf(tier, 0));
+        g.addColorStop(1, glowOf(tier, tier < 0 ? 0.5 : 0.8));
+        ctx.fillStyle = g;
+        ctx.fillRect(Math.min(from, xt), BAR_TOP - 3, Math.abs(dx), BAR_H + 6);
+        if (tier >= 0) {
+          const c = ctx.createLinearGradient(from, 0, xt, 0);
+          c.addColorStop(0, "rgba(255,255,255,0)");
+          c.addColorStop(1, "rgba(255,255,255,.9)");
+          ctx.fillStyle = c;
+          ctx.fillRect(Math.min(from, xt), BAR_Y - 1, Math.abs(dx), 2);
+        }
+      }
+    }
+    if (tier >= 0) {
+      ctx.save();
+      ctx.translate(xt, BAR_Y);
+      ctx.scale(1, 1.5);
+      const r = 14 + L.glow * 0.5 + 8 * kick;
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+      g.addColorStop(0, glowOf(tier, Math.min(1, L.glowA + 0.3 * kick)));
+      g.addColorStop(1, glowOf(tier, 0));
+      ctx.fillStyle = g;
+      ctx.fillRect(-r, -r, 2 * r, 2 * r);
+      ctx.restore();
+    }
+    const w = 3 + 1.2 * hover;
+    const h = BAR_H + 16 + 4 * hover;
+    ctx.beginPath();
+    ctx.roundRect(xt - w / 2 - 1.5, BAR_Y - h / 2 - 1.5, w + 3, h + 3, (w + 3) / 2);
     ctx.fillStyle = "#fff";
     ctx.fill();
     ctx.beginPath();
-    ctx.arc(xt, TRACK_Y, r, 0, Math.PI * 2);
+    ctx.roundRect(xt - w / 2, BAR_Y - h / 2, w, h, w / 2);
     ctx.fillStyle = "#111";
     ctx.fill();
-    for (const f of effects) if (f.kind === "ring") drawRing(f, xt);
+    if (tier >= 0) {
+      // A lit filament down the needle.
+      ctx.fillStyle = glowOf(tier, 1);
+      ctx.fillRect(xt - 0.5, BAR_Y - h / 2 + 3, 1, h - 6);
+    }
     if (focusRing) {
       ctx.beginPath();
-      ctx.arc(xt, TRACK_Y, r + 4.5, 0, Math.PI * 2);
+      ctx.roundRect(xt - w / 2 - 4.5, BAR_Y - h / 2 - 4.5, w + 9, h + 9, (w + 9) / 2);
       ctx.lineWidth = 1.5;
       ctx.strokeStyle = "#111";
       ctx.stroke();
     }
   }
 
+  function draw() {
+    if (!W) return;
+    ctx.setTransform(dpr, 0, 0, dpr, BLEED_X * dpr, BLEED_Y * dpr);
+    ctx.clearRect(-BLEED_X, -BLEED_Y, W + 2 * BLEED_X, H + 2 * BLEED_Y);
+    if (wipe) drawWipe(kick);
+    else drawGauge(tier, kick);
+    drawFlashes();
+    drawMarks();
+    for (const f of effects) if (f.kind === "travel") drawTravel(f);
+    for (const g of glints) drawGlint(g);
+    ctx.lineCap = "round";
+    for (const s of sparks) drawSpark(s);
+    ctx.lineCap = "butt";
+    for (const f of effects) if (f.kind === "shock") drawShock(f);
+    drawNeedle();
+    placePill();
+  }
+
+  function placePill() {
+    if (!pill) return;
+    const xt = xOf(shown);
+    const w = pill.offsetWidth;
+    const left = clamp(xt - w / 2, 0, W - w);
+    pill.style.transform = `translateX(${left.toFixed(1)}px)`;
+    pill.style.setProperty("--caret", `${clamp(xt - left, 7, w - 7).toFixed(1)}px`);
+    // Tier names step aside for the pill.
+    for (const m of marks) {
+      const a = m.label.offsetLeft, b = a + m.label.offsetWidth;
+      m.label.classList.toggle("is-covered", b > left - 6 && a < left + w + 6);
+    }
+  }
+
   // Loop: runs while something moves, or while a tier is live on screen; idle otherwise.
   function busy() {
     if (!visible || !W) return false;
-    if (effects.length || sparks.length || mix < 1) return true;
-    if (shown !== target || hover !== hoverTarget) return true;
+    if (effects.length || sparks.length || glints.length || queue.length || wipe) return true;
+    if (flash.some((a) => a >= 0)) return true;
+    if (shown !== target || hover !== hoverTarget || kick > 0) return true;
+    if (!reduced && fx - movedAt < 0.12) return true;
     return tier >= 0 && !reduced;
   }
   function frame(now) {
@@ -465,7 +784,7 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
     draw();
     if (busy()) raf = requestAnimationFrame(frame);
   }
-  function kick() {
+  function kickLoop() {
     if (raf) return;
     if (!busy()) { draw(); return; }
     last = performance.now();
@@ -473,11 +792,21 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
   }
 
   function apply(v, fromUser) {
+    const prev = val;
+    val = v;
     target = v / max;
     if (!fromUser) shown = target;
     input.setAttribute("aria-valuetext", text(v));
+    morph?.update(thumbLabel(v));
+    if (fromUser && v > prev) {
+      const crossed = ms.filter((m) => m.v > prev && m.v <= v);
+      if (reduced) { if (crossed.length) vibrate(10); }
+      else queue.push(...crossed);
+    }
+    queue = queue.filter((m) => m.v <= v).slice(-8);
     setTier(tierAt(v), fromUser);
-    kick();
+    syncLabels();
+    kickLoop();
   }
 
   // Events
@@ -486,17 +815,22 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
     apply(v, true);
     onInput?.(v);
   };
-  const onDown = () => { dragging = true; hoverTarget = 1; focusRing = false; kick(); };
-  const onUp = () => { if (!dragging) return; dragging = false; hoverTarget = input.matches(":hover") ? 1 : 0; kick(); };
-  const onEnter = () => { hoverTarget = 1; kick(); };
-  const onLeave = () => { if (!dragging) { hoverTarget = 0; kick(); } };
-  const onFocus = () => { focusRing = input.matches(":focus-visible"); kick(); draw(); };
+  const onDown = () => { dragging = true; hoverTarget = 1; focusRing = false; kickLoop(); };
+  const onUp = () => { if (!dragging) return; dragging = false; hoverTarget = input.matches(":hover") ? 1 : 0; kickLoop(); };
+  const onEnter = () => { hoverTarget = 1; kickLoop(); };
+  const onLeave = () => { if (!dragging) { hoverTarget = 0; kickLoop(); } };
+  const onFocus = () => { focusRing = input.matches(":focus-visible"); draw(); };
   const onBlur = () => { focusRing = false; draw(); };
   const onKey = () => { if (!focusRing) { focusRing = true; draw(); } };
+  const reset = () => {
+    effects = []; sparks = []; glints = []; queue = []; wipe = null; kick = 0;
+    flash.fill(-1);
+    shown = target;
+  };
   const onMotion = () => {
     reduced = !!reducedQuery?.matches;
-    if (reduced) { effects = []; sparks = []; mix = 1; shown = target; }
-    kick();
+    if (reduced) reset();
+    kickLoop();
   };
 
   input.addEventListener("input", onInputEvt);
@@ -514,15 +848,15 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
   ro.observe(el);
   const io = new IntersectionObserver(([entry]) => {
     visible = entry.isIntersecting;
-    if (!visible) { effects = []; sparks = []; mix = 1; shown = target; for (const t of ticks) t.flare = 0; }
-    kick();
+    if (!visible) reset();
+    kickLoop();
   });
   io.observe(el);
 
-  input.setAttribute("aria-valuetext", text(+input.value));
+  input.setAttribute("aria-valuetext", text(val));
   syncLabels();
   layout();
-  kick();
+  kickLoop();
   document.fonts?.ready.then(() => { if (el.isConnected) layout(); });
 
   return {
@@ -530,6 +864,8 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
     get value() { return +input.value; },
     set(v) {
       input.value = String(clamp(v, 0, max));
+      queue = [];
+      wipe = null;
       apply(+input.value, false);
     },
     destroy() {
@@ -547,6 +883,7 @@ export function tierSlider(host, { label, max, step = 1, value = 0, amountOf = (
       input.removeEventListener("blur", onBlur);
       input.removeEventListener("keydown", onKey);
       reducedQuery?.removeEventListener?.("change", onMotion);
+      morph?.destroy();
       el.remove();
     },
   };

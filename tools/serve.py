@@ -11,6 +11,11 @@ class NoCache(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
 
+class Server(http.server.ThreadingHTTPServer):
+    # The page fetches dozens of parts at once; the default backlog of 5 resets connections.
+    request_queue_size = 128
+
+
 port = int(sys.argv[1]) if len(sys.argv) > 1 else 4173
 handler = functools.partial(NoCache, directory=sys.argv[2] if len(sys.argv) > 2 else "site")
-http.server.ThreadingHTTPServer(("", port), handler).serve_forever()
+Server(("", port), handler).serve_forever()

@@ -9,6 +9,38 @@
   "deflection": 0.0012,
   "angular": 0.26,
   "lit": "/lampclear/",
+  "groups": {
+    "wheel_rr": "#(22|26)$",
+    "wheel_rl": "#(23|27)$",
+    "wheel_fr": "#(24|28)$",
+    "wheel_fl": "#(25|29)$"
+  },
+  "groupMeta": {
+    "wheel_rr": {
+      "spin": {
+        "axis": "x",
+        "rpm": 40
+      }
+    },
+    "wheel_rl": {
+      "spin": {
+        "axis": "x",
+        "rpm": 40
+      }
+    },
+    "wheel_fr": {
+      "spin": {
+        "axis": "x",
+        "rpm": 40
+      }
+    },
+    "wheel_fl": {
+      "spin": {
+        "axis": "x",
+        "rpm": 40
+      }
+    }
+  },
   "notes": "Generic long-wheelbase high-roof panel van, modelled (no manufacturer CAD) to the class's common proportions: 5,980 mm long over bumpers, 2,020 mm wide (2,580 mm over mirrors), 2,600 mm tall, 3,750 mm wheelbase, 1,720 mm track, 235/65 R16 tyres on 6-stud steel wheels. Twin sliding doors, twin rear doors; no badges.",
   "defaultMaterial": "white-paint",
   "customMaterials": {

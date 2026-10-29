@@ -6,14 +6,16 @@
   <title>Adopt a Part · RIFT</title>
   <meta name="description" content="RIFT is a new University of Toronto robotics team. We haven't built our robot yet, but we know every part it needs. Adopt one.">
   <meta name="theme-color" content="#ffffff">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="fonts/plex-mono-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/plex-mono-500.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="css/site.css">
   <link rel="stylesheet" href="css/tierslider.css">
   <link rel="stylesheet" href="css/road.css">
-  <link rel="stylesheet" href="css/cabin.css">
-  <link rel="modulepreload" href="vendor/three.module.min.js">
+  <link rel="stylesheet" href="css/flight.css">
+  <!-- The first screen needs only these; three.js and the parts load after it. -->
+  <link rel="modulepreload" href="js/app.js">
+  <link rel="modulepreload" href="js/catalog.js">
+  <link rel="modulepreload" href="posters/manifest.js">
 </head>
 <body>
   <header class="top">

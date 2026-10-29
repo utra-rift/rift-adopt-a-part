@@ -592,7 +592,7 @@ class StageImpl {
     this.w = Math.max(this.w, Math.ceil(w / 128) * 128); this.h = Math.max(this.h, Math.ceil(h / 128) * 128);
     this.renderer.setSize(this.w, this.h, false);
   }
-  paint(view) {
+  paint(view, blit = true) {
     const { canvas, ctx } = view;
     const w = canvas.width, h = canvas.height;
     if (!w || !h) return;
@@ -603,6 +603,7 @@ class StageImpl {
     this.scene.add(view.figure.root);
     r.render(this.scene, view.camera);
     this.scene.remove(view.figure.root);
+    if (!blit) return;
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(this.canvas, 0, this.h - h, w, h, 0, 0, w, h);
   }
@@ -687,4 +688,14 @@ export class View {
     this.figure.setView(this.camera.position.clone().normalize());
   }
   paint() { this.pose(); getStage().paint(this); }
+  // The figure as it would paint now, read back from the renderer, not the page's canvas
+  // (reading a 2D canvas back pulls it off the GPU): RGBA, bottom row first.
+  coverage() {
+    this.pose();
+    const st = getStage(), { width: w, height: h } = this.canvas;
+    st.paint(this, false);
+    const gl = st.renderer.getContext(), px = new Uint8Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    return px;
+  }
 }

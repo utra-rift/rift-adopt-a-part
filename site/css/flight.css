@@ -1,0 +1,6 @@
+/* The flight strip: a full-bleed WebGL plate; its height is set from its width by flight.js. */
+.flight { position: relative; width: 100%; height: 300px; overflow: hidden; background: #fff; }
+.flight-gl { display: block; width: 100%; height: 100%; }
+/* Without WebGL: the aeroplane at rest, drawn at 1440 x 432 (the strip's own shape there). */
+.flight--still { background: #fff url("../flight/still.jpg") center / cover no-repeat; }
+.flight--still .flight-gl { display: none; }

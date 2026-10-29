@@ -1,32 +1,37 @@
-/* Tier slider: see js/tierslider.js. Geometry constants there (16 px labels, 32 px input,
-   12 px thumb, 20 px canvas bleed) must match the numbers here. */
+/* Tier slider: see js/tierslider.js. Its geometry constants (66 px tall, gauge centred at 36 px,
+   12 px native thumb, canvas overhang 16 px sideways and 48 px up and down) must match these. */
 
 .tslider {
   position: relative;
   width: 100%;
-  height: 48px;
+  height: 66px;
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+  --tier-ink: #111;
 }
+.tslider[data-tier="bronze"] { --tier-ink: #8a4a1e; }
+.tslider[data-tier="silver"] { --tier-ink: #4f5963; }
+.tslider[data-tier="gold"]   { --tier-ink: #8a6106; }
+.tslider[data-tier="title"]  { --tier-ink: #6b4fd0; }
 
 .tslider-canvas {
   position: absolute;
-  left: 0;
-  top: -20px;
-  width: 100%;
-  height: 88px;
+  left: -16px;
+  top: -48px;
+  width: calc(100% + 32px);
+  height: 162px;
   pointer-events: none;
 }
 
-.tslider-marks {
+/* Tier names, above the gauge */
+.tslider-tiers {
   position: absolute;
   inset: 0 0 auto 0;
   height: 16px;
   pointer-events: none;
 }
-
-.tslider-label {
+.tslider-tier {
   position: absolute;
   top: 0;
   font: 400 10.5px/16px var(--mono, "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace);
@@ -34,12 +39,10 @@
   text-transform: uppercase;
   white-space: nowrap;
   color: var(--muted, #9a9a9e);
-  transform-origin: 50% 100%;
-  transition: color .6s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
+  transition: color .6s var(--ease-out, cubic-bezier(.23, 1, .32, 1)), opacity .2s ease;
 }
-
-/* The lit face is a second copy of the text painted in the tier's material, faded in over the grey. */
-.tslider-label::after {
+/* The lit face is a second copy of the text in the tier's material, faded in over the grey. */
+.tslider-tier::after {
   content: attr(data-name);
   position: absolute;
   inset: 0;
@@ -50,32 +53,88 @@
   opacity: 0;
   transition: opacity .6s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
 }
-.tslider-label.is-lit { color: transparent; }
-.tslider-label.is-lit::after { opacity: 1; }
-
-.tslider-label[data-tier="bronze"] { --mat: linear-gradient(100deg, #6e3819 0%, #b06a36 30%, #d08c58 50%, #a45f2d 70%, #6e3819 100%); --glow: rgba(196, 120, 60, .55); }
-.tslider-label[data-tier="silver"] { --mat: linear-gradient(100deg, #4f565e 0%, #7c858f 30%, #a2abb5 50%, #78818b 70%, #4f565e 100%); --glow: rgba(130, 144, 160, .55); }
-.tslider-label[data-tier="gold"]   { --mat: linear-gradient(100deg, #7a5408 0%, #b98a1a 30%, #dcae35 50%, #b0821a 70%, #7a5408 100%); --glow: rgba(214, 160, 30, .6); }
-.tslider-label[data-tier="title"]  { --mat: linear-gradient(100deg, #e0406a, #e88a2a, #b9b020, #2fb47a, #2a8fd8, #8a5ae0, #e0406a); --glow: rgba(150, 110, 230, .5); }
-.tslider-label[data-tier="title"]::after { background-size: 200% 100%; }
-.tslider-label[data-tier="title"].is-lit::after { animation: tslider-iri 6s linear infinite; }
-
-.tslider-label.is-flare { animation: tslider-flare .7s cubic-bezier(.2, .9, .3, 1); }
-
-@keyframes tslider-flare {
-  0%   { transform: none; filter: none; }
-  18%  { transform: translateY(-2px) scale(1.16); filter: drop-shadow(0 0 4px var(--glow)); }
-  100% { transform: none; filter: drop-shadow(0 0 0 transparent); }
-}
+.tslider-tier.is-lit { color: transparent; }
+.tslider-tier.is-lit::after { opacity: 1; }
+.tslider-tier[data-tier="bronze"] { --mat: linear-gradient(100deg, #6e3819 0%, #b06a36 30%, #d08c58 50%, #a45f2d 70%, #6e3819 100%); }
+.tslider-tier[data-tier="silver"] { --mat: linear-gradient(100deg, #4f565e 0%, #7c858f 30%, #a2abb5 50%, #78818b 70%, #4f565e 100%); }
+.tslider-tier[data-tier="gold"]   { --mat: linear-gradient(100deg, #7a5408 0%, #b98a1a 30%, #dcae35 50%, #b0821a 70%, #7a5408 100%); }
+.tslider-tier[data-tier="title"]  { --mat: linear-gradient(100deg, #e0406a, #e88a2a, #b9b020, #2fb47a, #2a8fd8, #8a5ae0, #e0406a); }
+.tslider-tier[data-tier="title"]::after { background-size: 200% 100%; }
+.tslider-tier[data-tier="title"].is-lit::after { animation: tslider-iri 5s linear infinite; }
 @keyframes tslider-iri { to { background-position: -200% 0; } }
 
-/* The native control: full size, transparent, its thumb as wide as the drawn one so values map alike. */
+.tslider-tier.is-covered { opacity: 0; }
+
+/* Value pill riding the needle (only with the thumbLabel option) */
+.tslider-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 9px;
+  background: var(--tier-ink);
+  color: #fff;
+  font: 500 10.5px/18px var(--mono, "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace);
+  letter-spacing: .02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  will-change: transform;
+  transition: background-color .5s var(--ease-out, cubic-bezier(.23, 1, .32, 1)), box-shadow .5s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
+}
+.tslider-pill::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: var(--caret, 50%);
+  margin-left: -3.5px;
+  border: 3.5px solid transparent;
+  border-top: 3.5px solid var(--tier-ink);
+  border-bottom: 0;
+  transition: border-color .5s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
+}
+.tslider[data-tier="bronze"] .tslider-pill { box-shadow: 0 2px 12px rgba(232, 140, 70, .45); }
+.tslider[data-tier="silver"] .tslider-pill { box-shadow: 0 2px 12px rgba(140, 160, 190, .5); }
+.tslider[data-tier="gold"]   .tslider-pill { box-shadow: 0 2px 14px rgba(255, 190, 30, .55); }
+.tslider[data-tier="title"]  .tslider-pill { box-shadow: 0 2px 16px rgba(170, 120, 255, .55); }
+
+/* Milestone labels, under the gauge */
+.tslider-ms {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50px;
+  height: 14px;
+  pointer-events: none;
+}
+.tslider-mlabel {
+  position: absolute;
+  top: 0;
+  font: 400 10px/14px var(--mono, "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace);
+  letter-spacing: .02em;
+  white-space: nowrap;
+  color: #b4b4b8;
+  font-variant-numeric: tabular-nums;
+  transform-origin: 50% 0;
+  transition: color .4s var(--ease-out, cubic-bezier(.23, 1, .32, 1));
+}
+.tslider-mlabel.is-passed { color: var(--tier-ink); }
+.tslider-mlabel.is-thin { visibility: hidden; }
+.tslider-mlabel.is-pop { animation: tslider-pop .55s cubic-bezier(.2, .9, .3, 1); }
+@keyframes tslider-pop {
+  0%   { transform: none; }
+  25%  { transform: translateY(1px) scale(1.18); }
+  100% { transform: none; }
+}
+
+/* The native control: full size, transparent, its thumb as wide as PAD * 2 so values map alike. */
 .tslider-input {
   position: absolute;
   left: 0;
   top: 16px;
   width: 100%;
-  height: 32px;
+  height: 40px;
   margin: 0;
   padding: 0;
   background: transparent;
@@ -85,14 +144,14 @@
   touch-action: pan-y;
   outline: none;
 }
-.tslider-input::-webkit-slider-runnable-track { height: 32px; background: transparent; border: 0; }
-.tslider-input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 32px; background: transparent; border: 0; }
-.tslider-input::-moz-range-track { height: 32px; background: transparent; border: 0; }
+.tslider-input::-webkit-slider-runnable-track { height: 40px; background: transparent; border: 0; }
+.tslider-input::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 12px; height: 40px; background: transparent; border: 0; }
+.tslider-input::-moz-range-track { height: 40px; background: transparent; border: 0; }
 .tslider-input::-moz-range-progress { background: transparent; }
-.tslider-input::-moz-range-thumb { width: 12px; height: 32px; background: transparent; border: 0; border-radius: 0; }
+.tslider-input::-moz-range-thumb { width: 12px; height: 40px; background: transparent; border: 0; border-radius: 0; }
 .tslider-input:active { cursor: grabbing; }
 
 @media (prefers-reduced-motion: reduce) {
-  .tslider-label, .tslider-label::after { transition: none; }
-  .tslider-label.is-flare, .tslider-label[data-tier="title"].is-lit::after { animation: none; }
+  .tslider-tier, .tslider-tier::after, .tslider-mlabel, .tslider-pill, .tslider-pill::after { transition: none; }
+  .tslider-mlabel.is-pop, .tslider-tier[data-tier="title"].is-lit::after { animation: none; }
 }

@@ -23,7 +23,15 @@
     <div class="dev-row mono muted"><span id="o">0%</span><span>set(f)</span></div>
   </div>
   <script type="module">
-    import { roadStrip } from "./js/road.js";
+    // ?shim: drive frames from timers, for testing in a hidden or background tab.
+    // (A hidden page gets no frames and no intersection callbacks, so both are stood in for.)
+    if (new URLSearchParams(location.search).has("shim")) {
+      window.requestAnimationFrame = (cb) => setTimeout(() => cb(performance.now()), 16);
+      document.head.insertAdjacentHTML("beforeend", "<style>.road-canvas, .road-map::before { transition: none !important; }</style>");
+      window.IntersectionObserver = class { constructor(cb) { this.cb = cb; } observe(t) { setTimeout(() => this.cb([{ isIntersecting: true, target: t }]), 0); } disconnect() {} };
+    }
+    // Cache-busted so edits always load.
+    const { roadStrip } = await import("./js/road.js?v=" + Date.now());
     // Inspection: ?w=1440&x=600&y=0&z=2 lays the strip out at a fixed width, magnifies it by z and shows it from (x, y).
     const qs = new URLSearchParams(location.search), host = document.getElementById("road");
     if (qs.get("w")) {

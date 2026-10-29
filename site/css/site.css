@@ -1,6 +1,12 @@
+/* Self-hosted, Latin only. The tape's marker face holds just the letters of "Adopted". */
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap; src: url("../fonts/plex-mono-400.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 500; font-display: swap; src: url("../fonts/plex-mono-500.woff2") format("woff2"); }
+@font-face { font-family: Inter; font-weight: 400 500; font-display: swap; src: url("../fonts/inter.woff2") format("woff2"); }
+@font-face { font-family: "Permanent Marker"; font-weight: 400; font-display: swap; src: url("../fonts/permanent-marker-tape.woff2") format("woff2"); }
+
 :root {
   --ink: #111111;
-  --muted: #9a9a9e;
+  --muted: #737378; /* 4.7:1 on white: small grey text stays legible */
   --faint: #dcdcdc;
   --rule: #ededed;
   --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -44,11 +50,13 @@ a { color: inherit; }
 
 /* ---------------------------------------------------------------- grid */
 main { padding: 92px var(--gutter) 40px; }
+/* Until app.js fills the shelves, keep the footer below the fold so it doesn't jump. */
+#shelves:empty { min-height: 100vh; }
 .gist { margin: 0 0 28px; text-align: center; color: var(--muted); }
 .tier { margin: 0 auto; max-width: 1600px; }
 .tier + .tier { margin-top: clamp(56px, 9vw, 128px); }
-.tier-label { margin: 0 0 4px; text-align: center; font: 400 10.5px/16px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
-.tier-label span { margin-left: 6px; }
+.tier-label { margin: 0 0 4px; text-align: center; font: 500 11.5px/16px var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+.tier-label span { margin-left: 8px; font-weight: 400; color: var(--muted); }
 .grid { list-style: none; margin: 0 auto; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; }
 .cell { width: 50%; opacity: 0; transition: opacity .9s var(--ease-out); transition-delay: var(--d, 0ms); }
 @media (min-width: 720px) { .cell { width: 33.333%; } }
@@ -61,6 +69,11 @@ main { padding: 92px var(--gutter) 40px; }
 
 /* The trip: each picture runs the full width of the page, its slider and readout under it. */
 .trip, .trip + .tier { margin-top: clamp(56px, 9vw, 128px); }
+/* Until its modules load, the trip holds its final height: label, the road strip (its
+   height from road.js) and labels, the gap, the flight strip (from flight.js), and two
+   slider-and-readout blocks, which wrap taller on a phone. */
+.trip-pending { --ctl: 140px; height: calc(30px + clamp(200px, 23.6vw, 380px) + 26px + clamp(48px, 7vw, 96px) + clamp(240px, 30vw, 440px) + 2 * var(--ctl)); }
+@media (max-width: 719px) { .trip-pending { --ctl: 186px; } }
 .trip-part + .trip-part { margin-top: clamp(48px, 7vw, 96px); }
 .trip-art { margin: 14px calc(-1 * var(--gutter)) 0; }
 .trip-ctl { max-width: 1600px; margin: 0 auto; padding-top: 16px; }
@@ -81,7 +94,12 @@ main { padding: 92px var(--gutter) 40px; }
   mask-composite: intersect;
 }
 .float { position: absolute; inset: 0; animation: bob var(--bob, 7s) ease-in-out infinite; animation-delay: var(--bob-at, 0s); }
-.fig canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.fig canvas, .fig .poster { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* The live figure fades in over its poster (the same picture), which then steps aside so
+   it can't show behind the figure as it turns. */
+.fig canvas { opacity: 0; transition: opacity .3s; }
+.cell[data-live] .fig canvas { opacity: 1; }
+.cell[data-live] .poster { visibility: hidden; transition: visibility 0s .3s; }
 .halo {
   position: absolute; left: 50%; top: var(--floor, 80%); width: var(--w, 40%); height: 7%;
   translate: -50% 0; margin-top: 4%;
@@ -95,9 +113,22 @@ main { padding: 92px var(--gutter) 40px; }
 .cap .price { color: var(--muted); transition: color .2s; }
 .cell[data-hot] .cap .price, .cell[data-state] .cap .price { color: var(--ink); }
 .cell[data-state="crate"] .cap .code::before { content: "● "; font-size: 8px; vertical-align: 1px; }
-.cell[data-state="adopted"] .cap { color: #8f9aa8; }
-.cell[data-state="adopted"] .cap .price { color: #8f9aa8; }
+.cell[data-state="adopted"] .cap { color: #66717f; }
+.cell[data-state="adopted"] .cap .price { color: #66717f; }
 .cell[data-state="adopted"] .halo { opacity: .55; }
+/* Adopted: a strip of masking tape stuck across the corner of the frame (never over the
+   part), written on in marker. The outer span carries the angle and the shadow, the inner
+   one the paper and its torn ends. */
+.tape { position: absolute; z-index: 1; top: var(--top, 7%); right: var(--right, -4%); width: 46%; min-width: 88px; transform: rotate(var(--tilt, 8deg)); filter: drop-shadow(0 1px 1px rgb(0 0 0 / .14)); pointer-events: none; }
+.tape span {
+  display: grid; place-items: center; height: 2.2em; padding-top: .1em;
+  font: 400 clamp(12px, 1vw, 15px)/1 "Permanent Marker", var(--mono); letter-spacing: .04em; text-transform: uppercase; color: rgb(24 24 26 / .84);
+  background:
+    repeating-linear-gradient(91deg, rgb(255 255 255 / .16) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, rgb(255 255 255 / .4), rgb(0 0 0 / .03) 55%, rgb(0 0 0 / .08)),
+    #e6dbbb;
+  clip-path: polygon(2% 0, 98% 0, 100% 12%, 97% 25%, 100% 38%, 97.5% 50%, 100% 63%, 97% 76%, 100% 88%, 98% 100%, 2% 100%, .5% 88%, 3% 76%, 0 63%, 2.5% 50%, 0 38%, 3% 25%, 0 12%);
+}
 .cell[data-empty] .fig { visibility: hidden; }
 
 /* ---------------------------------------------------------------- footer */
