@@ -21,8 +21,8 @@ const WHEEL_R = 0.356, WHEEL_RPM = 40;        // 235/65 R16; the rpm the part fi
 const ELEV = 30, AZIM = -20, FOV = 24;        // camera, degrees (a long lens)
 const LAND_LEAD = 4.5;                        // metres the land's colour front runs ahead of the road's
 const LAND_LAG = 8;                           // metres the colour front may fall behind its target while the van drives
-const ROAD_PAST = 7;                          // metres of road past where the van parks in Arlington
-const END_FILL = 48, ARRIVE_S = 1.2;          // metres the colour runs on past the parked van, and over how long
+const ROAD_PAST = 70;                         // metres of road past where the van parks in Arlington: on out of frame
+const END_FILL = 80, ARRIVE_S = 1.2;          // metres the colour runs on past the parked van, and over how long
 const SEED = 0x52494654;
 
 // ------------------------------------------------------------------ seeded noise
@@ -530,7 +530,7 @@ async function buildTerrain(R, slice) {
   return { geo, heightAt, slopeAt, ravineX };
 }
 
-// The road ends a few metres past where the van parks in Arlington: the trip goes no further.
+// The road runs on past where the van parks in Arlington until it leaves the frame, then stops.
 function buildRoad(R) {
   const n = Math.min(R.n, Math.ceil((R.s1 + ROAD_PAST) / R.step) + 1);
   const P = new Float32Array(n * 2 * 3), AS = new Float32Array(n * 2), AU = new Float32Array(n * 2);
