@@ -150,7 +150,7 @@ function atlas() {
 // square-on at the start and 30° ahead of the van at the end). Scale: the parked shot is wider,
 // so the Texas sign is drawn larger to read at the same size.
 const PLACES = [
-  { face: 0, at: (R) => R.s0 - 7, side: -1, turn: -0.12, scale: 1.4 },  // the far shoulder in front of Convocation Hall's lawn
+  { face: 0, at: (R) => R.s0 + 12, side: -1, turn: -0.12, scale: 1.4 },  // the far shoulder, just past where the van sets off
   { face: 1, at: (R) => R.s1 - 23, side: 1, turn: 0.85, scale: 1.35 },   // the near verge just before the parking spot
 ];
 
@@ -159,9 +159,14 @@ export function buildSigns(k, R, T, half) {
   const { site, add, box, put } = k;
   const { map, uv: uvs } = atlas();
   const P = [], N = [], UV = [], AS = [], AH = [], AD = [];
+  const opening = [];   // the start sign's panel corners, for the opening shot's framing
   for (const p of PLACES) {
     const [pw, ph] = FACES[p.face].panel;
     const st = site(p.at(R), p.side * (half + 2.4 * p.scale));
+    if (p.face === 0) for (const [x, y] of [[-pw / 2, CLEAR + ph], [pw / 2, CLEAR + ph], [-pw / 2, 0], [pw / 2, 0]]) {
+      const c = Math.cos(st.yaw), sn = Math.sin(st.yaw), gx = x * p.scale, gy = T.heightAt(st.x, st.z) + y * p.scale;
+      opening.push(new THREE.Vector3(st.x + gx * c, gy, st.z + gx * sn));
+    }
     const turn = (g) => g.scale(p.scale, p.scale, p.scale).rotateY(p.turn);
     // Two galvanised posts up to the panel's foot (any higher, their outlines show through the
     // face), and the panel's aluminium back.
@@ -190,7 +195,7 @@ export function buildSigns(k, R, T, half) {
   geo.setAttribute("aS", new THREE.Float32BufferAttribute(AS, 1));
   geo.setAttribute("aH", new THREE.Float32BufferAttribute(AH, 1));
   geo.setAttribute("aD", new THREE.Float32BufferAttribute(AD, 1));
-  return { geo, map };
+  return { geo, map, opening };
 }
 
 export const SIGN_VS = /* glsl */ `

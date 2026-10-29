@@ -21,6 +21,8 @@ const WHEEL_R = 0.356, WHEEL_RPM = 40;        // 235/65 R16; the rpm the part fi
 const ELEV = 30, AZIM = -20, FOV = 24;        // camera, degrees (a long lens)
 const LAND_LEAD = 4.5;                        // metres the land's colour front runs ahead of the road's
 const LAND_LAG = 8;                           // metres the colour front may fall behind its target while the van drives
+const CAMPUS = 28;                            // metres past the start that Toronto's campus is in colour from the outset
+const TOUCH = !matchMedia("(hover: hover) and (pointer: fine)").matches;
 const ROAD_PAST = 70;                         // metres of road past where the van parks in Arlington: on out of frame
 const END_FILL = 80, ARRIVE_S = 1.2;          // metres the colour runs on past the parked van, and over how long
 const SEED = 0x52494654;
@@ -723,8 +725,8 @@ function landmarkKit(R, T, S, placed) {
 // Both put a real metre at 0.42 scene metres, so the two buildings keep their true sizes to each other.
 // (Real sizes, sources and parts are in road/landmarks.js.)
 const SIZE = { hallDome: 13.8, cpcFront: 14.9 };
-const HALL_BACK = 27;   // metres of road between Convocation Hall's centre and the start
-const HALL_OUT = 20;    // metres from the road's edge to its centre, across the road from the camera
+const HALL_BACK = 2;    // metres of road between Convocation Hall's centre and the start: the van sets off in front of it
+const HALL_OUT = 14;    // metres from the road's edge to its centre, across the road from the camera
 const CPC_BACK = 24;    // metres between College Park Center's centre and where the van parks
 const CPC_OUT = 17;     // metres from the road's edge to the middle of its glass front
 // The arena's glass entrance is a 45-degree chamfer of the real building; it is turned this far from the road
@@ -735,6 +737,9 @@ const cpcSite = (site, R) => { const st = site(R.s1 - CPC_BACK, -(HALF + CPC_OUT
 
 // Dev measurement: how long each landmark took to build (ms), read by roadStrip's stats().
 const STATS = { hallMs: 0, cpcMs: 0, hallTris: 0, cpcTris: 0 };
+// What the opening shot keeps in frame besides the van: Convocation Hall's dome, the outer edges of
+// its side drums and the sign's panel (world points, set when the landmarks are built).
+const OPENING = [];
 function buildLandmarks(R, T, S, placed, milestones) {
   const k = landmarkKit(R, T, S, placed);
   const { site, add, box, cyl, cap, put } = k;
@@ -752,7 +757,16 @@ function buildLandmarks(R, T, S, placed, milestones) {
     const built = convocationHall(k, hall, SIZE.hallDome);
     STATS.hallMs = performance.now() - t0; STATS.hallTris = built.tris;
     keepClear(hall, built);
-    put(site(R.s0 - 8, HALF + 12), 10, 0);       // the near side in the opening shot stays open lawn
+    // the near side in the opening shot stays open lawn, so nothing stands between the camera and the hall
+    put(site(R.s0 - 8, HALF + 12), 13, 0, true);
+    put(site(R.s0 + 10, HALF + 12), 13, 0, true);
+    // Its framing points, from the model's own key points (real metres in its frame, scaled and set down).
+    const c = Math.cos(hall.yaw), sn = Math.sin(hall.yaw), y0 = T.heightAt(hall.x, hall.z), sc = built.scale;
+    const at = ([x, y, z]) => new THREE.Vector3(hall.x + (x * c - z * sn) * sc, y0 + y * sc, hall.z + (x * sn + z * c) * sc);
+    const top = CH_KEYS.capApex[1] * 0.62;
+    OPENING.length = 0;
+    OPENING.push(at(CH_KEYS.capApex), at(CH_KEYS.drumL), at(CH_KEYS.drumR),
+      at([CH_KEYS.drumL[0], top, CH_KEYS.drumL[2]]), at([CH_KEYS.drumR[0], top, CH_KEYS.drumR[2]]));
   }
   // The Midwest: grain silos and a barn at a few farmsteads.
   for (const [x, u] of [[150, -(HALF + 15)], [228, -(HALF + 13)], [284, HALF + 12]]) {
@@ -777,7 +791,9 @@ function buildLandmarks(R, T, S, placed, milestones) {
   // A plain post at each 500 km mark on the near shoulder.
   for (const m of milestones) add(box(0.26, 1.15, 0.26), site(m, HALF + 1.3), "#f2f1ec", { jitter: 0, edge: 40 });
   // The welcome signs at either end; their faces come back as their own mesh.
-  return buildSigns(k, R, T, HALF);
+  const signs = buildSigns(k, R, T, HALF);
+  OPENING.push(...signs.opening);
+  return signs;
 }
 
 function buildBridge(R, T, S) {
@@ -1067,7 +1083,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   // against the sky: Convocation Hall behind the van in Toronto; at Arlington it stands past
   // the end of the road and looks back down it (az relative to the heading), the van in front
   // and the arena behind it, with nothing of the unfunded land ahead in shot.
-  const START_REST = { el: 4, az: -6, dist: 1, look: -15, lift: 9.6 };
+  const START_REST = { el: 5, az: -6, dist: 1, look: -2, lift: 5 };
   const END_REST = { el: 8, az: 50, dist: 1, look: -11, lift: 1.6 };
   const DRIVE = { el: 22, az: -38, dist: 1, look: 1.6, lift: 1.2 };
   const BEATS = [
@@ -1080,7 +1096,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   const ROUGH = [[316, 346], [470, 505]];             // bridge joints and a washboard descent: a touch of shake
   const KEYS = ["el", "az", "dist", "look", "lift"];
   const shot = { ...REST }, shotV = { el: 0, az: 0, dist: 0, look: 0, lift: 0 };
-  let centreX = 0.2, centreY = 0.2, low = 0, campus = 0, drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
+  let centreX = 0.2, centreY = 0.2, low = 0, campus = 0, opening = 0, drive = 0, camRoll = 0, fit = 1, sizeK = 1, vanBox = [0, 0, 0, 0];
   const tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3(), vanTop = new THREE.Vector3();
   const nearRocks = [];
   const blocked = (a, b) => {
@@ -1105,7 +1121,9 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     // Arriving, it stays open even while the van is still driving, so the arena is never cropped.
     // (past ~1600 px the strip stops growing taller, so a wider strip opens the start shot a little more)
     const wide = clamp(0.15 * (W / Math.max(H, 1) - 4.3), 0, 0.45);
-    campus = Math.max(atStart * (W < 600 ? 0.5 : 0.06 + wide) * (1 - m), atEnd * 0.14) / 0.4;
+    campus = (atEnd * 0.14) / 0.4;
+    // At rest at the start the shot is fitted to Convocation Hall, its sign and the van (see fitFor).
+    opening = atStart * (1 - m);
     // Arriving, the van rides low so the arena's roof stays in; parked at either campus it may sit
     // lower still, leaving the top of the strip to the landmark.
     centreY = 0.2 + 0.35 * Math.min(campus, 1.4) * (1 - m * (1 - atEnd)) + 0.27 * Math.max(atStart, atEnd) * (1 - m);
@@ -1116,8 +1134,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     for (const k of KEYS) {
       const d = beat ? lerp(DRIVE[k], beat[k], wBeat) : DRIVE[k];
       const end = k === "az" ? END_REST.az - hy : END_REST[k];
-      // (a phone's narrow strip aims further back at the start, so the hall's left wing stays in)
-      const rest = lerp(lerp(REST[k], end, atEnd), k === "look" && W < 600 ? START_REST.look - 4.5 : START_REST[k], atStart);
+      const rest = lerp(lerp(REST[k], end, atEnd), START_REST[k], atStart);
       // Pulling into Arlington the chase eases into the arrival shot, so the arena is framed
       // the same way while the van is still rolling as once it has parked.
       out[k] = lerp(rest, lerp(k === "az" ? d - 0.55 * hy : d, end, atEnd), m);
@@ -1161,6 +1178,9 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   }
   const corners = [[3.1, 0, 1.2], [3.1, 0, -1.2], [-3.1, 0, 1.2], [-3.1, 0, -1.2], [3.1, 2.7, 1.1], [3.1, 2.7, -1.1], [-3.1, 2.7, 1.1], [-3.1, 2.7, -1.1]];
   const NC = corners.length;
+  // How much of the strip the opening shot's box fills, across and down, and how far it sits below
+  // the middle (NDC), leaving a little sky over the dome.
+  const OPEN_FILL = [0.9, 0.92, 0.01];
   const INNER_GOAL = [0.6, 0.55], OUTER_GOAL = [0.96, 0.92], INNER_HARD = [0.74, 0.72], OUTER_HARD = [1, 1], goalV = new THREE.Vector3();
   const pts = Array.from({ length: NC + 2 }, () => new THREE.Vector3()), fRight = new THREE.Vector3(), fUp = new THREE.Vector3(), proj = new THREE.Vector3();
   // Aim the camera at `at`, then slide `at` until the van (inner margin) and ten metres of road
@@ -1192,15 +1212,32 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
         if (n.x > mx) dx = Math.max(dx, n.x - mx); else if (n.x < -mx) dx = Math.min(dx, n.x + mx);
         if (n.y > my) dy = Math.max(dy, n.y - my); else if (n.y < -my) dy = Math.min(dy, n.y + my);
       });
-      if (!dx && !dy) break;
+      // The opening shot: centre its points' box (the fit above makes it fill the frame).
+      const b = opening > 0.001 && openBox();
+      if (b) { dx = lerp(dx, (b.x0 + b.x1) / 2, opening); dy = lerp(dy, (b.y0 + b.y1) / 2 + OPEN_FILL[2], opening); }
+      if (Math.abs(dx) < 1e-4 && Math.abs(dy) < 1e-4) break;
       at.addScaledVector(right, dx * halfW).addScaledVector(up, dy * halfH);
       aim();
     }
     return at;
   }
+  // The opening shot's points on screen (NDC): the van's corners and OPENING. Its box, or null.
+  const openBox = () => {
+    if (!OPENING.length) return null;
+    let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    for (const q of [...pts.slice(0, NC), ...OPENING]) {
+      const n = proj.copy(q).project(camera);
+      x0 = Math.min(x0, n.x); x1 = Math.max(x1, n.x); y0 = Math.min(y0, n.y); y1 = Math.max(y1, n.y);
+    }
+    return { x0, x1, y0, y1 };
+  };
   const fitFor = () => {
-    // At the two campuses the shot opens up (the van a little smaller) to take in the landmarks.
-    const f = clamp(fit * Math.max(vanBox[0] / (0.34 * sizeK * (1 - 0.4 * campus)), vanBox[1] / 1.36), 0.5, 3.5);
+    // At Arlington the shot opens up (the van a little smaller) to take in the arena.
+    let f = fit * Math.max(vanBox[0] / (0.34 * sizeK * (1 - 0.4 * campus)), vanBox[1] / 1.36);
+    // At the start it is as close as it can be with the hall, the sign and the van all in frame.
+    const b = opening > 0.001 && openBox();
+    if (b) f = lerp(f, fit * Math.max((b.x1 - b.x0) / (2 * OPEN_FILL[0]), (b.y1 - b.y0) / (2 * OPEN_FILL[1])), opening);
+    f = clamp(f, 0.5, 3.5);
     return Number.isFinite(f) ? f : 1;
   };
   // At rest the size is settled at once, so the strip never zooms on its own.
@@ -1239,9 +1276,9 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   function step(t) {
     raf = 0;
     if (!alive) return;
-    // 30 frames a second, like the plane: the drive reads smoothly at it, and a 120 Hz phone
-    // would otherwise draw it four times as often.
-    if (t - last < 1000 / 30 - 4) { raf = requestAnimationFrame(step); return; }
+    // 30 frames a second on a touch screen, like the plane (a 120 Hz phone would otherwise draw it
+    // four times as often), and 60 on a desktop.
+    if (t - last < (TOUCH ? 1000 / 30 : 1000 / 60) - 4) { raf = requestAnimationFrame(step); return; }
     const dt = Math.min(0.05, Math.max(0.001, (t - last) / 1000));
     last = t; clock += dt;
     uniforms.uTime.value += dt;
@@ -1277,10 +1314,10 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
     if (front > hi) { front = hi; fv = Math.min(fv, 0); }
     if (front < ft - LAND_LAG) { front = ft - LAND_LAG; fv = Math.max(fv, 0); }
     if (Math.abs(ft - front) < 0.03 && Math.abs(fv) < 0.05) { front = ft; fv = 0; }
-    uniforms.uReveal.value = front;
+    uniforms.uReveal.value = Math.max(front, R.s0 + CAMPUS);   // the campus, home, is in colour from the start
     uniforms.uBase.value = s;
     // Pollen lifts where the colour arrives, more the faster it travels, never a flood.
-    if (!reduced && front > prevFront) {
+    if (!reduced && front > prevFront && front > R.s0 + CAMPUS) {
       let n = Math.min(4, (front - prevFront) * 0.7);
       while (n > 0) {
         if (rm() < n) {
@@ -1344,7 +1381,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   }
   function kick() {
     if (!alive || !ready || raf || !visible || !W) return;
-    last = performance.now() - 1000 / 30;
+    last = performance.now() - 1000 / 30;   // (the first frame is never held back)
     raf = requestAnimationFrame(step);
   }
   // One frame when idle (something was added, the van arrived, a resize).
@@ -1355,7 +1392,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   }
   function snap() {
     s = sOf(target); v = 0; prevV = 0; arrived = s >= R.s1 - 0.5 ? 1 : 0; front = frontTarget(); fv = 0; dip = dipV = roll = 0;
-    uniforms.uReveal.value = front; uniforms.uBase.value = s;
+    uniforms.uReveal.value = Math.max(front, R.s0 + CAMPUS); uniforms.uBase.value = s;
     drive = 0; camRoll = 0;
     losTick = 0; Object.assign(shot, desired(0)); for (const k of KEYS) shotV[k] = 0;
     frame(camGoal(cam), INNER_GOAL, OUTER_GOAL);
