@@ -11,7 +11,11 @@ export const partUrl = (id) => `parts/${id}.bin`;
 // photographed to read the same size. A bundle's parts are evened out among themselves
 // (see Group in stage.js), and together they fill this much of the box.
 const VISUAL = 0.165, GROUP_FRAME = 0.66;
-export const cellFraming = (multi) => (multi ? { frame: GROUP_FRAME } : { visual: VISUAL });
+// A few parts read too large at the same optical size: a flat sheet is nearly all area. They
+// are drawn at this fraction of it, in the grid and in the item view alike.
+const OPTICAL = { "al-sheet-quarter": 0.7, "al-sheet-eighth": 0.7 };
+export const opticalOf = (id) => OPTICAL[id] ?? 1;
+export const cellFraming = (multi, k = 1) => (multi ? { frame: GROUP_FRAME } : { visual: VISUAL * k });
 
 // Load the parts an offer shows; one part is a Figure, several stand together as a Group.
 // An offer with nothing modelled yet stands in as a cube.
@@ -20,5 +24,6 @@ export async function figureFor(o) {
   if (!datas.length) throw new Error(`no figures for ${o.id}`);
   const fig = datas.length > 1 ? new Group(datas, { hero: o.hero }) : new Figure(datas[0]);
   fig.holo = isAdopted(o) ? 1 : 0;
-  return { fig, multi: datas.length > 1 };
+  const multi = datas.length > 1;
+  return { fig, multi, k: multi ? 1 : opticalOf(o.show[0]) };
 }

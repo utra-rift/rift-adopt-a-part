@@ -529,10 +529,10 @@ export default {
   "show": "al-sheet-quarter",
   "hero": false,
   "holo": false,
-  "floor": 0.7818,
-  "width": 0.3397,
+  "floor": 0.6972,
+  "width": 0.2378,
   "parts": "9165c34bf0",
-  "v": "39203c37aa"
+  "v": "6bd2dd1af8"
  },
  "kit-hardware": {
   "show": "screw-kit",

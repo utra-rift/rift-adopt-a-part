@@ -18,12 +18,12 @@ const offers = Q.has("ids") ? all.filter((o) => Q.get("ids").split(",").includes
 const canvas = document.getElementById("c");
 const out = { cells: {}, images: [] };
 for (const o of offers) {
-  const { fig, multi } = await figureFor(o);
+  const { fig, multi, k } = await figureFor(o);
   let view;
   for (const w of widths) {
     // The cell's box is 1 : .86 (.fig in site.css); the view rounds its height the same way.
     Object.assign(canvas.style, { width: `${w}px`, height: `${w * 0.86}px` });
-    view = new View(canvas, fig, { ...cellFraming(multi), dpr: 1 });
+    view = new View(canvas, fig, { ...cellFraming(multi, k), dpr: 1 });
     view.paint();
     out.images.push({ id: o.id, w, look: "", png: canvas.toDataURL("image/png") });
     fig.color = 1; view.paint(); fig.color = 0;

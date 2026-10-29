@@ -332,9 +332,9 @@ function boot(cell) {
   return (cell.boot ??= (async () => {
     queue.delete(cell);
     await stage();
-    const { fig, multi } = await S.figureFor(cell.o);
+    const { fig, multi, k } = await S.figureFor(cell.o);
     await nextTask();
-    cell.s = liveFigure(cell.el.querySelector("canvas"), fig, S.cellFraming(multi));
+    cell.s = liveFigure(cell.el.querySelector("canvas"), fig, S.cellFraming(multi, k));
     cell.s.sync = true;
     placeHalo(cell, cell.s.view);
     // Without a poster it arrives the old way: fading in mid-turn and settling at rest.
@@ -617,9 +617,10 @@ function standDown() {
 // optical size (a long cable no longer shrinks its body; what runs past the edge fades), and
 // a bundle's bodies fill most of the box. Wider screens fit the part's whole turn.
 const narrow = matchMedia("(max-width: 719px)");
-function mount(fig, multi) {
+// `k`: the part's size factor (opticalOf in figure.js).
+function mount(fig, multi, k = 1) {
   if (big) live.delete(big);
-  big = liveFigure(viewCanvas, fig, narrow.matches ? (multi ? { frame: 0.78 } : { visual: 0.22 }) : { fill: multi ? 0.72 : 0.6 });
+  big = liveFigure(viewCanvas, fig, narrow.matches ? (multi ? { frame: 0.78 } : { visual: 0.22 * k }) : { fill: multi ? 0.72 : 0.6 * k });
   big.motionTarget = reduced ? 0 : 1;
   big.view.paint();
   // Arrive as a drawing, then fade the colour in and keep it.
@@ -632,7 +633,7 @@ function mount(fig, multi) {
 function showOffer(o) {
   showing = null;
   document.querySelectorAll("#view-inside button[data-k]").forEach((b) => b.removeAttribute("aria-current"));
-  stage().then(() => S.figureFor(o)).then(({ fig, multi }) => { if (current === o && !showing) { mount(fig, multi); handOff(o); } }).catch(() => {});
+  stage().then(() => S.figureFor(o)).then(({ fig, multi, k }) => { if (current === o && !showing) { mount(fig, multi, k); handOff(o); } }).catch(() => {});
 }
 
 function showPart(t) {
@@ -643,7 +644,7 @@ function showPart(t) {
   stage().then(() => S.loadPart(S.partUrl(t.cad))).then((data) => {
     if (showing !== t) return;
     const f = new S.Figure(data); f.holo = t.adopted ? 1 : 0;
-    mount(f, false);
+    mount(f, false, S.opticalOf(t.cad));
   }).catch(() => {});
 }
 
