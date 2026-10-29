@@ -356,48 +356,36 @@ function boot(cell) {
 // opened; fetch it once the first screen is up and the page is idle.
 if (!canHover) firstScreen.then(() => idle(() => stage().catch(() => {})));
 
-// Touch screens have no hover to bring a part to life, so scrolling does: the two neighbouring
-// rows of parts whose middle is nearest the middle of the screen (below the header) show their
-// real colours, and pass them on a row at a time as the page goes by. Adopted parts keep their
-// look but still count as rows, so the hand-off keeps the same rhythm. Near the top and bottom
-// of the page the line they gather on rides up or down, so the first and last rows get their
-// turn. A new pair takes over only once it is clearly nearer, so a slow scroll near the
-// hand-off doesn't flicker. Positions are measured once and again when the layout changes, so
-// a scroll frame only compares numbers.
+// Touch screens have no hover to bring a part to life, so scrolling does, as a gradient: each
+// part's colour and a slight lift follow how near it sits to where the reader is looking (the
+// middle of the screen below the header), full there and fading out to either side, so the
+// effect flows with the finger instead of switching from row to row. Near the top and bottom
+// of the page the eye line rides up or down, so the first and last parts get their turn.
+// Adopted parts keep their look. Positions are measured once and again when the layout
+// changes, so a scroll frame only does arithmetic and writes the values that changed.
 if (!canHover) {
-  const HEADER = 52, SLACK = 24, ENDS = 400;
-  let rows = [], at = -1, lit = new Set(), queued = false, end = 0;
+  const HEADER = 52, ENDS = 400, CORE = 0.1, REACH = 0.42;   // px; px; fractions of the visible height
+  const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  let parts = [], end = 0, queued = false;
+  for (const c of cells) { c.el.dataset.still = ""; if (c.el.querySelector(".poster-c")) c.el.dataset.lit = ""; }
   const measure = () => {
-    rows = [];
     end = document.documentElement.scrollHeight;
-    for (const c of cells) {
-      if (!c.poster) continue;
-      const r = c.el.querySelector(".fig").getBoundingClientRect(), y = r.top + scrollY + r.height / 2;
-      const row = rows.find((w) => Math.abs(w.y - y) < r.height * 0.3);
-      if (row) row.cells.push(c); else rows.push({ y, cells: [c] });
-    }
-    rows.sort((a, b) => a.y - b.y);
-    at = -1;
+    parts = cells.filter((c) => "lit" in c.el.dataset).map((c) => {
+      const r = c.el.querySelector(".fig").getBoundingClientRect();
+      return { el: c.el, y: r.top + scrollY + r.height / 2, f: -1 };
+    });
   };
-  const focusRows = () => {
+  const light = () => {
     queued = false;
     const ramp = (d) => Math.max(0, 1 - d / ENDS);
-    const top = scrollY + HEADER, bottom = scrollY + innerHeight;
-    const mid = top + (bottom - top) * (0.5 - 0.22 * ramp(scrollY) + 0.22 * ramp(end - bottom));
-    const seen = (i) => !!rows[i] && rows[i].y > top && rows[i].y < bottom;
-    // A pair's middle; a row whose neighbour is off screen (across the trip) stands alone.
-    const off = (i) => Math.abs((seen(i + 1) ? (rows[i].y + rows[i + 1].y) / 2 : rows[i].y) - mid);
-    let best = -1;
-    for (let i = 0; i < rows.length; i++) if (seen(i) && (best < 0 || off(i) < off(best))) best = i;
-    if (best >= 0 && seen(at) && off(at) - off(best) < SLACK) best = at;
-    at = best;
-    const next = new Set();
-    for (const i of best < 0 ? [] : [best, best + 1]) if (seen(i)) for (const c of rows[i].cells) if (c.el.querySelector(".poster-c")) next.add(c);
-    for (const c of lit) if (!next.has(c)) c.el.removeAttribute("data-focus");
-    for (const c of next) c.el.setAttribute("data-focus", "");
-    lit = next;
+    const top = scrollY + HEADER, bottom = scrollY + innerHeight, h = bottom - top;
+    const eye = top + h * (0.5 - 0.22 * ramp(scrollY) + 0.22 * ramp(end - bottom));
+    for (const p of parts) {
+      const f = Math.round((1 - smooth(h * CORE, h * REACH, Math.abs(p.y - eye))) * 100) / 100;
+      if (f !== p.f) { p.f = f; p.el.style.setProperty("--f", f); }
+    }
   };
-  const request = () => { if (!queued) { queued = true; requestAnimationFrame(focusRows); } };
+  const request = () => { if (!queued) { queued = true; requestAnimationFrame(light); } };
   const relayout = () => { measure(); request(); };
   addEventListener("scroll", request, { passive: true });
   addEventListener("resize", relayout);

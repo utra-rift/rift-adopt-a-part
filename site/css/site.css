@@ -101,16 +101,17 @@ main { padding: 92px var(--gutter) 40px; }
 .fig canvas { opacity: 0; transition: opacity .3s; }
 .cell[data-live] .fig canvas { opacity: 1; }
 .cell[data-live] .poster { visibility: hidden; transition: visibility 0s .3s; }
-/* Touch screens: the row crossing the middle of the screen shows its real colours (the same
-   picture, in colour, cross-fading over the drawing) and lifts a little, the way hovering
-   brings a part to life with a pointer. */
-.fig .poster { transition: opacity .55s var(--ease-out); }
+/* Touch screens (cells marked data-lit): colour and a slight lift follow the eye down the page.
+   --f (0 to 1, set on scroll from the part's distance to where the reader is looking) fades the
+   same picture in real colour over the drawing and lifts the part. The scroll gives the grid
+   its motion, so on these screens (cells marked data-still) the idle bob stays off: over a
+   hundred endless masked animations a phone no longer has to run. */
 .fig .poster-c { opacity: 0; }
-.cell[data-focus] .poster-c { opacity: 1; }
-.cell[data-focus] .poster:not(.poster-c) { opacity: 0; }
-.cell .fig { transition: transform .55s var(--ease-out); }
-.cell[data-focus] .fig { transform: scale(1.045); }
-@media (prefers-reduced-motion: reduce) { .fig .poster, .cell .fig { transition: none; } .cell[data-focus] .fig { transform: none; } }
+.cell[data-lit] .poster-c { opacity: var(--f, 0); }
+.cell[data-lit] .fig { scale: calc(1 + .05 * var(--f, 0)); transform-origin: 50% 85%; }   /* grows up, clear of its caption */
+.cell[data-lit] .cap .price { color: color-mix(in srgb, var(--ink) calc(var(--f, 0) * 100%), #5c5c61); }
+.cell[data-still] .float, .cell[data-still] .halo { animation: none; }
+@media (prefers-reduced-motion: reduce) { .cell[data-lit] .fig { scale: none; } }
 .halo {
   position: absolute; left: 50%; top: var(--floor, 80%); width: var(--w, 40%); height: 7%;
   translate: -50% 0; margin-top: 4%;
@@ -122,7 +123,7 @@ main { padding: 92px var(--gutter) 40px; }
 @keyframes halo { 0%, 100% { scale: .9; opacity: .8; } 50% { scale: 1; opacity: 1; } }
 .cap { display: flex; justify-content: center; gap: 10px; padding: 0 0 34px; }
 .cap .price { color: var(--muted); transition: color .2s; }
-.cell[data-hot] .cap .price, .cell[data-focus] .cap .price, .cell[data-state] .cap .price { color: var(--ink); }
+.cell[data-hot] .cap .price, .cell[data-state] .cap .price { color: var(--ink); }
 .cell[data-state="crate"] .cap .code::before { content: "● "; font-size: 8px; vertical-align: 1px; }
 .cell[data-state="adopted"] .cap { color: #66717f; }
 .cell[data-state="adopted"] .cap .price { color: #66717f; }
