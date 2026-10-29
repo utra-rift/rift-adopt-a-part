@@ -1239,8 +1239,9 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   function step(t) {
     raf = 0;
     if (!alive) return;
-    // At most 60 frames a second: a 120 Hz phone would otherwise draw the drive twice as often.
-    if (t - last < 1000 / 60 - 4) { raf = requestAnimationFrame(step); return; }
+    // 30 frames a second, like the plane: the drive reads smoothly at it, and a 120 Hz phone
+    // would otherwise draw it four times as often.
+    if (t - last < 1000 / 30 - 4) { raf = requestAnimationFrame(step); return; }
     const dt = Math.min(0.05, Math.max(0.001, (t - last) / 1000));
     last = t; clock += dt;
     uniforms.uTime.value += dt;
@@ -1343,7 +1344,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   }
   function kick() {
     if (!alive || !ready || raf || !visible || !W) return;
-    last = performance.now() - 1000 / 60;
+    last = performance.now() - 1000 / 30;
     raf = requestAnimationFrame(step);
   }
   // One frame when idle (something was added, the van arrived, a resize).
