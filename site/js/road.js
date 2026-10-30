@@ -688,22 +688,9 @@ async function buildRocks(R, T, slice) {
   return { S, placed };
 }
 
-// ---- landmarks: where the trip starts and ends, and a few things on the way. Built in each
+// ---- landmarks: where the trip starts and ends, and the posts along the way. Built in each
 // one's local frame (x along the road, -z away from it, toward the far side) and set down beside
 // the route; each part reveals with the ground it stands on.
-function gable(w, h, depth) {
-  // A triangular prism: a pediment or a pitched roof, ridge along x.
-  const x0 = -w / 2, x1 = w / 2, z0 = -depth / 2, z1 = depth / 2;
-  const P = [
-    [x0, 0, z1], [x1, 0, z1], [0, h, z1], [x1, 0, z0], [x0, 0, z0], [0, h, z0],
-  ];
-  const tri = (a, b, c) => [...P[a], ...P[b], ...P[c]];
-  const pos = [...tri(0, 1, 2), ...tri(3, 4, 5), ...tri(0, 2, 5), ...tri(0, 5, 4), ...tri(1, 3, 5), ...tri(1, 5, 2)];
-  const g = new THREE.BufferGeometry();
-  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-  return g;
-}
-
 // The local-frame kit the landmark builders share: `site(s, u)` is a spot beside the route
 // (u > 0 toward the near side), `add` sets a part down there with its base on the ground.
 function landmarkKit(R, T, S, placed) {
@@ -742,7 +729,7 @@ const STATS = { hallMs: 0, cpcMs: 0, hallTris: 0, cpcTris: 0 };
 const OPENING = [];
 function buildLandmarks(R, T, S, placed, milestones) {
   const k = landmarkKit(R, T, S, placed);
-  const { site, add, box, cyl, cap, put } = k;
+  const { site, add, box, put } = k;
   // The ground a landmark keeps clear of trees and rocks: its circles, given in its own frame.
   const keepClear = (st, built) => {
     const c = Math.cos(st.yaw), s = Math.sin(st.yaw);
@@ -767,17 +754,6 @@ function buildLandmarks(R, T, S, placed, milestones) {
     OPENING.length = 0;
     OPENING.push(at(CH_KEYS.capApex), at(CH_KEYS.drumL), at(CH_KEYS.drumR),
       at([CH_KEYS.drumL[0], top, CH_KEYS.drumL[2]]), at([CH_KEYS.drumR[0], top, CH_KEYS.drumR[2]]));
-  }
-  // The Midwest: grain silos and a barn at a few farmsteads.
-  for (const [x, u] of [[150, -(HALF + 15)], [228, -(HALF + 13)], [284, HALF + 12]]) {
-    const st = site(R.near(x, 0).s, u);
-    add(cyl(1.5, 1.5, 7.5, 14, -2, 0, 0), st, "#c3c7ca", { edge: 40 });
-    add(cap(1.5, 14, -2, 7.5), st, "#b8bcbf", { edge: 40 });
-    add(cyl(1.3, 1.3, 6, 14, 1.2, 0, -0.6), st, "#c9ccce", { edge: 40 });
-    add(cap(1.3, 14, 1.2, 6, -0.6), st, "#b8bcbf", { edge: 40 });
-    add(box(7, 3.6, 4.6, 6.5, 0, 0.5), st, "#9b3b2c");
-    add(gable(7, 2, 4.6).translate(6.5, 3.6, 0.5), st, "#6f6f6c");
-    put(st, 6, 8);
   }
   // Arlington: the University of Texas at Arlington's College Park Center beside the end of the
   // road, just behind where the van parks so it is in colour when it arrives.
