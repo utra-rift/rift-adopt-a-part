@@ -9,7 +9,7 @@
 //   have already been adopted.
 // - real: the part's true materials under a white studio, faded in over the other looks.
 import * as THREE from "three";
-import { MeshoptDecoder } from "meshoptimizer";
+import { MeshoptDecoder } from "meshoptimizer/decoder";
 import type { ViewOptions } from "./types.ts";
 
 const INK_LIT = new THREE.Color("#000000");

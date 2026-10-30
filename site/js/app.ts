@@ -17,6 +17,17 @@ const canHover = matchMedia("(hover: hover) and (pointer: fine)").matches;
 document.addEventListener("touchstart", () => {}, { passive: true });
 const byId = new Map([...OFFERS, ...ITEMS].map((o) => [o.id, o]));
 
+// A deploy renames the hashed chunks, so a tab opened before it can't fetch the ones it hasn't
+// loaded yet. Reloading picks up the new names; at most once a minute, so a chunk that really is
+// missing can't loop.
+window.addEventListener("vite:preloadError", () => {
+  try {
+    if (Date.now() - Number(sessionStorage.getItem("chunk-reload")) < 60000) return;
+    sessionStorage.setItem("chunk-reload", String(Date.now()));
+  } catch { return; }
+  location.reload();
+});
+
 // The renderer (three.js) and the parts load after the first screen has painted: until a
 // cell's figure is live it shows its poster, the same picture rendered ahead of time.
 let lib = null, S = null;

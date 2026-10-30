@@ -48,7 +48,7 @@ They are not included in the production build.
 ## Deployment
 
 The root `vercel.json` selects Vite, runs `npm run build`, publishes `dist/`, and retains
-the poster and font cache headers. Set the Vercel project's **Root Directory** to the
+the long-term cache headers for hashed assets, posters and fonts. Set the Vercel project's **Root Directory** to the
 repository root (clear an existing `site` setting). Other static hosts can use the same
 build command and output directory. The relative Vite base also supports hosting the
 build under a subdirectory.
