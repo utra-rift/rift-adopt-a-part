@@ -1,4 +1,4 @@
-/* Tier slider: see js/tierslider.js. Its geometry constants (66 px tall, gauge centred at 36 px,
+/* Tier slider: see js/tierslider.ts. Its geometry constants (66 px tall, gauge centred at 36 px,
    12 px native thumb, canvas overhang 16 px sideways and 48 px up and down) must match these. */
 
 .tslider {
@@ -153,7 +153,7 @@
   outline: none;
 }
 /* Touch screens: the track lets touches through to the page; only the grip on the needle drags
-   (GRIP in tierslider.js), tall enough to take the value pill above it too. */
+   (GRIP in tierslider.ts), tall enough to take the value pill above it too. */
 .tslider[data-touch] .tslider-input { pointer-events: none; }
 .tslider-grip { position: absolute; left: 0; top: 0; width: 60px; height: 66px; touch-action: pan-y; }
 .tslider-input::-webkit-slider-runnable-track { height: 40px; background: transparent; border: 0; }

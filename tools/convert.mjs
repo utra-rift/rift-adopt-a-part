@@ -3,7 +3,7 @@
 // precomputes the drawing's edges (creases always drawn, smooth edges as silhouette
 // candidates), quantizes and meshopt-encodes everything into one .bin per part.
 //
-//   node convert.mjs <id ...>        reads tools/parts/<id>.json, writes site/parts/<id>.bin
+//   node convert.mjs <id ...>        reads tools/parts/<id>.json, writes site/public/parts/<id>.bin
 //   node convert.mjs --all
 //
 // Part config (tools/parts/<id>.json):
@@ -33,7 +33,7 @@ import { applyBends } from "./bend.mjs";
 
 const require = createRequire(import.meta.url);
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = path.join(ROOT, "site/parts");
+const OUT = path.join(ROOT, "site/public/parts");
 
 const PARTS = path.join(ROOT, "tools/parts");
 const args = process.argv.slice(2);

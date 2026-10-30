@@ -3,10 +3,10 @@
 // funded the aeroplane's linework takes the slider's tier materials and the air around it
 // becomes visible, one streamline at a time, until the lines stretch into a jump to hyperspace.
 // The page stays white at every tier.
-import * as THREE from "../vendor/three.module.min.js";
-import { buildPlane } from "../flight/plane.js";
-import { PLANE_VS, PLANE_FS, LINE_VS, LINE_FS, STREAM_VS, STREAM_FS, TRAIL_VS, TRAIL_FS, SKY_VS, SKY_FS, VAPOR_VS, VAPOR_FS, RING_VS, RING_FS } from "../flight/shaders.js";
-import { TIER_MATERIALS, TITLE_FOIL, tierOfSeats } from "./materials.js";
+import * as THREE from "three";
+import { buildPlane } from "../flight/plane.ts";
+import { PLANE_VS, PLANE_FS, LINE_VS, LINE_FS, STREAM_VS, STREAM_FS, TRAIL_VS, TRAIL_FS, SKY_VS, SKY_FS, VAPOR_VS, VAPOR_FS, RING_VS, RING_FS } from "../flight/shaders.ts";
+import { TIER_MATERIALS, TITLE_FOIL, tierOfSeats } from "./materials.ts";
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const sm = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
@@ -50,7 +50,7 @@ const SKY = [
 const SHADE = ["#dcdcd9", "#e4d6c8", "#c8cfd8", "#c3cad3", "#d6bf9c", "#cfae86", "#565b88", "#4c5080", "#444872"].map((h) => new THREE.Color(h));
 const AURORA = [0, 0, 0, 0, 0, 0, 0.45, 0.8, 1.2];
 const VIG = [0, 0.04, 0.08, 0.1, 0.16, 0.2, 0.32, 0.38, 0.45];
-const rampColor = (table, L, out, via) => {
+const rampColor = (table, L, out, via = null) => {
   const i = Math.floor(clamp(L, 0, 8)), f = clamp(L, 0, 8) - i;
   // golden hour to night goes through dusk, not through a muddy brown
   if (via && i === 5) return f < 0.5 ? out.copy(table[5]).lerp(via, f * 2) : out.copy(via).lerp(table[6], f * 2 - 1);
@@ -123,7 +123,7 @@ export function flightStrip(host, { seats = 8 } = {}) {
   }
 
   // ---------------------------------------------------------------- build, in slices
-  const slice = () => new Promise((r) => setTimeout(r, 0));
+  const slice = () => new Promise((r) => window.setTimeout(r, 0));
   async function start() {
     try {
       if (!canvas.getContext("webgl2", { antialias: true, alpha: false })) throw new Error("no WebGL2");
@@ -203,7 +203,7 @@ export function flightStrip(host, { seats = 8 } = {}) {
 
     // trails: contrails behind the engines, vortex trails off the wingtips
     const SEGT = 64;
-    for (const T of [{ src: 0, kind: 0, seed: 0.1 }, { src: 1, kind: 0, seed: 0.7 }, { src: 2, kind: 1, seed: 0.2 }, { src: 3, kind: 1, seed: 0.6 }]) {
+    for (const T of [{ src: 0, kind: 0, seed: 0.1, seg: 0, uni: {} as Record<string, THREE.IUniform>, mat: null as THREE.ShaderMaterial | null, mesh: null as THREE.Mesh | null }, { src: 1, kind: 0, seed: 0.7, seg: 0, uni: {} as Record<string, THREE.IUniform>, mat: null as THREE.ShaderMaterial | null, mesh: null as THREE.Mesh | null }, { src: 2, kind: 1, seed: 0.2, seg: 0, uni: {} as Record<string, THREE.IUniform>, mat: null as THREE.ShaderMaterial | null, mesh: null as THREE.Mesh | null }, { src: 3, kind: 1, seed: 0.6, seg: 0, uni: {} as Record<string, THREE.IUniform>, mat: null as THREE.ShaderMaterial | null, mesh: null as THREE.Mesh | null }]) {
       const g = new THREE.BufferGeometry(), nv2 = (SEGT + 1) * 2;
       g.setAttribute("position", new THREE.BufferAttribute(new Float32Array(nv2 * 3), 3).setUsage(THREE.DynamicDrawUsage));
       const aS = new Float32Array(nv2), aV = new Float32Array(nv2), ix = [];
@@ -253,7 +253,7 @@ export function flightStrip(host, { seats = 8 } = {}) {
     const rGeo = new THREE.BufferGeometry(), RR = 240;
     rGeo.setAttribute("position", new THREE.Float32BufferAttribute([0, -RR, -RR, 0, RR, -RR, 0, RR, RR, 0, -RR, RR], 3));
     rGeo.setIndex([0, 1, 2, 0, 2, 3]);
-    const rMat = new THREE.ShaderMaterial({ vertexShader: RING_VS, fragmentShader: RING_FS, uniforms: boomU, transparent: true, depthWrite: false, side: THREE.DoubleSide, extensions: { derivatives: true } });
+    const rMat = new THREE.ShaderMaterial({ vertexShader: RING_VS, fragmentShader: RING_FS, uniforms: boomU, transparent: true, depthWrite: false, side: THREE.DoubleSide });
     ring = new THREE.Mesh(rGeo, rMat);
     ring.frustumCulled = false; ring.renderOrder = 4; ring.visible = false;
     disposables.push(skyGeo, skyMat, vGeo, vMat, rGeo, rMat);

@@ -5,6 +5,11 @@ cad/raw/*/*
 !cad/raw/*/manifest.json
 
 # Tooling
+node_modules/
+dist/
+dist-tools/
+*.tsbuildinfo
+.vite/
 tools/node_modules/
 tools/.venv/
 __pycache__/

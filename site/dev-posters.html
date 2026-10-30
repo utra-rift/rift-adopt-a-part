@@ -2,36 +2,4 @@
 <html lang="en"><head><meta charset="utf-8"><title>Posters</title>
 <style>html, body { margin: 0; background: #fff; font: 11px/1.4 ui-monospace, monospace; color: #555; } canvas { display: block; }</style></head>
 <body><p id="status">rendering…</p><canvas id="c"></canvas>
-<script type="module">
-// Poster maker: every grid cell's figure at rest, drawn by the site's own renderer at each
-// poster width (device px), as PNG data URLs for tools/posters.mjs to encode: once in the
-// drawing look and once in real colour (look "c"), the same pose, for touch screens to
-// cross-fade to where a pointer would have hovered.
-// ?widths=400,560  &ids=item-c620,…  (defaults: tools/posters.mjs passes both)
-import { OFFERS, ITEMS, isAdopted } from "./js/catalog.js";
-import { figureFor, cellFraming } from "./js/figure.js";
-import { View } from "./js/stage.js";
-const Q = new URLSearchParams(location.search);
-const widths = (Q.get("widths") ?? "360,480,640,800").split(",").map(Number);
-const all = [...new Map([...ITEMS, ...OFFERS].map((o) => [o.id, o])).values()];
-const offers = Q.has("ids") ? all.filter((o) => Q.get("ids").split(",").includes(o.id)) : all;
-const canvas = document.getElementById("c");
-const out = { cells: {}, images: [] };
-for (const o of offers) {
-  const { fig, multi, k } = await figureFor(o);
-  let view;
-  for (const w of widths) {
-    // The cell's box is 1 : .86 (.fig in site.css); the view rounds its height the same way.
-    Object.assign(canvas.style, { width: `${w}px`, height: `${w * 0.86}px` });
-    view = new View(canvas, fig, { ...cellFraming(multi, k), dpr: 1 });
-    view.paint();
-    out.images.push({ id: o.id, w, look: "", png: canvas.toDataURL("image/png") });
-    fig.color = 1; view.paint(); fig.color = 0;
-    out.images.push({ id: o.id, w, look: "c", png: canvas.toDataURL("image/png") });
-  }
-  // What the poster shows (so the page can tell a stale one) and where its shadow sits.
-  out.cells[o.id] = { show: o.show.join(","), hero: !!o.hero, holo: isAdopted(o), floor: +view.floor.toFixed(4), width: +view.width.toFixed(4) };
-}
-document.getElementById("status").textContent = `${offers.length} cells × ${widths.length} widths`;
-window.__posters = out;
-</script></body></html>
+<script type="module" src="/dev/dev-posters.ts"></script></body></html>

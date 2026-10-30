@@ -20,6 +20,8 @@
 // Toronto–Indianapolis, the cheapest nonstop return for the same dates (Jun 29 – Jul 5,
 // 2027, checked Oct 27, 2026): CA$775 / CA$719.
 
+import type { BudgetLine, Offer } from "./types.ts";
+
 export const TIERS = [
   { id: "bronze", name: "Bronze", min: 500, perks: ["Website logo", "Pit signage", "Sponsor acknowledgement", "Scheduled build update"] },
   { id: "silver", name: "Silver", min: 1000, perks: ["Robot logo placement", "Team demonstration"] },
@@ -33,8 +35,8 @@ export const ADOPTERS = {
 };
 
 // The first argument is the item number in the budget.
-const L = (n, name, qty, price, cad, extra = {}) => ({ n, name, qty, price, cad, ...extra });
-export const LINES = {
+const L = (n: number, name: string, qty: number, price: number, cad: string | null, extra: Partial<BudgetLine> = {}): BudgetLine => ({ n, name, qty, price, cad, ...extra });
+export const LINES: Record<string, BudgetLine> = {
   m3508: L(1, "M3508 P19 brushless gear motor", 5, 509.16, "m3508-p19", { note: "4 installed + 1 spare", adopted: "sef" }),
   c620d: L(2, "C620 motor speed controller", 5, 266.33, "c620", { note: "drivetrain, 4 + 1 spare", adopted: "sef" }),
   kit: L(3, "M3508 accessories kit", 1, 59.53, "m3508-kit", { note: "CAN hub board and leads", adopted: "sef" }),
@@ -103,7 +105,7 @@ export const LINES = {
 for (let i = 1; i <= 8; i++) LINES[`seat${i}`] = L(32, "Return flight to the competition", 1, 916.74, "airline-seat");
 const SEATS = (n) => Array.from({ length: n }, (_, i) => `seat${i + 1}`);
 
-const O = (id, code, name, lines, show, line, extra = {}) => ({ id, code, name, lines, show, line, ...extra });
+const O = (id: string, code: string, name: string, lines: string[], show: string[], line: string, extra: Partial<Offer> = {}): Offer => ({ id, code, name, lines, show, line, ...extra });
 export const OFFERS = [
   // Open: still needs a sponsor.
   O("trip", "TRIP", "The whole trip", [...SEATS(8), "van", "entry"], ["cargo-van", "airline-seat", "airline-seat"], "Eight flights, the drive and the entry fee: everything that gets RIFT to its first competition."),
@@ -148,7 +150,7 @@ export const SECTIONS = [...TIERS].reverse().map((t, i, all) => {
 }).filter((s) => s.items.length);
 
 // Every budget line on its own, grouped the way the budget groups them. This is what the
-// site shows (app.js keeps the bundles above at ?bundles).
+// site shows (app.ts keeps the bundles above at ?bundles).
 const ITEM_LABELS = {
   m3508: "DRIVE MOTORS", c620d: "DRIVE CONTROL", kit: "WIRING KIT", wheels: "WHEELS",
   gm6020: "AIM MOTORS", m2006: "FEED MOTORS", c610: "FEED CONTROL", uv: "UV CHARGER", m3508bare: "LAUNCH MOTORS", c620l: "LAUNCH CONTROL",
@@ -158,7 +160,7 @@ const ITEM_LABELS = {
   mat: "CHASSIS", ammo: "AMMO", entry: "ENTRY", van: "VAN",
   pcb: "PCBS", slipring: "SLIP RING",
 };
-const BUDGET_GROUPS = [
+const BUDGET_GROUPS: [string, string[]][] = [
   ["Drivetrain", ["m3508", "c620d", "kit", "wheels"]],
   ["Turret and launcher", ["gm6020", "m2006", "c610", "uv", "m3508bare", "c620l", "bearings", "slipring", "filament"]],
   ["Control, vision and video", ["devc", "cam", "rpi5", "hat", "vt03"]],
@@ -174,7 +176,7 @@ const copiesOf = (l) => (l.parts ?? [l]).filter((p) => p.cad).map((p) => Array(p
   .sort((a, b) => a.length - b.length).flat();
 // The small things added after the budget, listed as kits of one kind each (every product
 // and its quantity is still named inside). A kit is drawn as one product: its first part.
-const KITS = {
+const KITS: Record<string, [string, string, string[], string]> = {
   bearings: ["BEARINGS", "Bearings", ["yawbearing", "pitchbearing", "bearingkit", "b6800"],
     "The yaw and pitch bearings the turret turns on, and small bearings for the flywheels, feeder and drive stages."],
   filament: ["FILAMENT", "Filament for the gimbal and launcher", ["pa6", "tpu"],

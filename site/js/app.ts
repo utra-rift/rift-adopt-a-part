@@ -1,7 +1,16 @@
-import { LINES, OFFERS, SECTIONS, ITEMS, ITEM_SECTIONS, OPEN_ITEMS, TRIP, TIERS, BUDGET, ADOPTED_TOTAL, tierFor, priceOf, isAdopted, adopterOf, money } from "./catalog.js";
-import POSTERS, { WIDTHS } from "../posters/manifest.js";
+interface Cell {
+  el: HTMLLIElement;
+  o: import("./types.ts").Offer;
+  s: ReturnType<typeof liveFigure> | null;
+  mask: ReturnType<typeof measureMask> | null;
+  hot: boolean; focused: boolean; on: boolean; poster: boolean;
+  boot: Promise<void> | null;
+  update: () => void;
+}
+import { LINES, OFFERS, SECTIONS, ITEMS, ITEM_SECTIONS, OPEN_ITEMS, TRIP, TIERS, BUDGET, ADOPTED_TOTAL, tierFor, priceOf, isAdopted, adopterOf, money } from "./catalog.ts";
+import POSTERS, { WIDTHS } from "./posters.ts";
 
-const $ = (s, el = document) => el.querySelector(s);
+const $ = <T extends HTMLElement = HTMLElement>(s: string, el: ParentNode = document) => el.querySelector<T>(s);
 const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canHover = matchMedia("(hover: hover) and (pointer: fine)").matches;
 // iOS Safari only applies :active (the press feedback) once the page listens for touches.
@@ -11,14 +20,14 @@ const byId = new Map([...OFFERS, ...ITEMS].map((o) => [o.id, o]));
 // The renderer (three.js) and the parts load after the first screen has painted: until a
 // cell's figure is live it shows its poster, the same picture rendered ahead of time.
 let lib = null, S = null;
-const stage = () => (lib ??= Promise.all([import("./stage.js"), import("./figure.js")]).then(([a, b]) => (S = { ...a, ...b })));
+const stage = () => (lib ??= Promise.all([import("./stage.ts"), import("./figure.ts")]).then(([a, b]) => (S = { ...a, ...b })));
 
 // ------------------------------------------------------------------ crate state
 // The crate holds offer ids, "seat:N" for single seats, and at most one "km:N" for part of
 // the drive. What it costs is the sum of the distinct budget lines those cover, so
 // overlapping offers never double up; km count only until something covers the whole drive.
 const STORE = "rift-crate-v3";
-const crate = new Set(read().filter((k) => (k.startsWith("seat:") ? LINES[`seat${k.slice(5)}`]
+const crate = new Set<string>(read().filter((k) => (k.startsWith("seat:") ? LINES[`seat${k.slice(5)}`]
   : k.startsWith("km:") ? +k.slice(3) > 0 && +k.slice(3) <= TRIP.km
   : byId.has(k) && !isAdopted(byId.get(k)))));
 function read() { try { return JSON.parse(localStorage.getItem(STORE) ?? "[]"); } catch { return []; } }
@@ -66,7 +75,7 @@ let trip = null; // the trip section, once it has loaded
 
 // ------------------------------------------------------------------ motion
 // Each live figure eases toward its targets; the loop sleeps when nothing moves.
-const live = new Set();
+const live = new Set<ReturnType<typeof liveFigure>>();
 let raf = 0, last = 0;
 function kick(s) { live.add(s); if (!raf) { last = performance.now(); raf = requestAnimationFrame(loop); } }
 function loop(now) {
@@ -103,7 +112,7 @@ function step(s, dt) {
 function liveFigure(canvas, figure, opts) {
   const view = new S.View(canvas, figure, opts);
   return { view, figure, azBase: view.azimuth, spinTarget: view.spin, spinVel: 0, azTarget: view.azimuth,
-    motion: 0, motionTarget: 0, drift: 0, color: 0, colorTarget: 0, rest: view.spin };
+    motion: 0, motionTarget: 0, drift: 0, color: 0, colorTarget: 0, rest: view.spin, sync: false };
 }
 
 // Hover turns the part a little toward you; its real colour and a slight lift in size come
@@ -127,7 +136,7 @@ function revealOff(s) {
 
 // ------------------------------------------------------------------ grid
 const shelves = $("#shelves");
-const cells = [];
+const cells: Cell[] = [];
 let tripEl = null;
 
 // The shelves list every budget line on its own: first, larger, the robot parts still up
@@ -135,7 +144,7 @@ let tripEl = null;
 // older tier-and-bundle layout stays at ?bundles until the bundles are redesigned.
 const ITEM_VIEW = !new URLSearchParams(location.search).has("bundles");
 const openTotal = OPEN_ITEMS.reduce((s, o) => s + priceOf(o), 0);
-const SHELVES = ITEM_VIEW
+const SHELVES: { name: string; note: string; aria: string; items: import("./types.ts").Offer[]; featured?: boolean }[] = ITEM_VIEW
   ? [{ name: "Up for adoption", note: money(openTotal), aria: `Up for adoption, ${money(openTotal)}`, items: OPEN_ITEMS, featured: true },
     ...ITEM_SECTIONS.map((g) => ({ name: g.name, note: money(g.total), aria: `${g.name}, ${money(g.total)}`, items: g.items }))]
   : SECTIONS.map((s) => ({ name: s.tier.name, note: `${money(s.tier.min, false)}+`, aria: `${s.tier.name}, ${money(s.tier.min, false)} and up`, items: s.items }));
@@ -182,8 +191,8 @@ SHELVES.forEach((sec, si) => {
         <div class="cap"><span class="code">${o.code}</span>${adopted ? "" : `<span class="price">${money(priceOf(o))}</span>`}</div>
       </button>`;
     ul.append(li);
-    const poster = li.querySelector(".poster");
-    const cell = { el: li, o, s: null, mask: null, hot: false, focused: false, on: false, poster: !!poster, boot: null };
+    const poster = li.querySelector<HTMLImageElement>(".poster");
+    const cell: Cell = { update: () => {}, el: li, o, s: null, mask: null, hot: false, focused: false, on: false, poster: !!poster, boot: null };
     cells.push(cell);
     if (poster) {
       placeHalo(cell, POSTERS[o.id]);
@@ -191,7 +200,7 @@ SHELVES.forEach((sec, si) => {
       if (poster.complete && poster.naturalWidth) shown();
       else { poster.addEventListener("load", shown, { once: true }); poster.addEventListener("error", () => { cell.poster = false; poster.remove(); li.querySelector(".poster-c")?.remove(); want(cell, true); }, { once: true }); }
     }
-    const hit = li.querySelector(".hit");
+    const hit = li.querySelector<HTMLButtonElement>(".hit");
     cell.update = () => {
       const on = cell.hot || cell.focused, s = cell.s;
       if (on === cell.on || !s) return;
@@ -296,12 +305,12 @@ function overPart(cell, e) {
 // keeps its posters. A cell with no poster (tools/posters.mjs not rerun) has nothing else
 // to show, so it loads its figure as soon as it's near, ahead of the rest, on any device.
 const firstScreen = Promise.race([
-  Promise.all([...shelves.querySelectorAll(".poster[fetchpriority]")].map((img) => img.decode().catch(() => {}))),
-  new Promise((r) => setTimeout(r, 3000)),
-]).then(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 0))));
-const nextTask = () => (globalThis.scheduler?.yield ? scheduler.yield() : new Promise((r) => setTimeout(r, 0)));
-const idle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1000 }) : setTimeout(fn, 100));
-const queue = new Set();
+  Promise.all([...shelves.querySelectorAll<HTMLImageElement>(".poster[fetchpriority]")].map((img) => img.decode().catch(() => {}))),
+  new Promise((r) => window.setTimeout(r, 3000)),
+]).then(() => new Promise((r) => requestAnimationFrame(() => window.setTimeout(r, 0))));
+const nextTask = () => (globalThis.scheduler?.yield ? scheduler.yield() : new Promise((r) => window.setTimeout(r, 0)));
+const idle = (fn) => (window.requestIdleCallback ? requestIdleCallback(fn, { timeout: 1000 }) : window.setTimeout(fn, 100));
+const queue = new Set<Cell>();
 let pumping = false;
 
 function want(cell, now = false) {
@@ -317,7 +326,7 @@ async function pump() {
   // Cells with nothing to show go first; the rest wait for the first screen.
   const away = (c) => { if (!c.poster) return -1; const r = c.el.getBoundingClientRect(); return Math.max(0, -r.bottom, r.top - innerHeight); };
   while (queue.size) {
-    const [cell, ...next] = [...queue].map((c) => [away(c), c]).sort((a, b) => a[0] - b[0]).map(([, c]) => c);
+    const [cell, ...next] = [...queue].map((c): [number, Cell] => [away(c), c]).sort((a, b) => a[0] - b[0]).map(([, c]) => c);
     if (cell.poster) await firstScreen;
     queue.delete(cell);
     // The next two cells' parts download while this one is built.
@@ -367,7 +376,7 @@ if (!canHover) {
   const HEADER = 52, ENDS = 400, CORE = 0.1, REACH = 0.42;   // px; px; fractions of the visible height
   const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
   let parts = [], end = 0, queued = false;
-  for (const c of cells) { c.el.dataset.still = ""; if (c.el.querySelector(".poster-c")) c.el.dataset.lit = ""; }
+  for (const c of cells) { c.el.dataset.still = ""; if (c.el.querySelector<HTMLImageElement>(".poster-c")) c.el.dataset.lit = ""; }
   const measure = () => {
     end = document.documentElement.scrollHeight;
     parts = cells.filter((c) => "lit" in c.el.dataset).map((c) => {
@@ -415,7 +424,7 @@ function paintCells() {
 const info = $("#info"), plus = $("#plus"), scrim = $("#scrim");
 function scrimOn(on) {
   if (on) { scrim.hidden = false; requestAnimationFrame(() => scrim.setAttribute("data-open", "")); }
-  else { scrim.removeAttribute("data-open"); setTimeout(() => { if (!scrim.hasAttribute("data-open")) scrim.hidden = true; }, 400); }
+  else { scrim.removeAttribute("data-open"); window.setTimeout(() => { if (!scrim.hasAttribute("data-open")) scrim.hidden = true; }, 400); }
 }
 scrim.addEventListener("click", () => { closeInfo(); closeCrate(); });
 $("#progress-text").textContent = `${money(ADOPTED_TOTAL)} of ${money(BUDGET)} adopted`;
@@ -430,7 +439,7 @@ function closeInfo() {
   if (!info.hasAttribute("data-open")) return;
   info.removeAttribute("data-open"); plus.setAttribute("aria-expanded", "false");
   if (!crateEl.hasAttribute("data-open")) scrimOn(false);
-  setTimeout(() => { if (!info.hasAttribute("data-open")) info.hidden = true; }, 550);
+  window.setTimeout(() => { if (!info.hasAttribute("data-open")) info.hidden = true; }, 550);
 }
 plus.addEventListener("click", () => (info.hasAttribute("data-open") ? closeInfo() : openInfo()));
 
@@ -441,7 +450,7 @@ function render(bump = false) {
   paintCells();
   trip?.sync();
   const count = $("#crate-count");
-  count.textContent = crate.size;
+  count.textContent = String(crate.size);
   if (bump) { count.classList.remove("bump"); void count.offsetWidth; count.classList.add("bump"); }
   const total = crateTotal();
   const offers = [...crate].filter((k) => !k.startsWith("seat:") && !k.startsWith("km:"));
@@ -458,7 +467,7 @@ function render(bump = false) {
   const lo = tier?.min ?? 0;
   $("#tierbar-fill").style.width = `${next ? Math.max(0, Math.min(1, (total - lo) / (next.min - lo))) * 100 : 100}%`;
   $("#crate-tier").textContent = [tier?.name, next ? `${money(next.min - total)} to ${next.name}` : null].filter(Boolean).join(" · ");
-  const send = $("#crate-send");
+  const send = $<HTMLAnchorElement>("#crate-send");
   send.setAttribute("aria-disabled", crate.size ? "false" : "true");
   send.href = mailto(total, tier);
 }
@@ -474,7 +483,7 @@ function mailto(total, tier) {
   const codes = [...new Set([...crate].map((k) => (k.startsWith("seat:") ? "SEAT" : k.startsWith("km:") ? "VAN" : byId.get(k).code)))];
   return `mailto:arcrobotics@utra.ca?subject=${encodeURIComponent(`Adopt a Part: ${codes.join(", ")} (${money(total)})`)}&body=${encodeURIComponent(summary(total, tier))}`;
 }
-$("#crate-list").addEventListener("click", (e) => { const k = e.target.closest("[data-remove]")?.dataset.remove; if (k) { crate.delete(k); save(); render(); paintAdopt(); } });
+$("#crate-list").addEventListener("click", (e) => { const k = (e.target as Element).closest<HTMLElement>("[data-remove]")?.dataset.remove; if (k) { crate.delete(k); save(); render(); paintAdopt(); } });
 $("#crate-copy").addEventListener("click", async () => {
   try { await navigator.clipboard.writeText(summary(crateTotal(), tierFor(crateTotal()))); toast("Copied"); } catch { toast("Couldn't copy"); }
 });
@@ -487,7 +496,7 @@ function closeCrate() {
   if (!crateEl.hasAttribute("data-open")) return;
   crateEl.removeAttribute("data-open"); crateBtn.setAttribute("aria-expanded", "false");
   if (!info.hasAttribute("data-open")) scrimOn(false);
-  setTimeout(() => { if (!crateEl.hasAttribute("data-open")) crateEl.hidden = true; }, 550);
+  window.setTimeout(() => { if (!crateEl.hasAttribute("data-open")) crateEl.hidden = true; }, 550);
 }
 crateBtn.addEventListener("click", () => (crateEl.hasAttribute("data-open") ? closeCrate() : openCrate()));
 $("#crate-close").addEventListener("click", closeCrate);
@@ -495,11 +504,11 @@ $("#crate-close").addEventListener("click", closeCrate);
 let toastTimer = 0;
 function toast(msg) {
   const t = $("#toast"); t.textContent = msg; t.setAttribute("data-show", "");
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.removeAttribute("data-show"), 2200);
+  clearTimeout(toastTimer); toastTimer = window.setTimeout(() => t.removeAttribute("data-show"), 2200);
 }
 
 // ------------------------------------------------------------------ part view
-const viewEl = $("#view"), viewCanvas = $("#view-canvas");
+const viewEl = $("#view"), viewCanvas = $<HTMLCanvasElement>("#view-canvas");
 let big = null, current = null, returnFocus = null, showing = null;
 
 function insideOf(o) {
@@ -533,7 +542,7 @@ function openView(id) {
   const inside = $("#view-inside");
   inside.innerHTML = drawn.length > 1 || o.show.length > 1 ? drawn.map((t, k) => `<li><button type="button" data-k="${k}" aria-label="${t.name}"><canvas aria-hidden="true"></canvas><span>${amount(t)}</span></button></li>`).join("") +
     `<li style="grid-column:1/-1" class="inside-name" id="inside-name"></li>` : `<li style="grid-column:1/-1" class="inside-name" id="inside-name">${lead ? (lead.unit ? `${lead.name}, ${amount(lead)}` : `${lead.qty > 1 ? `${lead.qty} × ` : ""}${lead.name}`) : ""}</li>`;
-  inside.querySelectorAll("button[data-k]").forEach((btn) => {
+  inside.querySelectorAll<HTMLButtonElement>("button[data-k]").forEach((btn) => {
     const t = drawn[+btn.dataset.k];
     btn.addEventListener("click", () => showPart(t));
     btn.addEventListener("pointerenter", () => { $("#inside-name").textContent = t.name; });
@@ -576,7 +585,7 @@ function standIn(o) {
   standDown();
   // The picture in colour where there is one (the live figure arrives in colour), else the drawing.
   const el = cells.find((c) => c.o === o)?.el;
-  const poster = [el?.querySelector(".poster-c"), el?.querySelector(".poster:not(.poster-c)")].find((p) => p?.complete && p.naturalWidth);
+  const poster = [el?.querySelector<HTMLImageElement>(".poster-c"), el?.querySelector<HTMLImageElement>(".poster:not(.poster-c)")].find((p) => p?.complete && p.naturalWidth);
   if (canHover || !poster) return;
   const box = alphaBox(poster, poster.naturalWidth, poster.naturalHeight);
   if (!box) return;
@@ -619,7 +628,7 @@ function standDown() {
 // optical size (a long cable no longer shrinks its body; what runs past the edge fades), and
 // a bundle's bodies fill most of the box. Wider screens fit the part's whole turn.
 const narrow = matchMedia("(max-width: 719px)");
-// `k`: the part's size factor (opticalOf in figure.js).
+// `k`: the part's size factor (opticalOf in figure.ts).
 function mount(fig, multi, k = 1) {
   if (big) live.delete(big);
   big = liveFigure(viewCanvas, fig, narrow.matches ? (multi ? { frame: 0.78 } : { visual: 0.22 * k }) : { fill: multi ? 0.72 : 0.6 * k });
@@ -629,12 +638,12 @@ function mount(fig, multi, k = 1) {
   big.color = big.colorTarget = 1; fig.color = 1;
   big.view.paint();
   const settle = () => { if (big?.figure === fig && !reduced) { big.drift = 7; kick(big); } };
-  setTimeout(settle, 900);
+  window.setTimeout(settle, 900);
 }
 
 function showOffer(o) {
   showing = null;
-  document.querySelectorAll("#view-inside button[data-k]").forEach((b) => b.removeAttribute("aria-current"));
+  document.querySelectorAll<HTMLButtonElement>("#view-inside button[data-k]").forEach((b) => b.removeAttribute("aria-current"));
   stage().then(() => S.figureFor(o)).then(({ fig, multi, k }) => { if (current === o && !showing) { mount(fig, multi, k); handOff(o); } }).catch(() => {});
 }
 
@@ -642,7 +651,7 @@ function showPart(t) {
   showing = t;
   standDown();
   $("#inside-name").textContent = t.name;
-  document.querySelectorAll("#view-inside button[data-k]").forEach((btn) => btn.setAttribute("aria-current", btn.getAttribute("aria-label") === t.name));
+  document.querySelectorAll<HTMLButtonElement>("#view-inside button[data-k]").forEach((btn) => btn.setAttribute("aria-current", String(btn.getAttribute("aria-label") === t.name)));
   stage().then(() => S.loadPart(S.partUrl(t.cad))).then((data) => {
     if (showing !== t) return;
     const f = new S.Figure(data); f.holo = t.adopted ? 1 : 0;
@@ -651,7 +660,7 @@ function showPart(t) {
 }
 
 function paintAdopt() {
-  const btn = $("#view-adopt"), o = current; if (!o) return;
+  const btn = $<HTMLButtonElement>("#view-adopt"), o = current; if (!o) return;
   if (isAdopted(o)) { btn.disabled = true; btn.textContent = `Adopted by ${adopterOf(o)}`; delete btn.dataset.state; return; }
   btn.disabled = false;
   const have = covered();
@@ -695,10 +704,10 @@ function closeView() {
   viewEl.removeAttribute("data-open");
   document.documentElement.style.overflow = "";
   history.replaceState(null, "", location.pathname + location.search);
-  setTimeout(() => { if (!viewEl.hasAttribute("data-open")) { viewEl.hidden = true; if (big) live.delete(big); big = null; standDown(); } }, 360);
+  window.setTimeout(() => { if (!viewEl.hasAttribute("data-open")) { viewEl.hidden = true; if (big) live.delete(big); big = null; standDown(); } }, 360);
   returnFocus?.focus?.({ preventScroll: true });
 }
-viewEl.addEventListener("click", (e) => { if (e.target.closest("[data-close]")) closeView(); });
+viewEl.addEventListener("click", (e) => { if ((e.target as Element).closest("[data-close]")) closeView(); });
 addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   if (!viewEl.hidden) closeView(); else if (crateEl.hasAttribute("data-open")) closeCrate(); else if (info.hasAttribute("data-open")) closeInfo();
@@ -725,7 +734,7 @@ addEventListener("keydown", (e) => {
     if (!drag || !big) return;
     big.spinTarget = big.view.spin + drag.v * 240;
     drag = null;
-    setTimeout(() => { if (big && !drag && !reduced) { big.drift = 7; kick(big); } }, 1600);
+    window.setTimeout(() => { if (big && !drag && !reduced) { big.drift = 7; kick(big); } }, 1600);
     kick(big);
   };
   pad.addEventListener("pointerup", end); pad.addEventListener("pointercancel", end);
@@ -734,7 +743,7 @@ addEventListener("keydown", (e) => {
 let resizeTimer = 0;
 addEventListener("resize", () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
+  resizeTimer = window.setTimeout(() => {
     for (const c of cells) if (c.s) { c.s.view.resize(); c.s.view.paint(); placeHalo(c, c.s.view); c.mask = null; }
     if (big) { big.view.resize(); big.view.paint(); }
   }, 120);
@@ -746,7 +755,7 @@ if (tripEl) {
   const near = new IntersectionObserver((es) => {
     if (!es.some((e) => e.isIntersecting)) return;
     near.disconnect();
-    firstScreen.then(() => import("./trip.js")).then(({ tripSection }) => {
+    firstScreen.then(() => import("./trip.ts")).then(({ tripSection }) => {
       trip = tripSection({
         el: tripEl, km: () => kmIn(), seats: () => seatsIn(),
         setKm: (km) => { setKm(km); save(); render(true); },

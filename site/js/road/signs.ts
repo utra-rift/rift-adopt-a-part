@@ -8,7 +8,7 @@
 //   green, the Texas flag waving on a gold staff.
 // The panels and posts are solids like any landmark; each face is a textured quad that shares the
 // strip's reveal, drawn in ink on plaster until the colour arrives.
-import * as THREE from "../../vendor/three.module.min.js";
+import * as THREE from "three";
 
 const PAD = 6, CLEAR = 2.0, DEPTH = 0.08;          // texels round each tile; metres from ground to panel, panel thickness
 const NAVY = "#1e3765", GREEN = "#0f6a48", INK = "#4a4a50";
@@ -77,7 +77,7 @@ function texas(ctx, ink, w, h) {
   const wave = (u) => Math.sin(u * Math.PI * 1.6 + 0.3) * 9 * u;          // the fly end ripples most
   const shade = (u) => 1 - 0.18 * Math.max(0, Math.cos(u * Math.PI * 1.6 + 0.3)) * u;
   const BL = [0, 40, 104], RD = [191, 10, 48], WH = [255, 255, 255];
-  const rgb = ([r, g, b], k) => `rgb(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)})`;
+  const rgb = ([r, g, b]: number[], k: number) => `rgb(${Math.round(r * k)},${Math.round(g * k)},${Math.round(b * k)})`;
   const N = 87;
   for (let i = 0; i < N; i++) {
     const u0 = i / N, x = fx + u0 * fw, dy = wave(u0), k = shade(u0);
