@@ -9,8 +9,9 @@
 // screen the track lets touches through (a thumb landing on it mid-scroll would jump the value)
 // and only a grip riding the needle drags it.
 
-import { TIERS, tierFor, money } from "./catalog.js";
+import { TIERS, tierFor, money } from "./catalog.ts";
 import { TextMorph } from "../vendor/torph.mjs";
+import type { TierSliderOptions } from "./types.ts";
 
 // Geometry, in CSS px. Must match css/tierslider.css.
 const PAD = 6;            // half the native thumb width: value 0 and max sit PAD in from the edges
@@ -62,10 +63,10 @@ function vibrate(pattern) {
   return false;
 }
 
-export function tierSlider(host, {
+export function tierSlider(host: HTMLElement, {
   label, max, step = 1, value = 0, amountOf = (v) => v, onInput, valueText,
   milestones, milestoneLabel = (v) => v.toLocaleString("en-CA"), thumbLabel,
-} = {}) {
+}: TierSliderOptions) {
   const tierAt = (v) => TIERS.indexOf(tierFor(amountOf(v)));
   const text = valueText ?? ((v) => {
     const t = tierFor(amountOf(v));
@@ -189,7 +190,7 @@ export function tierSlider(host, {
   const levelOf = (ti) => LEVELS[ti + 1];
 
   // Colours
-  const rgb = ([r, g, b], a) => `rgba(${r},${g},${b},${a})`;
+  const rgb = ([r, g, b]: number[], a: number) => `rgba(${r},${g},${b},${a})`;
   // Title's light wanders through pink, violet and blue (never green or brown on white).
   const titleHue = (off) => 275 + 50 * Math.sin(fx * 0.7 + off / 50);
   const glowOf = (ti, a, off = 0) =>
@@ -481,7 +482,6 @@ export function tierSlider(host, {
       const off = side * 60;
       ctx.save();
       ctx.translate(xf, BAR_Y);
-      ctx.scale(2.6, 1);
       const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, 22);
       halo.addColorStop(0, glowOf(wipe.to, 0.6 * fade, off));
       halo.addColorStop(1, glowOf(wipe.to, 0, off));
@@ -586,9 +586,9 @@ export function tierSlider(host, {
     for (const delay of rings) {
       const pp = (f.t - delay) / f.dur;
       if (pp <= 0 || pp >= 1) continue;
-      const rx = 4 + R * ease(pp) * (delay ? 0.72 : 1);
+      const radius = 4 + R * ease(pp) * (delay ? 0.72 : 1);
       ctx.beginPath();
-      ctx.ellipse(f.x, BAR_Y, rx, rx * 0.62, 0, 0, Math.PI * 2);
+      ctx.arc(f.x, BAR_Y, radius, 0, Math.PI * 2);
       ctx.lineWidth = (1.4 + (f.ti + 1) * 0.55) * (1 - pp) * (delay ? 0.6 : 1) + 0.3;
       ctx.strokeStyle = deepOf(f.ti, (f.ti < 0 ? 0.45 : 0.95) * (1 - pp), delay ? 90 : 0);
       if (f.ti >= 1) { ctx.shadowColor = glowOf(f.ti, 0.8 * (1 - pp)); ctx.shadowBlur = 8 * dpr; }
@@ -631,7 +631,6 @@ export function tierSlider(host, {
       const xf = f.x + side * d;
       ctx.save();
       ctx.translate(xf, BAR_Y);
-      ctx.scale(3.2, 1);
       const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 16);
       g.addColorStop(0, glowOf(f.ti, 0.32 * fade, side * 50));
       g.addColorStop(1, glowOf(f.ti, 0, side * 50));

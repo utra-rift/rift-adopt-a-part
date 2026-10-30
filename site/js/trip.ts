@@ -1,10 +1,10 @@
 // The trip: the drive and the flights, each a full-width picture over a slider. A sponsor
 // drags to choose how many km of the drive or how many seats to fund, watches the van get
 // that far or the plane gather speed, and puts exactly that in the crate.
-import { TRIP, tierFor, money } from "./catalog.js";
-import { roadStrip } from "./road.js";
-import { flightStrip } from "./flight.js";
-import { tierSlider } from "./tierslider.js";
+import { TRIP, tierFor, money } from "./catalog.ts";
+import { roadStrip } from "./road.ts";
+import { flightStrip } from "./flight.ts";
+import { tierSlider } from "./tierslider.ts";
 import { TextMorph } from "../vendor/torph.mjs";
 
 const count = (n) => n.toLocaleString("en-CA");
@@ -50,9 +50,9 @@ function part(parent, o) {
       </div>
     </div>`;
   parent.append(wrap);
-  const btn = wrap.querySelector(".trip-adopt");
+  const btn = wrap.querySelector<HTMLButtonElement>(".trip-adopt");
   // The readout's numbers roll by place value as the slider moves (torph).
-  const morph = (key, opts) => new TextMorph({ element: wrap.querySelector(`[data-m="${key}"]`), locale: "en-CA",
+  const morph = (key, opts = {}) => new TextMorph({ element: wrap.querySelector(`[data-m="${key}"]`), locale: "en-CA",
     ease: { stiffness: 260, damping: 26 }, respectReducedMotion: true, ...opts });
   const m = { count: morph("count", { numbers: true }), noun: morph("noun"), tier: morph("tier") };
   const art = o.art(wrap.querySelector(".trip-art"));

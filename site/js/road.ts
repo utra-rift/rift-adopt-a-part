@@ -9,10 +9,10 @@
 // uniform (metres along the route); every vertex carries its own route coordinate, its
 // height above the road and its distance from it, so the front soaks outward from the road
 // and climbs the rock faces last. The loop renders only while something moves.
-import * as THREE from "../vendor/three.module.min.js";
-import { loadPart, Figure } from "./stage.js";
-import { convocationHall, collegeParkCenter, CH_KEYS, CPC, CPC_KEYS } from "./road/landmarks.js";
-import { buildSigns, SIGN_VS, signFS } from "./road/signs.js";
+import * as THREE from "three";
+import { loadPart, Figure } from "./stage.ts";
+import { convocationHall, collegeParkCenter, CH_KEYS, CPC, CPC_KEYS } from "./road/landmarks.ts";
+import { buildSigns, SIGN_VS, signFS } from "./road/signs.ts";
 
 const VAN_URL = "parts/cargo-van.bin";
 const TRIP_KM = 4534, MILESTONE_KM = 500;
@@ -70,7 +70,7 @@ const END = 560, RAVINE_X = 331;
 // The drive south-west, by route x (metres): Toronto and the lake, Ontario, the Midwest's
 // farmland, the Mississippi at St. Louis, the Ozarks, Oklahoma's red dirt, Texas.
 const LAKE = [14, 74], FARM = [96, 300], OZARKS = [362, 470], REDDIRT = [470, 503];
-const band = (x, [a, b], soft = 14) => smooth(a - soft, a + soft, x) * (1 - smooth(b - soft, b + soft, x));
+const band = (x: number, [a, b]: number[], soft = 14) => smooth(a - soft, a + soft, x) * (1 - smooth(b - soft, b + soft, x));
 const CONTROL = [
   [-120, 0, 0], [-60, 2, 0], [0, 0, 0], [35, -4, 0.4], [70, 6, 1.4], [105, -6, 3.8], [140, -15, 8.5], [175, -9, 13],
   [205, 2, 15], [235, 9, 12], [265, 5, 7], [295, -3, 4.2], [318, -6, 4], [344, -5, 4.2], [372, 2, 7.5], [405, 9, 13],
@@ -414,7 +414,7 @@ function attrs(geo, list) { for (const [k, v, n] of list) geo.setAttribute(k, ne
 const ABORT = new Error("road: destroyed");
 function slicer(budget, isAlive) {
   let start = performance.now();
-  const yieldNow = () => (globalThis.scheduler?.yield ? globalThis.scheduler.yield() : new Promise((r) => setTimeout(r, 0)));
+  const yieldNow = () => (globalThis.scheduler?.yield ? globalThis.scheduler.yield() : new Promise((r) => window.setTimeout(r, 0)));
   return async () => {
     if (performance.now() - start > budget) { await yieldNow(); start = performance.now(); }
     if (!isAlive()) throw ABORT;
@@ -423,7 +423,7 @@ function slicer(budget, isAlive) {
 
 // The ground College Park Center stands on: level, at the road's highest point along its
 // frontage (so no verge rises between the road and the building), over its footprint and
-// plaza (the cover in road/landmarks.js, in its own frame: x along the glass front, z out of
+// plaza (the cover in road/landmarks.ts, in its own frame: x along the glass front, z out of
 // it toward the road) and 8 m of feather.
 function cpcPad(R) {
   const site = (s, u) => { const p = R.at(s); return { x: p.x - p.tz * u, z: p.z + p.tx * u, yaw: Math.atan2(p.tz, p.tx) }; };
@@ -553,11 +553,14 @@ function buildRoad(R) {
 
 // Faceted solids (rocks, the bridge) go into one geometry, with ink edges in another.
 class Solids {
+  declare R: ReturnType<typeof buildRoute>;
+  declare tris: number[];
+  declare lines: number[];
   // Each vertex carries its route coordinate (s), height above the road (h) and distance
   // from it (d). A rock takes them from the road point nearest its middle, so the whole rock
   // colours with the ground it stands on; long things (the bridge) take them per vertex.
   constructor(R) { this.R = R; this.tris = []; this.lines = []; }
-  route(x, y, z, at) { const nr = at ?? this.R.near(x, z); return [nr.s, y - nr.y, nr.d]; }
+  route(x, y, z, at = null) { const nr = at ?? this.R.near(x, z); return [nr.s, y - nr.y, nr.d]; }
   add(geo, colour, faceJitter = 0.06, edgeAngle = 22, perVertex = false) {
     const g = geo.index ? geo.toNonIndexed() : geo;
     const p = g.attributes.position.array, base = new THREE.Color(colour);
@@ -580,7 +583,7 @@ class Solids {
   }
   line(a, b, colour) {
     const c = new THREE.Color(colour).multiplyScalar(0.6);
-    this.lines.push(...a, c.r, c.g, c.b, ...this.route(...a), ...b, c.r, c.g, c.b, ...this.route(...b));
+    this.lines.push(...a, c.r, c.g, c.b, ...this.route(a[0], a[1], a[2]), ...b, c.r, c.g, c.b, ...this.route(b[0], b[1], b[2]));
   }
   build() {
     const pack = (arr, withNormals) => {
@@ -710,7 +713,7 @@ function landmarkKit(R, T, S, placed) {
 
 // Sizes in the scene (metres): the hall's dome across its base, the arena's glass front along the road.
 // Both put a real metre at 0.42 scene metres, so the two buildings keep their true sizes to each other.
-// (Real sizes, sources and parts are in road/landmarks.js.)
+// (Real sizes, sources and parts are in road/landmarks.ts.)
 const SIZE = { hallDome: 13.8, cpcFront: 14.9 };
 const HALL_BACK = 2;    // metres of road between Convocation Hall's centre and the start: the van sets off in front of it
 const HALL_OUT = 14;    // metres from the road's edge to its centre, across the road from the camera
@@ -749,7 +752,7 @@ function buildLandmarks(R, T, S, placed, milestones) {
     put(site(R.s0 + 10, HALF + 12), 13, 0, true);
     // Its framing points, from the model's own key points (real metres in its frame, scaled and set down).
     const c = Math.cos(hall.yaw), sn = Math.sin(hall.yaw), y0 = T.heightAt(hall.x, hall.z), sc = built.scale;
-    const at = ([x, y, z]) => new THREE.Vector3(hall.x + (x * c - z * sn) * sc, y0 + y * sc, hall.z + (x * sn + z * c) * sc);
+    const at = ([x, y, z]: number[]) => new THREE.Vector3(hall.x + (x * c - z * sn) * sc, y0 + y * sc, hall.z + (x * sn + z * c) * sc);
     const top = CH_KEYS.capApex[1] * 0.62;
     OPENING.length = 0;
     OPENING.push(at(CH_KEYS.capApex), at(CH_KEYS.drumL), at(CH_KEYS.drumR),
@@ -1062,7 +1065,7 @@ export function roadStrip(host, { solo = null, cam: soloCam = null, aspect = 0.6
   const START_REST = { el: 5, az: -6, dist: 1, look: -2, lift: 5 };
   const END_REST = { el: 8, az: 50, dist: 1, look: -11, lift: 1.6 };
   const DRIVE = { el: 22, az: -38, dist: 1, look: 1.6, lift: 1.2 };
-  const BEATS = [
+  const BEATS: [number, number, typeof REST][] = [
     [105, 190, { el: 15, az: -62, dist: 1, look: 1.4, lift: 1.3 }],   // the climb: low from behind, the road rising past it
     [197, 240, { el: 46, az: -14, dist: 1, look: 2.4, lift: 1.0 }],   // the crest: rise over the van as the valley opens ahead
     [312, 352, { el: 11, az: 4, dist: 1, look: 0.6, lift: 1.1 }],     // the bridge: track alongside, the ravine below

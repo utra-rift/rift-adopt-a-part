@@ -12,21 +12,22 @@ The reference figure is `m3508-p19` (`tools/parts/m3508-p19.json`). Read it firs
 |---|---|
 | `node tools/inspect.mjs <file.step>` | Every mesh: index, triangle count, bounding box (source mm), CAD colours, path. |
 | `node tools/axis.mjs <file.step> 4,5,6 [7,8]` | Principal axis and end points of the given meshes, and where other meshes sit along it. Use it to route leads. |
-| `node tools/convert.mjs <id>` | Reads `tools/parts/<id>.json`, writes `site/parts/<id>.bin`, prints triangles, size in mm, KB. |
+| `node tools/convert.mjs <id>` | Reads `tools/parts/<id>.json`, writes `site/public/parts/<id>.bin`, prints triangles, size in mm, KB. |
 | `tools/shot.sh <id> shots/<id>-plan.png "real=0" 900` | Renders the figure in the drawing (plan) look. |
 | `tools/shot.sh <id> shots/<id>-real.png "real=1" 900` | Renders it in its real materials. Query also takes `spin=deg`, `elev=deg`, `az=deg`, `fill=0.8`. |
 | `node tools/posters.mjs` | Re-renders the grid posters that are missing or stale. Run it after converting a part or changing what an offer shows. |
 
-The dev server (http://localhost:4173) is already running; `shot.sh` uses it. Read every PNG you make.
+Install CAD dependencies with `npm --prefix tools ci`. Start the Vite dev server with
+`npm run dev` from the project root (http://localhost:4173); `shot.sh` uses it. Read every PNG you make.
 
 ## Posters
 
-The grid first shows each cell as a poster, `site/posters/<cell id>-<width>.webp`: the cell's
+The grid first shows each cell as a poster, `site/public/posters/<cell id>-<width>.webp`: the cell's
 figure at rest, drawn by the site's own renderer (`site/dev-posters.html`, framing from
-`site/js/figure.js`) at four widths. The live figure loads afterwards and fades in over it, so
+`site/js/figure.ts`) at four widths. The live figure loads afterwards and fades in over it, so
 a poster has to be the same picture. `node tools/posters.mjs` (dev server running) renders
 the posters whose cell is new, shows different parts, or uses a part file that changed, and
-rewrites `site/posters/manifest.js`. `--all` renders every one; `--ids a,b` just those.
+rewrites `site/js/posters.ts`. `--all` renders every one; `--ids a,b` just those.
 A cell whose poster is missing or stale still works: it loads its figure straight away, as the
 site did before posters, which is slower. Commit the posters with the part.
 
@@ -43,7 +44,7 @@ See the header of `tools/convert.mjs` for every key. The ones that matter:
 - `drop`: meshes that can't be seen from outside (internal bolts, magnets, stator windings).
   Only drop what is truly hidden. Never drop something visible to save triangles.
 - `materials`: real-look materials by mesh (`match` is a regex on `"<path>/<name>#<index>"`,
-  as `inspect.mjs` prints; `#12$` matches mesh 12). Presets are in `MATERIALS` in `site/js/stage.js`
+  as `inspect.mjs` prints; `#12$` matches mesh 12). Presets are in `MATERIALS` in `site/js/stage.ts`
   (black-anodized, black-plastic, matte-black, grey-plastic, silver-anodized, steel, brass, gold,
   copper, pcb-green, pcb-black, rubber, white-plastic, red-wire, yellow-wire, orange-wire,
   blue-led, red-led, fluoro). Add `customMaterials` for anything else, colour picked from the
@@ -72,5 +73,5 @@ See the header of `tools/convert.mjs` for every key. The ones that matter:
 4. Leads hang naturally; connectors are intact; nothing intersects.
 5. Within budget (≤ 90k tris, ≤ 600 KB).
 
-Don't edit `tools/convert.mjs`, `tools/bend.mjs` or `site/js/stage.js` (shared by everyone).
+Don't edit `tools/convert.mjs`, `tools/bend.mjs` or `site/js/stage.ts` (shared by everyone).
 If you need a change there, describe it in your report instead.

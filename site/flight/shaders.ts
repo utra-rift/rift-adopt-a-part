@@ -3,7 +3,7 @@
 // that travels), never as light added to white.
 //
 // Materials are indexed 0 none (ink), 1 bronze, 2 silver, 3 gold, 4 Title foil. Every colour
-// arrives as a uniform (from js/materials.js), so the strip and the slider share one palette.
+// arrives as a uniform (from js/materials.ts), so the strip and the slider share one palette.
 
 export const COMMON = /* glsl */ `
   uniform vec3 uDeep[5]; uniform vec3 uMid[5]; uniform vec3 uLight[5]; uniform vec3 uHi[5];
@@ -265,7 +265,7 @@ export const TRAIL_FS = /* glsl */ `
 // ------------------------------------------------------------------ the sky
 // A full-bleed sky behind everything, by ray direction: a gradient from the zenith to a glow
 // along the horizon and a cloud deck below, with a soft vignette. At the Title tiers it is night
-// with an aurora in the slider's foil. Colours come in per tier from js/flight.js.
+// with an aurora in the slider's foil. Colours come in per tier from js/flight.ts.
 export const SKY_VS = /* glsl */ `
   varying vec2 vNdc;
   void main(){ vNdc = position.xy; gl_Position = vec4(position.xy, 1., 1.); }`;

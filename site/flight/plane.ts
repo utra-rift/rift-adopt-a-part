@@ -77,7 +77,7 @@ export function buildPlane() {
     if (closed) seg(pts[pts.length - 1], pts[0], tone);
   }
   const mz = (pts) => pts.map(([x, y, z]) => [x, y, -z]);
-  function polyBoth(pts, tone, closed) { poly(pts, tone, closed); poly(mz(pts), tone, closed); }
+  function polyBoth(pts, tone = TONE.seam, closed = false) { poly(pts, tone, closed); poly(mz(pts), tone, closed); }
 
   // A body of revolution about an axis parallel to x through (cy, cz); prof is [[x, r], ...].
   function lathe(prof, cy, cz, { seg: n = 40, mat = MAT.paper, aura = false, edgeFn = null, sz = 1 } = {}) {

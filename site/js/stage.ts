@@ -8,8 +8,9 @@
 // - hologram: cool translucent grey with a bright rim and fine scanlines, for parts that
 //   have already been adopted.
 // - real: the part's true materials under a white studio, faded in over the other looks.
-import * as THREE from "../vendor/three.module.min.js";
-import { MeshoptDecoder } from "../vendor/meshopt_decoder.mjs";
+import * as THREE from "three";
+import { MeshoptDecoder } from "meshoptimizer";
+import type { ViewOptions } from "./types.ts";
 
 const INK_LIT = new THREE.Color("#000000");
 const INK_HI = new THREE.Color("#26262a");
@@ -278,6 +279,14 @@ function palette(header) {
 }
 
 export class Figure {
+  declare data: ReturnType<typeof decode>;
+  declare root: THREE.Group;
+  declare uniforms: Record<string, THREE.IUniform>;
+  declare surface: THREE.ShaderMaterial;
+  declare creaseMat: THREE.ShaderMaterial;
+  declare spins: { node: THREE.Group; axis: THREE.Vector3; rpm: number; angle: number }[];
+  declare frame?: { w: number; h: number };
+  declare ground?: { width: number; below: number };
   // A posed instance of a part. `root` turns about the vertical through the optical
   // centre; moving groups (a motor's shaft) turn about their own axes.
   constructor(data) {
@@ -307,7 +316,7 @@ export class Figure {
       node.add(inner); body.add(node);
       if (g.meta.spin) {
         const ax = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] }[g.meta.spin.axis] ?? g.meta.spin.axis;
-        this.spins.push({ node, axis: new THREE.Vector3(...ax).normalize(), rpm: g.meta.spin.rpm ?? 30, angle: 0 });
+        this.spins.push({ node, axis: new THREE.Vector3(ax[0], ax[1], ax[2]).normalize(), rpm: g.meta.spin.rpm ?? 30, angle: 0 });
       }
     }
   }
@@ -341,6 +350,11 @@ export class Figure {
 const UNIT = 100, GAP = 0.1, OVERLAP = 0.1, FRAME_ASPECT = 0.86;
 const SMALL = 0.72, TUCK = 0.5, HERO_OVERLAP = 0.3;
 export class Group {
+  declare figures: Figure[];
+  declare root: THREE.Group;
+  declare frame: { w: number; h: number };
+  declare ground: { width: number; below: number };
+  declare data: { position: Float32Array; index?: Uint32Array; centre: number[]; spread: number[]; cov: number[]; area: number; yRange: number[] };
   constructor(datas, { azimuth = 45, elevation = 30, hero = false } = {}) {
     this.figures = datas.map((d) => new Figure(d));
     this.root = new THREE.Group();
@@ -559,8 +573,8 @@ function footprint({ x0, y0, nx, ny, bits }) {
 
 // For each column along R (cells) the nearest and farthest occupied floor row of a laid
 // out row of parts, merged into `into`.
-function columns(out, cell, into = null) {
-  const cols = new Map(into ?? []);
+function columns(out, cell: number, into: Map<number, [number, number]> | null = null) {
+  const cols = new Map<number, [number, number]>(into ?? []);
   for (const q of out) {
     const t = Math.round(q.x / cell);
     for (const [d, [lo, hi]] of q.p.foot) for (let c = lo + t; c <= hi + t; c++) {
@@ -572,13 +586,18 @@ function columns(out, cell, into = null) {
 }
 
 // RMS radius of a surface (area-weighted covariance) as seen along screen axes R and U.
-function projectedRadius([xx, xy, xz, yy, yz, zz], R, U) {
+function projectedRadius([xx, xy, xz, yy, yz, zz]: number[], R: number[], U: number[]) {
   const q = (v) => v[0] * v[0] * xx + v[1] * v[1] * yy + v[2] * v[2] * zz + 2 * (v[0] * v[1] * xy + v[0] * v[2] * xz + v[1] * v[2] * yz);
   return Math.sqrt(q(R) + q(U));
 }
 
 // ------------------------------------------------------------------ stage
 class StageImpl {
+  declare canvas: HTMLCanvasElement;
+  declare renderer: THREE.WebGLRenderer;
+  declare scene: THREE.Scene;
+  declare w: number;
+  declare h: number;
   constructor() {
     this.canvas = document.createElement("canvas");
     this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true, preserveDrawingBuffer: true });
@@ -619,7 +638,21 @@ export const getStage = () => (stage ??= new StageImpl());
 // to fade), shared (`span`: millimetres across the canvas width, backing off so nothing
 // clips), or fitted to the part's full extent (`fill`).
 export class View {
-  constructor(canvas, figure, opts = {}) {
+  declare canvas: HTMLCanvasElement;
+  declare ctx: CanvasRenderingContext2D;
+  declare figure: Figure | Group;
+  declare azimuth: number;
+  declare elevation: number;
+  declare fill: number;
+  declare frame: number | null;
+  declare span: number | null;
+  declare visual: number | null;
+  declare dpr: number;
+  declare spin: number;
+  declare zoom: number;
+  declare camera: THREE.OrthographicCamera;
+  declare extent: { hw: number; hh: number; low: number };
+  constructor(canvas: HTMLCanvasElement, figure: Figure | Group, opts: ViewOptions = {}) {
     // Every figure uses the same camera, so every part faces the same way; parts are posed
     // in their configs, never by moving the camera.
     const o = { azimuth: 45, elevation: 30, fill: 0.7, frame: null, span: null, visual: null, dpr: Math.min(2, devicePixelRatio || 1), ...opts };

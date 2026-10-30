@@ -9,7 +9,7 @@
 // heights from photographs. Parts are flat-coloured, lightly jittered low-poly pieces, merged
 // into one geometry per material. Outlines cost build time (an edge pass per material), so
 // small repeated details use materials without outlines.
-import * as THREE from "../../vendor/three.module.min.js";
+import * as THREE from "three";
 
 const TAU = Math.PI * 2;
 const rad = (d) => (d * Math.PI) / 180;
@@ -94,6 +94,8 @@ const MAT = {
 // Triangles collected per material in real metres; `flush` scales them and hands each material
 // to the scene as one geometry.
 class Bag {
+  declare by: Map<string, number[]>;
+  declare count: number;
   constructor() { this.by = new Map(); this.count = 0; }
   list(m) { let a = this.by.get(m); if (!a) this.by.set(m, (a = [])); return a; }
   tri(m, a, b, c) { this.list(m).push(a[0], a[1], a[2], b[0], b[1], b[2], c[0], c[1], c[2]); this.count++; }
@@ -114,8 +116,13 @@ class Bag {
 // A local frame on the floor plan: local +z points at angle `rot` (from +z toward +x), so a
 // part built "facing front" can be set at any angle round a rotunda. Methods take local metres.
 class Frame {
+  declare b: Bag;
+  declare cx: number;
+  declare cz: number;
+  declare sn: number;
+  declare cs: number;
   constructor(bag, cx, cz, rot) { this.b = bag; this.cx = cx; this.cz = cz; this.sn = Math.sin(rot); this.cs = Math.cos(rot); }
-  p(x, y, z) { return [this.cx + x * this.cs + z * this.sn, y, this.cz - x * this.sn + z * this.cs]; }
+  p(...[x, y, z]: number[]): [number, number, number] { return [this.cx + x * this.cs + z * this.sn, y, this.cz - x * this.sn + z * this.cs]; }
   quad(m, a, b, c, d) { this.b.quad(m, this.p(...a), this.p(...b), this.p(...c), this.p(...d)); }
   tri(m, a, b, c) { this.b.tri(m, this.p(...a), this.p(...b), this.p(...c)); }
   // A rectangle standing on the plane z, between (x0, y0) and (x1, y1).
@@ -246,7 +253,7 @@ function h2(i, j, s = 0) {
 
 // A tall sash window on a wall: a lighter surround, dark glass, a mullion and two transoms. `z` is
 // the wall face; the pieces stand off it by a few centimetres so they never fight the wall.
-function window(F, xc, y0, w, h, z, o = {}) {
+function window(F, xc, y0, w, h, z, o: { lintel?: number; sill?: number; side?: number } = {}) {
   const { lintel = 0.35, sill = 0.2, side = 0.2 } = o;
   F.face("frame", xc - w / 2 - side, y0 - sill, xc + w / 2 + side, y0 + h + lintel, z + 0.1);
   F.face("glass", xc - w / 2, y0, xc + w / 2, y0 + h, z + 0.2);
@@ -507,7 +514,7 @@ function hallParts(bag) {
 function simcoe(bag) {
   const S = CH.simcoe, F = bag.at(S.at[0], S.at[1], rad(S.facing)), H = S.h;
   const rows = [1.2, 1.2 + S.storey, 1.2 + 2 * S.storey], wh = [2.6, 2.6, 2.1];
-  const block = ([x0, z0, x1, z1], fronts) => {
+  const block = ([x0, z0, x1, z1]: number[], fronts = undefined) => {
     F.box("tan", x0, -1.5, z0, x1, H - 0.9, z1);
     F.box("darkStone", x0 - 0.2, H - 0.9, z0 - 0.2, x1 + 0.2, H, z1 + 0.2);                              // cornice
     F.box("roofTar", x0 + 0.3, H, z0 + 0.3, x1 - 0.3, H + 0.05, z1 - 0.3);
@@ -556,7 +563,7 @@ const OSM_CPC = {          // OSM way 286854828: [east, north] metres about its 
   dock: [[17.4, -31.0], [29.6, -31.0], [29.4, -49.4], [17.3, -49.2]],
   se: [[25.9, -31.0], [47.9, -9.6]],                               // the south-east chamfer
 };
-const toCpc = ([e, n]) => { const de = e - 35.8, dn = n - 46.6; return [0.7071 * (dn - de), 0.7071 * (de + dn)]; };
+const toCpc = ([e, n]: number[]) => { const de = e - 35.8, dn = n - 46.6; return [0.7071 * (dn - de), 0.7071 * (de + dn)]; };
 const CS = 0.774;          // C1 scale: the earlier reads were at 12.85 px/m; the glass is at 16.6 px/m
 export const CPC = {
   front: 35.4,             // OSM chamfer length; the bays below (C1 pixel runs) are stretched 2.6% to it
@@ -594,7 +601,7 @@ export const CPC = {
   bays: [
     ["glass", 10.7, 3], ["brickWide", 6.6], ["glass", 4.8, 2], ["stone", 1.8], ["glass", 5.0, 2, "gate"],
     ["brick", 0.8], ["glass", 4.8, 2, "gate"], ["stone", 1.5], ["glass", 3.7, 2], ["brick", 1.2], ["glass", 3.7, 2],
-  ],
+  ] as [string, number, number?, string?][],
 };
 // The roof octagon over the bowl (aerial): the outer walls set 6 m in on the north, north-east, east, south-east and
 // south, its west side on the main block's west roof edge, 18 m chamfers at the north-west and south-west.

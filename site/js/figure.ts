@@ -1,15 +1,15 @@
 // How an offer is drawn: its parts loaded and posed as one Figure or a Group, framed the
 // way a grid cell frames it. Shared by the page and the poster maker (dev-posters.html),
 // so a cell's poster and its live figure are the same picture.
-import { loadPart, placeholderPart, Figure, Group } from "./stage.js";
-import { isAdopted } from "./catalog.js";
+import { loadPart, placeholderPart, Figure, Group } from "./stage.ts";
+import { isAdopted } from "./catalog.ts";
 
 export const partUrl = (id) => `parts/${id}.bin`;
 
 // Every part is drawn at the same optical size: its visual mass (area-weighted spread,
 // as the camera sees it) takes this fraction of the cell width, like a row of products
 // photographed to read the same size. A bundle's parts are evened out among themselves
-// (see Group in stage.js), and together they fill this much of the box.
+// (see Group in stage.ts), and together they fill this much of the box.
 const VISUAL = 0.165, GROUP_FRAME = 0.66;
 // A few parts read too large at the same optical size: a flat sheet is nearly all area. They
 // are drawn at this fraction of it, in the grid and in the item view alike.
